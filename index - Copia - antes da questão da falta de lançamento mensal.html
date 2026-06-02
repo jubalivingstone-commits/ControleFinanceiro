@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v14.0.04</title>
+    <title>Meu Controle Financeiro Pro - v14.0.03</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -616,7 +616,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8; letter-spacing: 0.5px;">
-        Meu Controle Financeiro Pro • v14.0.04
+        Meu Controle Financeiro Pro • v14.0.03
     </div>
 
 </div>
@@ -624,11 +624,11 @@
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 14.0.04
+     * @version 14.0.03
      * @changelog
-     * - [FEATURE] Restauração Inteligente de Recorrência para Transferências. Agora é possível configurar uma transferência (ou pagamento de cartão) para repetir mensalmente/anualmente. O sistema espelhará a criação para o mês seguinte preservando as duas contas.
-     * - [FIX] Trava Total nas Contas: Ao editar qualquer transferência espelhada, as contas de origem e destino ficam estritamente bloqueadas.
-     * - [UX] Tabela de lançamentos transformada em um bloco scrollável.
+     * - [FIX] Trava Total nas Contas: Ao editar qualquer transferência espelhada (seja avulsa ou fatura), as contas de origem e destino ficam estritamente bloqueadas para garantir a integridade dos dados e prevenir paradoxos contábeis. Apenas a Data, o Valor e o Status podem ser alterados na edição.
+     * - [FIX] Remoção e desativação da opção legado "💳 Cartão" do menu de tipos para evitar lançamentos avulsos na conta corrente. Ela agora só é exibida ao editar lançamentos legados muito antigos.
+     * - [UX] Tabela de lançamentos transformada em um bloco scrollável independente com suporte a redimensionamento manual pelo usuário. Cabeçalhos e rodapés fixados.
      */
 
     let contas = [];
@@ -1133,7 +1133,7 @@
         }
 
         let rec = l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false);
-        if (confirmandoAgora && rec && !l.isFaturaCartao) {
+        if (confirmandoAgora && rec && !l.isFaturaCartao && !l.transferId) {
             processarProximo(c, l);
         }
 
@@ -1172,12 +1172,7 @@
             const idD = document.getElementById('f_destino').value;
             if(!idD) return alert("Selecione destino.");
             const tId = Date.now().toString();
-            // MUDANÇA 14.0.04: Transferindo todos os parâmetros de recorrência para a origem
-            execTransf(c, d, v, descBase, contas.find(x => x.id === idD), tId, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual);
-            
-            let novoL = c.lancamentos[c.lancamentos.length - 1];
-            if (dataOk && valorOk && eRecurrente) processarProximo(c, novoL);
-
+            execTransf(c, d, v, descBase, contas.find(x => x.id === idD), tId, dataOk, valorOk);
         } else {
             let descFinal = descBase.replace(/ \(Parc\. \d+\/\d+\)$/, "");
             const cartaoId = tipo === 'cartao' ? document.getElementById('f_cartao_vinculado').value : null;
@@ -1187,14 +1182,14 @@
                 const confirmandoAgora = (!l.dataOk || !l.valorOk) && (dataOk && valorOk);
                 
                 if (l.transferId) {
+                    // MUDANÇA 14.0.03: Lógica simplificada de salvamento. 
+                    // Como a conta destino é agora sempre estritamente bloqueada na edição, basta espelhar os valores na conta já vinculada.
                     l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk;
-                    l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual;
                     
                     contas.forEach(conta => {
                         let irma = conta.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
                         if (irma) {
                             irma.data = d; irma.valor = v; irma.dataOk = dataOk; irma.valorOk = valorOk;
-                            irma.eRecurrente = eRecurrente; irma.freq = freq; irma.pTotal = pTotal; irma.pAtual = pAtual;
                         }
                     });
                 } else {
@@ -1212,7 +1207,7 @@
                     }
                 }
 
-                if (confirmandoAgora && eRecurrente && !l.isFaturaCartao) processarProximo(c, l);
+                if (confirmandoAgora && eRecurrente && !l.isFaturaCartao && !l.transferId) processarProximo(c, l);
             } else {
                 const oM = c.lancamentos.length > 0 ? Math.max(...c.lancamentos.map(l => l.ordem || 0)) : 0;
                 const novoL = { id: Date.now().toString(), data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, ordem: oM + 1, eRecurrente, freq, pTotal, pAtual, cartaoId };
@@ -1226,8 +1221,7 @@
         limparFL();
     }
 
-    // MUDANÇA 14.0.04: Função preparada para carregar o DNA de recorrência
-    function execTransf(cO, d, v, descBase, cD, tI, isDataOk, isValorOk, isRec, freq, pT, pA) {
+    function execTransf(cO, d, v, descBase, cD, tI, isDataOk, isValorOk) {
         const oO = (cO.lancamentos.length > 0 ? Math.max(...cO.lancamentos.map(l => l.ordem || 0)) : 0) + 1;
         const oD = (cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(l => l.ordem || 0)) : 0) + 1;
         
@@ -1236,15 +1230,13 @@
         cO.lancamentos.push({ 
             id: tI+"A", transferId: tI, data: d, valor: v, 
             desc: `Transf. para ${cD.nome}${obs}`, 
-            tipo: 'debito', dataOk: isDataOk, valorOk: isValorOk, ordem: oO,
-            eRecurrente: isRec || false, freq: freq || 'mensal', pTotal: pT || 0, pAtual: pA || 1
+            tipo: 'debito', dataOk: isDataOk, valorOk: isValorOk, ordem: oO 
         });
         
         cD.lancamentos.push({ 
             id: tI+"B", transferId: tI, data: d, valor: v, 
             desc: `Transf. de ${cO.nome}${obs}`, 
-            tipo: 'credito', dataOk: isDataOk, valorOk: isValorOk, ordem: oD,
-            eRecurrente: isRec || false, freq: freq || 'mensal', pTotal: pT || 0, pAtual: pA || 1
+            tipo: 'credito', dataOk: isDataOk, valorOk: isValorOk, ordem: oD 
         });
     }
 
@@ -1280,7 +1272,6 @@
         }
     }
 
-    // MUDANÇA 14.0.04: Motor de recorrência sabe trabalhar com transferências sem risco de Loop
     function processarProximo(conta, l) {
         if (l.pTotal > 0 && l.pAtual >= l.pTotal) return;
         let dA = new Date(l.data + 'T12:00:00');
@@ -1297,38 +1288,14 @@
             nValor = calcularRendimento(conta, nD);
         }
         
-        if (l.transferId) {
-            // Apenas para evitar duplicação, garantimos que o par ainda não existe
-            if (!conta.lancamentos.find(x => x.data === nD && x.transferId && x.pAtual === proxP && x.desc === l.desc)) {
-                let contaOutra = contas.find(cx => cx.id !== conta.id && cx.lancamentos.some(lx => lx.transferId === l.transferId));
-                if (contaOutra) {
-                    let lOutra = contaOutra.lancamentos.find(lx => lx.transferId === l.transferId);
-                    
-                    let novoTId = Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000);
-                    
-                    const oO = Math.max(...conta.lancamentos.map(lx => lx.ordem || 0));
-                    conta.lancamentos.push({ 
-                        id: novoTId+"A", transferId: novoTId, data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, 
-                        dataOk: false, valorOk: false, ordem: oO + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP 
-                    });
-
-                    const oD = Math.max(...contaOutra.lancamentos.map(lx => lx.ordem || 0));
-                    contaOutra.lancamentos.push({ 
-                        id: novoTId+"B", transferId: novoTId, data: nD, valor: nValor, desc: lOutra.desc, tipo: lOutra.tipo, 
-                        dataOk: false, valorOk: false, ordem: oD + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP 
-                    });
-                }
-            }
-        } else {
-            if (!conta.lancamentos.find(x => x.data === nD && x.desc === l.desc && x.pAtual === proxP)) {
-                const oM = Math.max(...conta.lancamentos.map(lx => lx.ordem || 0));
-                conta.lancamentos.push({ 
-                    id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), 
-                    data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, 
-                    ordem: oM + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, 
-                    cartaoId: l.cartaoId 
-                });
-            }
+        if (!conta.lancamentos.find(x => x.data === nD && x.desc === l.desc && x.pAtual === proxP)) {
+            const oM = Math.max(...conta.lancamentos.map(lx => lx.ordem || 0));
+            conta.lancamentos.push({ 
+                id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), 
+                data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, 
+                ordem: oM + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, 
+                cartaoId: l.cartaoId 
+            });
         }
     }
 
@@ -2212,6 +2179,7 @@
                 document.getElementById('f_destino').value = outraConta.id;
             }
             
+            // MUDANÇA 14.0.03: Trava total das contas de origem e destino na edição de transferências
             document.getElementById('f_destino').disabled = true;
             document.getElementById('f_destino').title = "As contas envolvidas não podem ser alteradas. Exclua e refaça caso tenha errado a conta.";
             
