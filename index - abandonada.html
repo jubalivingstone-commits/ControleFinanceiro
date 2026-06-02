@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Controle Financeiro Pro - v12.1.00</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #3498db; --success: #2ecc71; --danger: #e74c3c;
+            --warning: #f1c40f; --bg: #f8fafc; --text: #1e293b;
+            --divider: #cbd5e1;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); padding: 20px; color: var(--text); line-height: 1.5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .tabs { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .tab-btn { padding: 12px 24px; border: none; background: #e2e8f0; cursor: pointer; border-radius: 8px; font-weight: 600; color: #64748b; transition: 0.3s; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #f1f5f9; }
+        
+        /* DESIGN: PAINEL DE INSERÇÃO DESTACADO */
+        .painel-insercao {
+            background: #ffffff;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 25px 20px 20px 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 15px -3px rgba(52, 152, 219, 0.15);
+            position: relative;
+        }
+        .painel-insercao-title {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: white;
+            padding: 0 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Estilos para a caixa sanfonada (Accordion) principal */
+        details.accordion { background: white; padding: 20px 25px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: background 0.3s; }
+        details.accordion:hover { background: #f8fafc; }
+        details.accordion summary { font-weight: bold; font-size: 1.15rem; cursor: pointer; color: var(--text); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        details.accordion summary::-webkit-details-marker { display: none; }
+        details.accordion summary::after { content: "▼"; font-size: 0.9rem; color: #64748b; transition: transform 0.2s;}
+        details.accordion[open] summary::after { transform: rotate(180deg); }
+        details.accordion[open] { background: white; }
+        details.accordion > div { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9; }
+        
+        /* Triângulos animados para sanfonas internas (Histórico e API) */
+        details.acc-interno > summary { cursor: pointer; outline: none; list-style: none; position: relative; user-select: none; }
+        details.acc-interno > summary::-webkit-details-marker { display: none; }
+        details.acc-interno > summary::after { content: "▼"; font-size: 0.8rem; color: #64748b; margin-left: 8px; display: inline-block; transition: transform 0.2s; }
+        details.acc-interno[open] > summary::after { transform: rotate(180deg); }
+
+        .incerto { background-color: rgba(250, 204, 21, 0.15) !important; border: 1px solid #facc15 !important; }
+        .linha-passada { background-color: rgba(0, 0, 0, 0.03); }
+        .linha-hoje { background-color: rgba(52, 152, 219, 0.08); border-left: 4px solid var(--primary); }
+        .linha-negativa { background-color: rgba(231, 76, 60, 0.03) !important; border-left: 4px solid var(--danger); }
+        .texto-perigo { color: var(--danger) !important; }
+        .separador-dia { border-bottom: 2px solid var(--divider) !important; }
+        tr:hover { background-color: #f1f5f9; }
+
+        .badge-alerta-geral { background: var(--danger); color: white; border-radius: 50%; padding: 2px 7px; font-size: 10px; margin-left: 8px; vertical-align: middle; }
+        .conta-pendente::after { content: " ⚠️"; color: var(--danger); font-weight: bold; }
+
+        .toggle-btn { cursor: pointer; border: 1px solid #cbd5e1; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
+        .toggle-btn.active { background: #dcfce7; color: #166534; border-color: #86efac; }
+        
+        .ico-lock { font-size: 1.35em; vertical-align: text-bottom; line-height: 0.8; display: inline-block; }
+
+        .flex-form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
+        .flex-form .field-group { display: flex; flex-direction: column; gap: 6px; }
+        
+        .fg-data { flex: 0 0 145px; }
+        .fg-desc { flex: 1 1 180px; min-width: 150px; }
+        .fg-valor { flex: 0 0 110px; }
+        .fg-tipo { flex: 0 0 120px; }
+        .fg-freq { flex: 0 0 100px; }
+        .fg-parc { flex: 0 0 65px; }
+        .fg-destino { flex: 0 0 130px; }
+        .fg-btn { flex: 0 0 auto; display: flex; gap: 5px; height: 38px; align-items: center; margin-bottom: 2px; }
+
+        label { font-weight: 700; font-size: 0.85rem; color: #475569; display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 4px; white-space: nowrap; }
+        
+        input, select, textarea { padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box; width: 100%; height: 38px; }
+        input[type="date"] { padding-right: 5px; } 
+        
+        #f_valor { text-align: right; }
+        .input-mini { text-align: center; padding: 8px 5px; }
+
+        .btn { padding: 0 18px; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; }
+        .btn-success { background: var(--success); }
+        .btn-primary { background: var(--primary); }
+        .btn-danger { background: var(--danger); }
+        .btn-move { background: #f39c12; }
+        .btn-sync { background: #6366f1; }
+        
+        .mes-navegador { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .mes-atual-label { font-size: 1.2rem; font-weight: bold; color: var(--primary); min-width: 200px; text-align: center; }
+        .btn-nav { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        .pill { padding: 8px 15px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-right: 5px; margin-bottom: 5px; display: inline-flex; align-items: center; gap: 6px; }
+        .pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; background: white; }
+        th { background: #f8fafc; padding: 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; }
+        td { padding: 12px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
+        .val-col { text-align: right; font-weight: bold; white-space: nowrap; }
+        .actions { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+        .mini-btn { padding: 4px 8px; border-radius: 4px; font-size: 10px; color: white; border: none; cursor: pointer; font-weight: bold; height: auto; }
+        .btn-confirm { background: var(--success); }
+        
+        .order-controls { display: inline-flex; flex-direction: column; vertical-align: middle; margin-left: 8px; gap: 2px; }
+        .btn-ord { background: rgba(0,0,0,0.05); border: 1px solid #ccc; color: #666; cursor: pointer; font-size: 8px; padding: 1px 4px; border-radius: 2px; height: auto; }
+
+        .badge { font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: bold; margin-left: 5px; white-space: nowrap; }
+        .badge-diario { background: #dcfce7; color: #166534; }
+        .badge-mensal { background: #e0f2fe; color: #0369a1; }
+        .badge-anual { background: #fef3c7; color: #92400e; }
+        .badge-parc { background: #e2e8f0; color: #475569; }
+
+        .form-grid-config { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
+        .form-grid-config .field-group { display: flex; flex-direction: column; gap: 6px; }
+        
+        .th-ordenavel { cursor: pointer; user-select: none; transition: 0.2s; }
+        .th-ordenavel:hover { background: #e2e8f0; }
+        
+        .tutorial-steps { list-style-type: decimal; margin-left: 20px; padding-left: 10px; color: #334155; font-size: 0.9rem;}
+        .tutorial-steps li { margin-bottom: 10px; }
+        
+        /* ESTADO VAZIO */
+        #estadoVazio { text-align: center; padding: 60px 20px; }
+        #estadoVazio h2 { color: var(--primary); margin-bottom: 15px; }
+        #estadoVazio p { color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; }
+        
+        /* METADADOS NUVEM */
+        .box-metadados { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; color: #166534; margin-bottom: 15px; display: flex; align-items: flex-start; gap: 10px; }
+
+        /* DRAG AND DROP - LANÇAMENTOS */
+        .linha-arrastando { opacity: 0.4; transform: scale(0.99); }
+        .linha-alvo-drop { border-top: 2px dashed var(--primary) !important; background-color: rgba(52, 152, 219, 0.05) !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="mudarAba('aba-lancamentos', this)" title="Veja o fluxo de caixa, registre ganhos e gastos">📊 Lançamentos</button>
+        <button class="tab-btn" onclick="mudarAba('aba-relatorios', this)" title="Consulte resumos e faturas do mês">📑 Relatórios</button>
+        <button class="tab-btn" onclick="mudarAba('aba-config', this)" title="Crie ou edite suas contas e cartões">⚙️ Contas</button>
+        <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)" title="Acesse backups e sincronização com o Firebase">☁️ Nuvem & Backup</button>
+    </div>
+
+    <div id="aba-lancamentos" class="content-section active">
+        
+        <div id="estadoVazio" style="display:none;">
+            <div class="card">
+                <h2>Bem-vindo ao seu Controle Financeiro! 🎉</h2>
+                <p>Parece que você ainda não tem nenhuma conta configurada. Para começarmos a organizar suas finanças, crie sua primeira conta corrente, poupança ou cartão de crédito.</p>
+                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[2].click()">
+                    Criar Minha Primeira Conta ➡️
+                </button>
+
+                <!-- GUIA DE AJUDA SANFONADO -->
+                <details class="accordion" style="text-align: left; margin-top: 40px; margin-bottom: 0;">
+                    <summary title="Saiba mais sobre como usar este aplicativo">📖 Guia Rápido: Como este aplicativo funciona?</summary>
+                    <div style="font-size: 0.95rem; color: #475569; line-height: 1.6;">
+                        
+                        <h4 style="color: var(--primary); margin-top: 0; margin-bottom: 10px;">🛡️ Seus Dados, Suas Regras</h4>
+                        <p style="margin-top: 0;">Por padrão, este aplicativo funciona 100% <b>offline</b>. Todos os lançamentos ficam salvos apenas na memória do seu navegador. Ninguém (nem mesmo o desenvolvedor) tem acesso aos seus dados financeiros. Por isso, lembre-se de fazer backups regularmente!</p>
+                        
+                        <h4 style="color: var(--primary); margin-bottom: 10px;">⚡ Recursos Poderosos</h4>
+                        <ul style="margin-top: 0; padding-left: 20px;">
+                            <li><b>Lançamentos Inteligentes:</b> Registre parcelamentos, contas fixas mensais e use a barra de pesquisa para buscar qualquer gasto do passado.</li>
+                            <li><b>Gestão de Cartões:</b> O aplicativo calcula automaticamente o que entra e sai de faturas baseado nos dias de vencimento (e flags de adiamento).</li>
+                            <li><b>Auditoria Avançada:</b> Confira na aba de Relatórios se o seu banco está pagando a taxa exata do CDI dia a dia na sua conta remunerada.</li>
+                        </ul>
+
+                        <h4 style="color: var(--primary); margin-bottom: 10px;">☁️ Nuvem Própria</h4>
+                        <p style="margin-top: 0;">Quer usar no celular e no PC? Na aba "Nuvem & Backup" você pode integrar seu próprio banco de dados online gratuito (Firebase) e sincronizar seus dispositivos, mantendo a posse total sobre a sua estrutura de dados.</p>
+
+                        <hr style="border: 0; border-top: 1px solid var(--divider); margin: 25px 0 20px 0;">
+                        
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--divider); text-align: center;">
+                            <h4 style="color: var(--text); margin-top: 0; margin-bottom: 10px;">☕ Apoie o Desenvolvedor</h4>
+                            <p style="margin-top: 0; font-size: 0.9rem;">Esta ferramenta é gratuita e sem anúncios. Se ela está ajudando a organizar sua vida financeira, considere incentivar o projeto pagando um café:</p>
+                            <div style="display: inline-block; background: white; padding: 8px 15px; border-radius: 8px; border: 1px dashed var(--success); font-weight: bold; color: var(--success); font-size: 1.1rem; letter-spacing: 0.5px;">
+                                PIX: lewende.santos@gmail.com
+                            </div>
+                        </div>
+
+                    </div>
+                </details>
+                <!-- FIM DO GUIA -->
+            </div>
+        </div>
+
+        <div id="painelPrincipalLancamentos" style="display:none;">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
+                    <h2 id="tituloConta" style="margin:0;">Selecionar Conta</h2>
+                    <button class="btn btn-primary" onclick="proximaConta()" title="Alternar rapidamente entre suas contas ativas">
+                        🔄 Trocar Conta<span id="alertaGeral" class="badge-alerta-geral" style="display:none;" title="Quantidade de pendências não confirmadas">0</span>
+                    </button>
+                </div>
+
+                <div id="containerPills" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;"></div>
+                
+                <div class="mes-navegador">
+                    <button class="btn-nav" onclick="alterarMes(-1)" title="Ver o mês anterior">◀ Anterior</button>
+                    <div class="mes-atual-label" id="labelMesAno" title="Mês e ano sendo exibidos atualmente">CARREGANDO...</div>
+                    <button class="btn-nav" onclick="irParaHoje()" title="Voltar para o mês atual">Hoje</button>
+                    <button class="btn-nav" onclick="alterarMes(1)" title="Ver o próximo mês">Próximo ▶</button>
+                </div>
+
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <input type="text" id="inputBusca" placeholder="🔍 Buscar por descrição ou valor em todo o histórico..." style="width: 100%; max-width: 450px; border-radius: 20px; text-align: center; background: #f8fafc;" onkeyup="render()">
+                </div>
+                
+                <div id="boxFaturaParcial" style="display:none; text-align: center; font-size: 0.95rem; margin-top: -10px; margin-bottom: 20px; color: #64748b;" title="Soma dos gastos confirmados contidos no ciclo de fechamento desta fatura.">
+                    Total da Fatura (Confirmada): <span id="valFaturaParcial" style="font-weight: bold; color: var(--danger); font-size: 1.1rem;">R$ 0,00</span>
+                </div>
+
+                <div id="painelOperacional" style="display:block;">
+                    
+                    <div class="painel-insercao">
+                        <div class="painel-insercao-title">✏️ Área de Lançamento</div>
+                        <input type="hidden" id="id_editando_l">
+                        
+                        <div class="flex-form" style="margin-bottom: 0;">
+                            <div class="field-group fg-data">
+                                <label>Data <span id="tData" class="toggle-btn" onclick="toggleStatus('Data')" title="Clique para alternar: [Est.] O gasto é apenas uma previsão futura. [Conf.] O gasto já aconteceu de verdade."><span class="ico-lock">🔓</span> Est.</span></label>
+                                <input type="date" id="f_data" onkeydown="if(event.key === 'Enter') salvarL()">
+                            </div>
+                            
+                            <!-- NOVO BOTÃO: PULAR FATURA -->
+                            <div class="field-group" id="groupPulaFatura" style="display:none; flex: 0 0 auto;">
+                                <label title="Joga este lançamento para o fechamento do mês seguinte">&nbsp;</label>
+                                <button type="button" id="tPula" class="toggle-btn" onclick="togglePulaFatura()" style="height: 38px; padding: 0 10px; border-radius: 8px; font-size: 0.8rem; border: 1px solid #cbd5e1; background: #f1f5f9;">⏭️ Próx. Fatura</button>
+                            </div>
+
+                            <div class="field-group fg-desc">
+                                <label>Descrição <span id="tMensal" class="toggle-btn" onclick="toggleStatus('Mensal')" title="Clique para alternar: Repetir esse gasto/ganho automaticamente ou registrar apenas uma vez.">🔄 Único</span></label>
+                                <input type="text" id="f_desc" placeholder="Ex: IPVA" onkeydown="if(event.key === 'Enter') salvarL()">
+                            </div>
+                            <div class="field-group fg-valor">
+                                <label>Valor <span id="tValor" class="toggle-btn" onclick="toggleStatus('Valor')" title="Clique para alternar: [Est.] Valor pode sofrer alterações. [Conf.] O valor já está exato na conta."><span class="ico-lock">🔓</span> Est.</span></label>
+                                <input type="text" inputmode="decimal" id="f_valor" value="0,00" onblur="calcularValor()" onkeydown="if(event.key === 'Enter'){ calcularValor(); salvarL(); }" title="Você pode digitar contas matemáticas aqui (Ex: 15,50 + 20)">
+                            </div>
+                            <div class="field-group fg-tipo">
+                                <label>Tipo</label>
+                                <select id="f_tipo" onchange="checkTransf()" onkeydown="if(event.key === 'Enter') salvarL()">
+                                    <option value="debito">Débito (-)</option>
+                                    <option value="credito">Crédito (+)</option>
+                                    <option value="transferencia" title="Enviar dinheiro para outra conta sua">➡️ Transf.</option>
+                                    <option value="cartao" title="Registrar uma compra feita no cartão de crédito">💳 Cartão</option>
+                                </select>
+                            </div>
+
+                            <div class="field-group group-recurr fg-freq" style="display:none;">
+                                <label title="Qual o intervalo em que esta transação se repete?">Freq.</label>
+                                <select id="f_freq" onkeydown="if(event.key === 'Enter') salvarL()">
+                                    <option value="diario">Diário</option>
+                                    <option value="mensal" selected>Mensal</option>
+                                    <option value="anual">Anual</option>
+                                </select>
+                            </div>
+                            <div class="field-group group-recurr fg-parc" style="display:none;">
+                                <label title="Deixe 0 para parcelas infinitas (ex: Netflix) ou preencha a quantidade limite.">Parcelas</label>
+                                <input type="number" id="f_parc_total" class="input-mini" min="0" value="0" onkeydown="if(event.key === 'Enter') salvarL()">
+                            </div>
+                            <div class="field-group group-recurr fg-parc" style="display:none;">
+                                <label>Parcela</label>
+                                <input type="number" id="f_parc_atual" class="input-mini" min="1" value="1" onkeydown="if(event.key === 'Enter') salvarL()">
+                            </div>
+
+                            <div class="field-group fg-destino" id="groupDestino" style="display:none;">
+                                <label>Conta Destino</label>
+                                <select id="f_destino" onkeydown="if(event.key === 'Enter') salvarL()"></select>
+                            </div>
+
+                            <div class="field-group fg-destino" id="groupCartao" style="display:none;">
+                                <label>Cartão Vinculado</label>
+                                <select id="f_cartao_vinculado" onkeydown="if(event.key === 'Enter') salvarL()"></select>
+                            </div>
+                            
+                            <div class="fg-btn">
+                                <button class="btn btn-success" id="btnSalvarL" onclick="salvarL()" title="Gravar este lançamento na conta atual">Salvar</button>
+                                <button id="btnCancL" class="btn" style="background:#64748b; display:none;" onclick="limparFL()" title="Cancelar edição">X</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="th-ordenavel" onclick="toggleOrdem()" title="Clique para inverter a ordem de visualização">Data <span id="iconeOrdem">▼</span></th>
+                                    <th>Descrição</th>
+                                    <th style="text-align:right">Valor (R$)</th>
+                                    <th style="text-align:right" title="Projeção do dinheiro na conta após este lançamento">Saldo (R$)</th>
+                                    <th style="text-align:center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabela"></tbody>
+                            <tfoot id="rodapeTabela" style="background: #f8fafc; border-top: 2px solid #cbd5e1; display: none;">
+                                <tr>
+                                    <td colspan="3" style="text-align: right; font-weight: bold; color: #475569; font-size: 0.9rem; padding-top: 15px;">Saldo Inicial do Mês (Transportado):</td>
+                                    <td id="celulaSaldoInicial" class="val-col" style="font-weight: bold; font-size: 0.95rem; padding-top: 15px;">0,00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="aba-relatorios" class="content-section">
+        
+        <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap;">
+            <button class="pill" id="btnAbaResumo" onclick="abrirSubRelatorio('resumo')" title="Visão geral do dinheiro que sobrará no final do mês">📊 Resumo de Saldos</button>
+            <button class="pill" id="btnAbaRecorrente" onclick="abrirSubRelatorio('recorrente')" title="Veja o peso das suas contas fixas no orçamento">🔄 Lançamentos Recorrentes</button>
+            <button class="pill" id="btnAbaRendimentos" onclick="abrirSubRelatorio('rendimentos')" title="Quanto seu dinheiro rendeu trabalhando sozinho">📈 Rendimentos do Mês</button>
+            <button class="pill" id="btnAbaAuditoria" onclick="abrirSubRelatorio('auditoria')" title="Auditoria dia a dia dos rendimentos das contas">🔎 Auditoria de Rendimentos</button>
+        </div>
+
+        <div id="painelRelResumo" style="display:none;">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin: 0;">Resumo de Saldos (Fim do Mês)</h3>
+                </div>
+                
+                <div class="mes-navegador" style="margin-top: 15px; margin-bottom: 25px;">
+                    <button class="btn-nav" onclick="alterarMes(-1)">◀ Anterior</button>
+                    <div class="mes-atual-label" id="labelMesAnoResumo">CARREGANDO...</div>
+                    <button class="btn-nav" onclick="irParaHoje()">Hoje</button>
+                    <button class="btn-nav" onclick="alterarMes(1)">Próximo ▶</button>
+                </div>
+
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: -10px; margin-bottom: 20px;">
+                    Posição financeira projetada e calculada para o último dia do mês selecionado.
+                </p>
+                <div class="table-container">
+                    <table style="min-width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Conta / Cartão</th>
+                                <th style="text-align:right">Saldo Atualizado (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaResumo"></tbody>
+                        <tfoot>
+                            <tr>
+                                <td style="text-align:right; font-weight:bold; padding-top: 15px;">Saldo Líquido Estimado:</td>
+                                <td id="totalResumoLiquido" class="val-col" style="font-size: 1.1rem; padding-top: 15px;" title="Disponível em contas menos o valor total das faturas de cartão do mês">0,00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="painelRelRecorrente" style="display:none;">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0;">Lançamentos Recorrentes</h3>
+                    <button id="btnToggleParcelados" class="toggle-btn" onclick="toggleParceladosRelatorio()" title="Controla se as parcelas de compras antigas também devem ser somadas a este relatório">🔄 Incluir Parcelados</button>
+                </div>
+                
+                <div class="mes-navegador" style="margin-top: 15px; margin-bottom: 25px;">
+                    <button class="btn-nav" onclick="alterarMes(-1)">◀ Anterior</button>
+                    <div class="mes-atual-label" id="labelMesAnoRelatorio">CARREGANDO...</div>
+                    <button class="btn-nav" onclick="irParaHoje()">Hoje</button>
+                    <button class="btn-nav" onclick="alterarMes(1)">Próximo ▶</button>
+                </div>
+
+                <p id="descRelatorio" style="font-size: 0.85rem; color: #64748b; margin-top: -10px; margin-bottom: 20px;">
+                    Exibindo apenas lançamentos fixos (diários/mensais/anuais) do mês selecionado. Exclui parcelamentos e pagamentos de fatura.
+                </p>
+                <div class="table-container">
+                    <table style="min-width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição / Conta</th>
+                                <th style="text-align:right">Valor (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaRelatorio"></tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" style="text-align:right; font-weight:bold; padding-top: 15px;" id="labelTotalRelatorio">Total de Despesas Recorrentes:</td>
+                                <td id="totalRelatorio" class="val-col" style="color: var(--danger); font-size: 1.1rem; padding-top: 15px;">0,00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="painelRelRendimentos" style="display:none;">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin: 0;">Rendimentos do Mês</h3>
+                </div>
+                
+                <div class="mes-navegador" style="margin-top: 15px; margin-bottom: 25px;">
+                    <button class="btn-nav" onclick="alterarMes(-1)">◀ Anterior</button>
+                    <div class="mes-atual-label" id="labelMesAnoRendimentos">CARREGANDO...</div>
+                    <button class="btn-nav" onclick="irParaHoje()">Hoje</button>
+                    <button class="btn-nav" onclick="alterarMes(1)">Próximo ▶</button>
+                </div>
+
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: -10px; margin-bottom: 20px;">
+                    Soma de todos os rendimentos diários agrupados por conta no mês selecionado.
+                </p>
+                <div class="table-container">
+                    <table style="min-width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Conta Remunerada</th>
+                                <th style="text-align:right">Total Rendido (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaRendimentos"></tbody>
+                        <tfoot>
+                            <tr>
+                                <td style="text-align:right; font-weight:bold; padding-top: 15px;">Total do Mês:</td>
+                                <td id="totalRendimentos" class="val-col" style="color: var(--success); font-size: 1.1rem; padding-top: 15px;">0,00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="painelRelAuditoria" style="display:none;">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin: 0;">Auditoria de Rendimentos</h3>
+                </div>
+                
+                <div class="mes-navegador" style="margin-top: 15px; margin-bottom: 25px;">
+                    <button class="btn-nav" onclick="alterarMes(-1)">◀ Anterior</button>
+                    <div class="mes-atual-label" id="labelMesAnoAuditoria">CARREGANDO...</div>
+                    <button class="btn-nav" onclick="irParaHoje()">Hoje</button>
+                    <button class="btn-nav" onclick="alterarMes(1)">Próximo ▶</button>
+                </div>
+
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: -10px; margin-bottom: 20px;">
+                    Compara o rendimento registrado com a projeção matemática calculada a partir do Saldo do Dia Anterior.
+                </p>
+                <div class="table-container">
+                    <table style="min-width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th style="text-align:right" title="Saldo na conta calculado até às 23:59 do dia anterior">Saldo Base (R$)</th>
+                                <th style="text-align:right" title="Rendimento que foi registrado na sua conta neste dia">Rend. Real (R$)</th>
+                                <th style="text-align:right" title="O que o sistema previu (Saldo Base x Taxa Diária Esperada)">Rend. Esperado (R$)</th>
+                                <th style="text-align:right" title="(Taxa Diária Real / Taxa Diária de 100% do CDI)">% CDI EFETIVO</th>
+                                <th style="text-align:right" title="Diferença entre o Rendimento Real e o Esperado">Diferença (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaAuditoria"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="aba-config" class="content-section">
+        
+        <details class="accordion" id="accFormConta">
+            <summary id="tituloConfigSummary" title="Clique para expandir e criar uma nova conta">➕ Criar Nova Conta</summary>
+            <div>
+                <input type="hidden" id="c_id_editando">
+                <div class="form-grid-config">
+                    <div class="field-group" style="flex: 1 1 180px;"><label>Nome da Conta</label><input type="text" id="c_nome" placeholder="Ex: Carteira, Nubank, Itaú"></div>
+                    <div class="field-group" style="flex: 0 0 150px;">
+                        <label>Tipo de Conta</label>
+                        <select id="c_tipo" onchange="toggleTipoContaInput()">
+                            <option value="normal">Normal</option>
+                            <option value="cartao">Cartão de Crédito</option>
+                        </select>
+                    </div>
+                    <div class="field-group cartao-fields" style="flex: 0 0 120px; display:none;"><label title="Dia em que a fatura vence">Vencimento (Dia)</label><input type="number" id="c_vencimento" min="1" max="31" value="10"></div>
+                    
+                    <!-- Campo oculto propositalmente: fechamento descontinuado -->
+                    <div class="field-group cartao-fields" style="flex: 0 0 120px; display:none !important;"><label title="Dia em que a fatura fecha">Fechamento (Dia)</label><input type="number" id="c_fechamento" min="1" max="31" placeholder="Ex: 3"></div>
+                    
+                    <div class="field-group remun-toggle-field" style="flex: 0 0 90px;"><label title="Esta conta gera rendimentos diários?">Conta Rende?</label><select id="c_remun" onchange="toggleRemunInput()"><option value="n">Não</option><option value="s">Sim</option></select></div>
+                    <div class="field-group remun-fields" style="flex: 0 0 90px; display:none;"><label>Selic (%)</label><input type="number" id="c_selic" value="14.5" step="0.1"></div>
+                    <div class="field-group remun-fields" style="flex: 0 0 90px; display:none;"><label>CDI (%)</label><input type="number" id="c_cdi" value="120"></div>
+                    <div class="field-group remun-fields" style="flex: 0 0 100px; display:none;"><label title="Quantidade de dias úteis no ano para o cálculo do CDI">Base CDI (Dias)</label><input type="number" id="c_base_dias" placeholder="Ex: 252" value="252"></div>
+                    
+                    <div class="field-group" style="flex: 0 0 180px;">
+                        <label title="Define como o sistema vai te avisar sobre pendências nesta conta">Nível de Alertas</label>
+                        <select id="c_alerta_nivel">
+                            <option value="1">Todos os Alertas</option>
+                            <option value="2">Ignorar Rendimentos</option>
+                            <option value="3">Conta Silenciada</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display:flex; gap:5px; align-items: end; height: 38px;">
+                        <button class="btn btn-primary" id="btnSalvarC" onclick="salvarC()" title="Salvar e aplicar configurações">Guardar Conta</button>
+                        <button id="btnCancC" class="btn" style="background:#64748b; display:none;" onclick="limparFC()">Cancelar</button>
+                    </div>
+                </div>
+                <textarea id="c_obs" style="width:100%; height:60px; margin-top:15px; border-radius:8px; border:1px solid #cbd5e1; padding:10px; box-sizing: border-box;" placeholder="Observações (opcional)..."></textarea>
+            </div>
+        </details>
+        
+        <div id="listaConfigContas"></div>
+    </div>
+
+    <div id="aba-nuvem" class="content-section">
+        
+        <details class="accordion" id="accMotor">
+            <summary>
+                <div style="display: flex; align-items: center; gap: 10px;" title="Ativar, desativar ou configurar a nuvem">
+                    💽 Sincronização e Acesso Online
+                    <span id="badgeConexao" class="badge badge-diario" style="font-weight: normal;">Verificando...</span>
+                </div>
+            </summary>
+            <div>
+                <div id="boxMetaNuvem" class="box-metadados" style="display:none;">
+                    <span style="font-size: 1.5rem; line-height: 1;">🕒</span>
+                    <div id="txtMetaInfo" style="flex:1;">Carregando dados da nuvem...</div>
+                </div>
+
+                <div class="form-grid-config" style="margin-bottom: 10px;">
+                    <div class="field-group" style="flex: 1 1 200px;">
+                        <label>Armazenamento Atual</label>
+                        <select id="config_db_mode" onchange="toggleDbMode()" style="font-weight: bold; background: #f8fafc;">
+                            <option value="local">Local (Navegador - Offline)</option>
+                            <option value="nuvem">Nuvem (Firebase - Sincronizado)</option>
+                        </select>
+                    </div>
+                    <div class="field-group" style="flex: 1 1 200px;">
+                        <label title="Como você quer identificar este aparelho no histórico? Ex: Celular, Computador do Trabalho">Nome deste Dispositivo</label>
+                        <input type="text" id="config_db_device" placeholder="Ex: Notebook Trabalho" style="background: #f8fafc;">
+                    </div>
+                </div>
+                
+                <div id="boxFirebase" style="display:none; margin-top: 15px;">
+                    <details class="acc-interno" style="border: 1px solid var(--divider); padding: 10px 15px; border-radius: 8px;">
+                        <summary style="font-weight: bold; font-size: 0.9rem; color: var(--primary);">⚙️ Editar Chaves de API do Firebase</summary>
+                        <div style="margin-top: 15px;">
+                            <label style="margin-bottom: 5px;">Chaves de API do Firebase</label>
+                            <textarea id="config_fb_keys" style="width:100%; height:180px; font-family: monospace; font-size: 0.8rem; background: #1e293b; color: #e2e8f0; border: 1px solid var(--divider); padding: 15px; border-radius: 8px;" placeholder="apiKey: 'SUA_API_KEY_AQUI',&#10;authDomain: 'SEU_PROJETO.firebaseapp.com',&#10;projectId: 'SEU_PROJETO',&#10;storageBucket: '...',&#10;messagingSenderId: '...',&#10;appId: '...'"></textarea>
+                            
+                            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="salvarConfigDb()">💾 Salvar Chaves e Conectar</button>
+                                <button class="btn btn-danger" style="background: #e74c3c;" onclick="subirParaNuvem()" title="Envia o histórico atual deste aparelho para o banco online, substituindo o que estiver lá">📤 Forçar Subida de Dados Locais</button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: #64748b; margin-top: 10px;"><i>Nota: Clique em "Forçar Subida" com cuidado. Isso substituirá a nuvem atual pelos dados que estão na sua tela.</i></p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </details>
+
+        <details class="accordion">
+            <summary title="Aprenda a montar o banco de dados do zero">📖 Como Criar sua Nuvem Gratuita (Tutorial)</summary>
+            <div>
+                <p style="font-size: 0.9rem; color: #475569;">Siga estes passos para configurar seu próprio banco de dados online e usar este controle no celular e no computador ao mesmo tempo, sem perder os dados.</p>
+                <ol class="tutorial-steps">
+                    <li>Acesse o site <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--primary);">Firebase Console</a> e faça login com sua conta Google.</li>
+                    <li>Clique em <b>Adicionar projeto</b> (Dê um nome como "MeuControleFinanceiro" e aceite os termos. Você pode desativar o Google Analytics).</li>
+                    <li>Dentro do projeto, no menu esquerdo, vá em <b>Criação > Firestore Database</b>.</li>
+                    <li>Clique em <b>Criar banco de dados</b> (Mantenha as configurações de localidade recomendadas e confirme).</li>
+                    <li>Com o banco criado, clique na aba <b>Regras (Rules)</b> no topo da tela do Firestore.</li>
+                    <li>Mude a palavra <code>false</code> para <code>true</code>. O código deve ficar exatamente assim: <br><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 5px;">allow read, write: if true;</code></li>
+                    <li>Clique no botão azul <b>Publicar</b>. <i>(Isso destranca o cofre para o nosso sistema)</i>.</li>
+                    <li>Agora vá no topo esquerdo do painel, clique no ícone da engrenagem (⚙️) ao lado de "Visão geral do projeto" e escolha <b>Configurações do projeto</b>.</li>
+                    <li>Role a página até o fim. Onde diz "Seus aplicativos", clique no botão redondo de código <b>&lt;/&gt; (Web)</b>.</li>
+                    <li>Dê um apelido para o app (ex: "Controle Web") e clique em Registrar. Ignore a parte de "Hospedagem" (Hosting).</li>
+                    <li>Ele vai gerar um bloco de código. Copie apenas a parte interna que começa com <code>apiKey: "..."</code> até a última linha <code>appId: "..."</code>.</li>
+                    <li>Volte para o nosso sistema, abra a aba acima (Sincronização e Acesso Online), mude para Nuvem, cole o código na caixa preta e clique em <b>Salvar Chaves</b>. Pronto!</li>
+                </ol>
+            </div>
+        </details>
+
+        <details class="accordion" open>
+            <summary title="Baixe arquivos de segurança da sua vida financeira">📦 Backups e Exportação Local</summary>
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 0.9rem; font-weight: bold; color: #475569;">Saúde da Memória Offline (Navegador):</span>
+                    <span id="txtUsoStorage" style="font-weight: bold; font-size: 0.85rem; color: var(--success);">0.00%</span>
+                </div>
+                <div style="width: 100%; background: #e2e8f0; border-radius: 6px; height: 6px; margin-bottom: 20px; overflow: hidden;">
+                    <div id="barraStorage" style="height: 100%; background: var(--success); width: 0%; transition: 0.3s;"></div>
+                </div>
+                
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: -5px; margin-bottom: 15px;">É altamente recomendado gerar um backup local (.json) regularmente por motivos de segurança.</p>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-sync" onclick="exportarBackup()" title="Gera um arquivo de recuperação do sistema completo">📥 Baixar Backup de Segurança (.json)</button>
+                    <label class="btn btn-success" style="cursor: pointer; background: #64748b;" title="Abre um arquivo de backup para substituir os dados da tela">
+                        📂 Restaurar Backup
+                        <input type="file" id="importFile" style="display:none" onchange="importarBackup(event)">
+                    </label>
+                    <button class="btn" style="background: #10b981;" onclick="exportarCSV()" title="Gera arquivo legível para o Microsoft Excel">📊 Exportar para Excel (.csv)</button>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.8rem; color: #94a3b8; letter-spacing: 0.5px; line-height: 1.8;">
+        Meu Controle Financeiro Pro • v12.1.00 <br>
+        Gostou do sistema? <span style="cursor: pointer; color: var(--primary); font-weight: bold;" title="Chave PIX: lewende.santos@gmail.com" onclick="alert('Obrigado por apoiar o desenvolvimento do Meu Controle Financeiro Pro!\n\nChave PIX: lewende.santos@gmail.com')">☕ Pague um café ao desenvolvedor</span>
+    </div>
+
+</div>
+
+<script>
+    /**
+     * @file Controle Financeiro Pro
+     * @version 12.1.00
+     * @changelog
+     * - [FEATURE] Adição de Busca Global Omnibox na aba de Lançamentos (Ignora mês e filtra por todo o histórico da conta ativa).
+     * - [FEATURE] Adição do botão (Flag) "Próx. Fatura" para adiamento de compras no cartão para a fatura seguinte, preservando a data histórica.
+     * - [UX] Conversão automática de sinal negativo para despesas cadastradas erradas no input de valor.
+     * - [UX] Novo painel de Help integrado e PIX de apoio adicionado ao rodapé do sistema.
+     * - [SYSTEM] Descontinuação do cálculo complexo de fechamento de faturas (retorno ao v-7 padrão) devido a inconsistências bancárias.
+     * - [BUGFIX] Correção na renderização de Relatórios para obedecerem estritamente as mudanças de mês do usuário.
+     * - [BUGFIX] Bloqueio de loop de auto-recriação de faturas e rendimentos através de variáveis globais e user prompt.
+     */
+
+    let contas = [];
+    let ignorarRendimentosAuto = false; 
+    let ignorarFaturasAuto = false; 
+
+    let dbConfig = JSON.parse(localStorage.getItem('financas_db_setup')) || { mode: 'local', keys: '', deviceName: 'Meu Dispositivo' };
+    
+    let db = null;
+    const FIREBASE_DOC_ID = "banco_jubal";
+    
+    let contaAtiva = null;
+    let dataOk = false; let valorOk = false; let eRecurrente = false;
+    let pulaFatura = false; 
+    let incluirParceladosRelatorio = false; 
+    let dataFiltro = new Date(); dataFiltro.setDate(1);
+    
+    let ordemDesc = true; 
+    let ultimaDataUsada = new Date().toISOString().split('T')[0];
+    let relatorioAtivo = null;
+
+    const fmt = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function formatarDataHora(isoString) {
+        if(!isoString) return "Desconhecido";
+        let d = new Date(isoString);
+        return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR');
+    }
+
+    function atualizarUIMeta(metadados) {
+        const box = document.getElementById('boxMetaNuvem');
+        const txt = document.getElementById('txtMetaInfo');
+        if(box && txt && metadados && metadados.historico && metadados.historico.length > 0) {
+            box.style.display = 'flex';
+            let h = metadados.historico;
+            let html = `Última atualização feita por <b>${h[0].dispositivo}</b> em <b>${formatarDataHora(h[0].dataHora)}</b>.`;
+            
+            if(h.length > 1) {
+                html += ` <details class="acc-interno" style="margin-top:5px;"><summary style="font-size:0.8rem; color:var(--primary);">Ver histórico anterior (${h.length-1})</summary><ul style="margin:5px 0 0 0; padding-left:20px; font-size:0.8rem; color:#475569;">`;
+                for(let i=1; i<h.length; i++) {
+                    html += `<li><b>${h[i].dispositivo}</b> - ${formatarDataHora(h[i].dataHora)}</li>`;
+                }
+                html += `</ul></details>`;
+            }
+            txt.innerHTML = `<div>${html}</div>`;
+        }
+    }
+
+    function initFirebase() {
+        if (dbConfig.mode === 'nuvem' && dbConfig.keys) {
+            try {
+                let configObj = eval("({" + dbConfig.keys + "})");
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(configObj);
+                    
+                    firebase.firestore().enablePersistence()
+                        .catch(function(err) {
+                            console.log("Aviso: Persistência offline não suportada neste modo.", err);
+                        });
+                }
+                db = firebase.firestore();
+                return true;
+            } catch (e) {
+                console.error(e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    async function carregarDados() {
+        initDbUI();
+        let dadosLocais = JSON.parse(localStorage.getItem('financas_v9')) || [];
+        let metaLocal = JSON.parse(localStorage.getItem('financas_meta')) || { historico: [] };
+        
+        atualizarUIMeta(metaLocal);
+
+        const badge = document.getElementById('badgeConexao');
+
+        if (dbConfig.mode === 'nuvem') {
+            if (initFirebase()) {
+                document.getElementById('labelMesAno').innerText = "CONECTANDO NUVEM...";
+                try {
+                    const doc = await db.collection("financas").doc(FIREBASE_DOC_ID).get();
+                    if (doc.exists && doc.data().contas && doc.data().contas.length > 0) {
+                        contas = doc.data().contas;
+                        localStorage.setItem('financas_v9', JSON.stringify(contas)); 
+                        
+                        if(doc.data().metadados) {
+                            localStorage.setItem('financas_meta', JSON.stringify(doc.data().metadados));
+                            atualizarUIMeta(doc.data().metadados);
+                        }
+
+                        if(badge) { badge.innerText = "Sincronizado (Online)"; badge.style.background = "#2ecc71"; }
+                    } else {
+                        if (dadosLocais.length > 0) {
+                            alert("Atenção: A sua nuvem está vazia. O sistema mostrará seus dados locais. Use a opção 'Forçar Subida' na aba Nuvem para enviar seu histórico ao Google.");
+                        }
+                        contas = dadosLocais;
+                        if(badge) { badge.innerText = "Nuvem Vazia (Usando Local)"; badge.style.background = "#f1c40f"; badge.style.color = "#000"; }
+                    }
+                } catch(e) {
+                    alert("Erro ao ler Nuvem. Voltando para modo Local de segurança.");
+                    contas = dadosLocais;
+                    if(badge) { badge.innerText = "Erro na Nuvem (Usando Local)"; badge.style.background = "#e74c3c"; }
+                }
+            } else {
+                contas = dadosLocais;
+                if(badge) { badge.innerText = "Chaves Inválidas (Local)"; badge.style.background = "#e74c3c"; }
+            }
+        } else {
+            contas = dadosLocais;
+            if(badge) { badge.innerText = "Modo Local (Offline)"; badge.style.background = "#64748b"; }
+        }
+        
+        iniciarApp();
+    }
+
+    function iniciarApp() {
+        if (contas.length > 0 && !contaAtiva) contaAtiva = contas[0].id;
+        const info = verificarPendencias();
+        if (info.totalGlobal > 0) alert(`Atenção: Existem ${info.totalGlobal} pendências estimadas para hoje ou datas anteriores.`);
+        limparFL();
+        salvarEAtualizar();
+    }
+
+    async function subirParaNuvem() {
+        if (!initFirebase()) return alert("Erro nas chaves do Firebase. Verifique se copiou corretamente.");
+        let dadosLocais = JSON.parse(localStorage.getItem('financas_v9')) || contas;
+        if (dadosLocais.length === 0) return alert("Seu banco local está vazio. Nada para enviar.");
+        
+        let confirmacao = confirm("CUIDADO! Isso vai apagar a nuvem e forçar a gravação dos dados que estão na sua tela neste exato momento. Tem certeza absoluta?");
+        if(!confirmacao) return;
+
+        try {
+            document.getElementById('labelMesAno').innerText = "ENVIANDO...";
+            
+            let metaLocal = JSON.parse(localStorage.getItem('financas_meta')) || { historico: [] };
+            let novoRegistro = { dataHora: new Date().toISOString(), dispositivo: document.getElementById('config_db_device').value || 'Meu Dispositivo' };
+            let historicoAtual = metaLocal.historico || [];
+            historicoAtual.unshift(novoRegistro);
+            if (historicoAtual.length > 5) historicoAtual = historicoAtual.slice(0, 5);
+
+            let metaInfo = { historico: historicoAtual };
+
+            await db.collection("financas").doc(FIREBASE_DOC_ID).set({ 
+                contas: dadosLocais,
+                metadados: metaInfo
+            });
+            
+            localStorage.setItem('financas_meta', JSON.stringify(metaInfo));
+            
+            alert("Sucesso! Dados forçados para a nuvem. O sistema agora opera de forma sincronizada online.");
+            
+            dbConfig.mode = 'nuvem';
+            dbConfig.deviceName = novoRegistro.dispositivo;
+            localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
+            location.reload();
+        } catch(e) {
+            alert("Erro ao enviar! Verifique se liberou as regras (Rules = true) no Firebase.");
+            console.error(e);
+        }
+    }
+
+    function initDbUI() {
+        if(document.getElementById('config_db_mode')) {
+            document.getElementById('config_db_mode').value = dbConfig.mode || 'local';
+            document.getElementById('config_fb_keys').value = dbConfig.keys || '';
+            document.getElementById('config_db_device').value = dbConfig.deviceName || '';
+            toggleDbMode();
+            
+            if (dbConfig.mode === 'nuvem') {
+                document.getElementById('accMotor').setAttribute('open', true);
+            }
+        }
+    }
+
+    function toggleDbMode() {
+        const mode = document.getElementById('config_db_mode').value;
+        document.getElementById('boxFirebase').style.display = mode === 'nuvem' ? 'block' : 'none';
+    }
+
+    function salvarConfigDb() {
+        dbConfig.mode = document.getElementById('config_db_mode').value;
+        dbConfig.keys = document.getElementById('config_fb_keys').value;
+        dbConfig.deviceName = document.getElementById('config_db_device').value || 'Meu Dispositivo';
+        localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
+        alert("Preferência de Banco de Dados salva no navegador!");
+        location.reload(); 
+    }
+
+    function formatarMesInteligente(data) {
+        const nomeMes = data.toLocaleDateString('pt-BR', { month: 'long' }).toUpperCase();
+        const anoFiltro = data.getFullYear();
+        const anoAtual = new Date().getFullYear();
+        
+        if (anoFiltro !== anoAtual) {
+            const anoCurto = anoFiltro.toString().slice(-2);
+            return `${nomeMes}/${anoCurto}`;
+        }
+        return nomeMes;
+    }
+
+    function toggleOrdem() {
+        ordemDesc = !ordemDesc;
+        document.getElementById('iconeOrdem').innerText = ordemDesc ? "▼" : "▲";
+        render();
+    }
+
+    function atualizarSaudeBanco() {
+        const txt = document.getElementById('txtUsoStorage');
+        const barra = document.getElementById('barraStorage');
+        if (!txt || !barra) return;
+
+        const dados = localStorage.getItem('financas_v9') || "";
+        const tamanhoBytes = new Blob([dados]).size;
+        const limiteBytes = 5 * 1024 * 1024; 
+        
+        const percentualUso = (tamanhoBytes / limiteBytes) * 100;
+        const saudeLivre = 100 - percentualUso;
+        const kbUtilizado = (tamanhoBytes / 1024).toFixed(1);
+
+        txt.innerText = `${saudeLivre.toFixed(2)}% Livre (${kbUtilizado} KB)`;
+        barra.style.width = `${saudeLivre}%`;
+
+        if (saudeLivre > 30) {
+            txt.style.color = 'var(--success)';
+            barra.style.background = 'var(--success)';
+        } else if (saudeLivre > 10) {
+            txt.style.color = 'var(--warning)';
+            barra.style.background = 'var(--warning)';
+        } else {
+            txt.style.color = 'var(--danger)';
+            barra.style.background = 'var(--danger)';
+        }
+    }
+
+    function getDataFechamentoParaFatura(contaCard, dataReferenciaStr) {
+        let dRef = new Date(dataReferenciaStr + 'T12:00:00');
+        let vDia = parseInt(contaCard.vencimento) || 10;
+        
+        // Forçando o padrão antigo (vencimento - 7) e ignorando o fechamento descontinuado
+        let fDia = vDia - 7;
+        if (fDia <= 0) fDia += 30; 
+        
+        let dFechamento = new Date(dRef.getFullYear(), dRef.getMonth(), 1);
+        
+        if (fDia >= vDia) {
+            dFechamento.setMonth(dFechamento.getMonth() - 1);
+        }
+        
+        let ultimoDiaMes = new Date(dFechamento.getFullYear(), dFechamento.getMonth() + 1, 0).getDate();
+        dFechamento.setDate(Math.min(fDia, ultimoDiaMes));
+        
+        return dFechamento.toISOString().split('T')[0];
+    }
+
+    function obterSaldoCartao(contaCardId, dataRefFatura) {
+        const contaCard = contas.find(x => x.id === contaCardId);
+        if (!contaCard) return 0;
+        
+        let dataCorte = getDataFechamentoParaFatura(contaCard, dataRefFatura);
+        
+        let saldo = 0;
+        contaCard.lancamentos.forEach(l => {
+            let dataEfetiva = l.data;
+            if (l.pulaFatura) {
+                let dObj = new Date(l.data + 'T12:00:00');
+                dObj.setMonth(dObj.getMonth() + 1);
+                dataEfetiva = dObj.toISOString().split('T')[0];
+            }
+
+            if (dataEfetiva <= dataCorte) {
+                if (l.isFaturaCartao && !l.valorOk && l.data === dataRefFatura) return;
+                saldo += (l.tipo === 'credito' ? l.valor : -l.valor);
+            }
+        });
+        return saldo;
+    }
+
+    function calcularRendimento(conta, dataRef) {
+        const dObj = new Date(dataRef + 'T12:00:00');
+        if (dObj.getDay() === 0 || dObj.getDay() === 6) return 0; 
+
+        if (!conta.remun) return 0;
+        let saldo = 0;
+        conta.lancamentos.forEach(l => {
+            if (l.data < dataRef) {
+                saldo += (l.tipo === 'credito' ? l.valor : -l.valor);
+            }
+        });
+        if (saldo <= 0) return 0;
+        
+        const selic = parseFloat(conta.selic) || 14.5;
+        const cdi = parseFloat(conta.cdi) || 120;
+        const baseDias = parseInt(conta.baseDias) || 252;
+        
+        const taxaAnual = ((selic - 0.1) / 100) * (cdi / 100);
+        const taxaDiaria = Math.pow(1 + taxaAnual, 1 / baseDias) - 1;
+        
+        return parseFloat((saldo * taxaDiaria).toFixed(2));
+    }
+
+    function verificarRendimentosDiarios() {
+        if (ignorarRendimentosAuto) return;
+        const hj = new Date().toISOString().split('T')[0];
+        let contasParaRender = [];
+
+        contas.forEach(c => {
+            if (c.remun) {
+                const temRendimentoHoje = c.lancamentos.some(l => l.desc.toLowerCase() === "rendimento diário" && l.data === hj);
+                if (!temRendimentoHoje) {
+                    const valorEstimado = calcularRendimento(c, hj);
+                    if (valorEstimado > 0) {
+                        contasParaRender.push({ conta: c, valor: valorEstimado });
+                    }
+                }
+            }
+        });
+
+        if (contasParaRender.length > 0) {
+            if (confirm(`Foram identificados rendimentos diários não lançados para hoje. Deseja registrar automaticamente?`)) {
+                contasParaRender.forEach(item => {
+                    const oM = item.conta.lancamentos.length > 0 ? Math.max(...item.conta.lancamentos.map(lx => lx.ordem || 0)) : 0;
+                    item.conta.lancamentos.push({ 
+                        id: Date.now().toString() + "_REND" + Math.floor(Math.random()*1000), 
+                        data: hj, valor: item.valor, desc: "Rendimento Diário", tipo: "credito", 
+                        dataOk: false, valorOk: false, ordem: oM + 1, eRecurrente: true, freq: "diario", pTotal: 0, pAtual: 1 
+                    });
+                });
+            } else {
+                ignorarRendimentosAuto = true;
+            }
+        }
+    }
+
+    function gerarParFatura(contaOrigem, contaCartao, baseDate, vDia) {
+        let mesStr = String(baseDate.getMonth() + 1).padStart(2, '0');
+        let anoStr = baseDate.getFullYear();
+        let dataFatura = `${anoStr}-${mesStr}-${String(vDia).padStart(2, '0')}`;
+        
+        if (contaOrigem.lancamentos.some(l => l.isFaturaCartao === contaCartao.id && l.data === dataFatura)) return;
+
+        const oM_A = contaOrigem.lancamentos.length > 0 ? Math.max(...contaOrigem.lancamentos.map(lx => lx.ordem || 0)) : 0;
+        const oM_B = contaCartao.lancamentos.length > 0 ? Math.max(...contaCartao.lancamentos.map(lx => lx.ordem || 0)) : 0;
+        const tId = Date.now().toString() + "_" + contaCartao.id.substring(0,4);
+        
+        contaOrigem.lancamentos.push({
+            id: tId + "A", data: dataFatura, valor: 0, desc: `Fatura ${contaCartao.nome}`, tipo: 'debito', 
+            dataOk: false, valorOk: false, ordem: oM_A + 1, eRecurrente: false, freq: 'mensal', pTotal: 0, pAtual: 1, isFaturaCartao: contaCartao.id
+        });
+        contaCartao.lancamentos.push({
+            id: tId + "B", data: dataFatura, valor: 0, desc: `Pagamento Recebido`, tipo: 'credito', 
+            dataOk: false, valorOk: false, ordem: oM_B + 1, eRecurrente: false, freq: 'mensal', pTotal: 0, pAtual: 1, isFaturaCartao: contaCartao.id
+        });
+    }
+
+    function verificarFaturasCartao() {
+        if (contas.length === 0 || ignorarFaturasAuto) return;
+        
+        let contaOrigem = contas.find(c => c.tipoConta !== 'cartao'); 
+        if (!contaOrigem) return;
+
+        let hoje = new Date();
+        let anoAtual = hoje.getFullYear();
+        let mesAtual = hoje.getMonth() + 1; 
+        
+        let mesesAlvo = [];
+        let anoLoop = 2026;
+        let mesLoop = 5;
+
+        let limiteAno = mesAtual === 12 ? anoAtual + 1 : anoAtual;
+        let limiteMes = mesAtual === 12 ? 1 : mesAtual + 1;
+
+        while (anoLoop < limiteAno || (anoLoop === limiteAno && mesLoop <= limiteMes)) {
+            mesesAlvo.push({ ano: anoLoop, mes: mesLoop });
+            mesLoop++;
+            if (mesLoop > 12) { mesLoop = 1; anoLoop++; }
+        }
+
+        let faturasParaGerar = [];
+
+        contas.forEach(c => {
+            if (c.tipoConta === 'cartao') {
+                const vDia = c.vencimento || 10;
+                
+                mesesAlvo.forEach(alvo => {
+                    let mesStr = String(alvo.mes).padStart(2, '0');
+                    let prefixoAnoMes = `${alvo.ano}-${mesStr}`;
+                    
+                    let faturaJaExiste = contaOrigem.lancamentos.some(l => 
+                        l.isFaturaCartao === c.id && l.data.startsWith(prefixoAnoMes)
+                    );
+                    
+                    if (!faturaJaExiste) {
+                        let dataFaturaStr = `${prefixoAnoMes}-${String(vDia).padStart(2, '0')}`;
+                        let dBase = new Date(dataFaturaStr + 'T12:00:00');
+                        faturasParaGerar.push({ contaCard: c, dataBase: dBase, diaVenc: vDia });
+                    }
+                });
+            }
+        });
+
+        if (faturasParaGerar.length > 0) {
+            let msg = `O sistema detectou ${faturasParaGerar.length} faturas de cartão pendentes de lançamento. Deseja gerá-las agora?`;
+            if (confirm(msg)) {
+                faturasParaGerar.forEach(f => {
+                    gerarParFatura(contaOrigem, f.contaCard, f.dataBase, f.diaVenc);
+                });
+            } else {
+                ignorarFaturasAuto = true; 
+            }
+        }
+    }
+
+    async function salvarEAtualizar() { 
+        verificarRendimentosDiarios();
+        verificarFaturasCartao();
+        
+        if (dbConfig.mode === 'nuvem' && db !== null) {
+            try {
+                let metaLocal = JSON.parse(localStorage.getItem('financas_meta')) || { historico: [] };
+                let novoRegistro = { dataHora: new Date().toISOString(), dispositivo: dbConfig.deviceName || 'Meu Dispositivo' };
+                let historicoAtual = metaLocal.historico || [];
+                historicoAtual.unshift(novoRegistro);
+                if (historicoAtual.length > 5) historicoAtual = historicoAtual.slice(0, 5);
+
+                let metaInfo = { historico: historicoAtual };
+                
+                await db.collection("financas").doc(FIREBASE_DOC_ID).set({ 
+                    contas: contas,
+                    metadados: metaInfo
+                });
+                
+                localStorage.setItem('financas_v9', JSON.stringify(contas)); 
+                localStorage.setItem('financas_meta', JSON.stringify(metaInfo)); 
+                atualizarUIMeta(metaInfo);
+            } catch(e) {
+                console.error("Modo offline preventivo: Salvo localmente.", e);
+                localStorage.setItem('financas_v9', JSON.stringify(contas));
+            }
+        } else {
+            localStorage.setItem('financas_v9', JSON.stringify(contas)); 
+        }
+        
+        render(); 
+    }
+
+    function calcularValor() {
+        let campo = document.getElementById('f_valor');
+        let val = campo.value.replace(/\s/g, '');
+        if (!val || /^\d+$/.test(val) || /^\d+,\d{1,2}$/.test(val)) return;
+
+        let exp = val.replace(/\./g, '').replace(/,/g, '.');
+        exp = exp.replace(/[^\d\.\+\-\*\/\(\)]/g, '');
+
+        try {
+            if (exp) {
+                let res = Function('"use strict";return (' + exp + ')')();
+                if (isFinite(res)) {
+                    campo.value = parseFloat(res).toFixed(2).replace('.', ',');
+                }
+            }
+        } catch(e) {}
+    }
+
+    function moverConta(id, dir) {
+        const idx = contas.findIndex(x => x.id === id);
+        const aIdx = dir === 'sobe' ? idx - 1 : idx + 1;
+        if (aIdx >= 0 && aIdx < contas.length) {
+            const temp = contas[idx];
+            contas[idx] = contas[aIdx];
+            contas[aIdx] = temp;
+            salvarEAtualizar();
+        }
+    }
+
+    function toggleParceladosRelatorio() {
+        incluirParceladosRelatorio = !incluirParceladosRelatorio;
+        const btn = document.getElementById('btnToggleParcelados');
+        btn.innerText = incluirParceladosRelatorio ? "🔄 Omitir Parcelados" : "🔄 Incluir Parcelados";
+        btn.classList.toggle('active', incluirParceladosRelatorio);
+        gerarDadosRelatorio();
+    }
+
+    function exportarBackup() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(contas));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `financeiro_backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    function importarBackup(event) {
+        const file = event.target.files[0];
+        if (!file || !confirm("Isso substituirá TODOS os dados atuais. Prosseguir?")) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (Array.isArray(importedData)) {
+                    contas = importedData;
+                    salvarEAtualizar();
+                    location.reload();
+                }
+            } catch (err) { alert("Erro ao ler o arquivo."); }
+        };
+        reader.readAsText(file);
+    }
+
+    function exportarCSV() {
+        if (contas.length === 0) return alert("Nenhuma conta registrada.");
+        let csv = "data:text/csv;charset=utf-8,Conta;Data;Descricao;Tipo;Valor;Status_Data;Status_Valor\n";
+        contas.forEach(c => c.lancamentos.forEach(l => {
+            csv += `${c.nome};${l.data.split('-').reverse().join('/')};"${l.desc}";${l.tipo};${l.valor.toString().replace('.',',')};${l.dataOk?'CONF':'EST'};${l.valorOk?'CONF':'EST'}\n`;
+        }));
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csv));
+        link.setAttribute("download", "financas.csv");
+        link.click();
+    }
+
+    function confirmarRapidoL(id) {
+        let c = contas.find(x => x.id === contaAtiva);
+        let l = c.lancamentos.find(x => x.id === id);
+        if (!l) return;
+
+        const confirmandoAgora = (!l.dataOk || !l.valorOk);
+        l.dataOk = true;
+        l.valorOk = true;
+
+        if (l.isFaturaCartao) {
+            let siblingC = contas.find(cx => cx.id !== c.id && cx.lancamentos.some(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1))); 
+            if (siblingC) {
+                let siblingL = siblingC.lancamentos.find(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1));
+                if (siblingL) {
+                    siblingL.dataOk = true;
+                    siblingL.valorOk = true;
+                    siblingL.valor = l.valor; 
+                    siblingL.data = l.data;
+                }
+            }
+        }
+
+        let rec = l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false);
+        if (confirmandoAgora && rec && !l.isFaturaCartao) {
+            processarProximo(c, l);
+        }
+
+        salvarEAtualizar();
+    }
+
+    function salvarL() {
+        calcularValor();
+        
+        const d = document.getElementById('f_data').value;
+        let vRaw = document.getElementById('f_valor').value;
+        let vParsed = vRaw.replace(/\./g, '').replace(/,/g, '.');
+        let v = parseFloat(vParsed);
+
+        if(isNaN(v)) { alert("Por favor, informe um valor numérico válido."); return; }
+        
+        let descBase = document.getElementById('f_desc').value;
+        let tipo = document.getElementById('f_tipo').value;
+        const idEdit = document.getElementById('id_editando_l').value;
+        const freq = document.getElementById('f_freq').value;
+        const pTotal = parseInt(document.getElementById('f_parc_total').value) || 0;
+        const pAtual = parseInt(document.getElementById('f_parc_atual').value) || 0;
+
+        // INVERSÃO AUTOMÁTICA DE SINAL
+        if (v < 0) {
+            v = Math.abs(v);
+            if (tipo === 'debito') {
+                tipo = 'credito';
+            } else if (tipo === 'credito') {
+                tipo = 'debito';
+            }
+        }
+
+        if(!d || !descBase) return;
+        let c = contas.find(x => x.id === contaAtiva);
+        
+        if(idEdit) {
+            if (!dataOk || !valorOk) {
+                if (confirm("Deseja marcar este lançamento editado como CONFIRMADO? \n\nPressione [ENTER] para Confirmar ou [ESC] para mantê-lo Estimado.")) {
+                    dataOk = true;
+                    valorOk = true;
+                }
+            }
+        }
+
+        if (tipo === 'transferencia') {
+            const idD = document.getElementById('f_destino').value;
+            if(!idD) return alert("Selecione destino.");
+            const tId = Date.now().toString();
+            execTransf(c, d, v, descBase, contas.find(x => x.id === idD), tId);
+        } else {
+            let descFinal = descBase.replace(/ \(Parc\. \d+\/\d+\)$/, "");
+            const cartaoId = tipo === 'cartao' ? document.getElementById('f_cartao_vinculado').value : null;
+
+            if(idEdit) {
+                let l = c.lancamentos.find(x => x.id === idEdit);
+                const confirmandoAgora = (!l.dataOk || !l.valorOk) && (dataOk && valorOk);
+                Object.assign(l, { data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, cartaoId, pulaFatura });
+                
+                if (l.isFaturaCartao) {
+                    let siblingC = contas.find(cx => cx.id !== c.id && cx.lancamentos.some(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1))); 
+                    if (siblingC) {
+                        let siblingL = siblingC.lancamentos.find(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1));
+                        if (siblingL) {
+                            siblingL.dataOk = dataOk;
+                            siblingL.valorOk = valorOk;
+                            siblingL.valor = v;
+                            siblingL.data = d;
+                        }
+                    }
+                }
+
+                if (confirmandoAgora && eRecurrente && !l.isFaturaCartao) processarProximo(c, l);
+            } else {
+                const oM = c.lancamentos.length > 0 ? Math.max(...c.lancamentos.map(l => l.ordem || 0)) : 0;
+                const novoL = { id: Date.now().toString(), data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, ordem: oM + 1, eRecurrente, freq, pTotal, pAtual, cartaoId, pulaFatura };
+                c.lancamentos.push(novoL);
+                if (dataOk && valorOk && eRecurrente && !novoL.isFaturaCartao) processarProximo(c, novoL);
+            }
+        }
+        
+        ultimaDataUsada = d; 
+        salvarEAtualizar();
+        limparFL();
+    }
+
+    function execTransf(cO, d, v, desc, cD, tI) {
+        const oO = (cO.lancamentos.length > 0 ? Math.max(...cO.lancamentos.map(l => l.ordem || 0)) : 0) + 1;
+        const oD = (cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(l => l.ordem || 0)) : 0) + 1;
+        cO.lancamentos.push({ id: tI+"A", data: d, valor: v, desc: desc + ` (-> ${cD.nome})`, tipo: 'debito', dataOk: true, valorOk: true, ordem: oO });
+        cD.lancamentos.push({ id: tI+"B", data: d, valor: v, desc: desc + ` (<- ${cO.nome})`, tipo: 'credito', dataOk: true, valorOk: true, ordem: oD });
+    }
+
+    function togglePulaFatura() {
+        pulaFatura = !pulaFatura;
+        const btn = document.getElementById('tPula');
+        if (pulaFatura) {
+            btn.classList.add('active');
+            btn.innerText = "⏭️ Adiado (+1 Mês)";
+            btn.style.background = "#dcfce7";
+            btn.style.borderColor = "#86efac";
+        } else {
+            btn.classList.remove('active');
+            btn.innerText = "⏭️ Próx. Fatura";
+            btn.style.background = "#f1f5f9";
+            btn.style.borderColor = "#cbd5e1";
+        }
+    }
+
+    function checkTransf() {
+        const t = document.getElementById('f_tipo').value;
+        const gDestino = document.getElementById('groupDestino');
+        const sDestino = document.getElementById('f_destino');
+        const gCartao = document.getElementById('groupCartao');
+        const sCartao = document.getElementById('f_cartao_vinculado');
+        const gPula = document.getElementById('groupPulaFatura');
+
+        gDestino.style.display = 'none';
+        gCartao.style.display = 'none';
+
+        let c = contas.find(x => x.id === contaAtiva);
+        let ehCartao = (c && c.tipoConta === 'cartao') || (t === 'cartao');
+        if (gPula) gPula.style.display = ehCartao ? 'flex' : 'none';
+
+        if (t === 'transferencia') {
+            gDestino.style.display = 'flex'; sDestino.innerHTML = '<option value="">Selecione...</option>';
+            contas.filter(c => c.id !== contaAtiva && c.tipoConta !== 'cartao').forEach(c => { sDestino.innerHTML += `<option value="${c.id}">${c.nome}</option>`; });
+        } else if (t === 'cartao') {
+            gCartao.style.display = 'flex'; sCartao.innerHTML = '<option value="">Selecione...</option>';
+            contas.filter(c => c.tipoConta === 'cartao').forEach(c => { sCartao.innerHTML += `<option value="${c.id}">${c.nome}</option>`; });
+        }
+    }
+
+    function processarProximo(conta, l) {
+        if (l.pTotal > 0 && l.pAtual >= l.pTotal) return;
+        let dA = new Date(l.data + 'T12:00:00');
+        
+        if (l.freq === 'anual') dA.setFullYear(dA.getFullYear() + 1);
+        else if (l.freq === 'diario') dA.setDate(dA.getDate() + 1);
+        else dA.setMonth(dA.getMonth() + 1);
+        
+        const nD = dA.toISOString().split('T')[0];
+        const proxP = l.pTotal > 0 ? l.pAtual + 1 : 0;
+        
+        let nValor = l.valor;
+        if (l.freq === 'diario' && l.desc.toLowerCase() === "rendimento diário") {
+            nValor = calcularRendimento(conta, nD);
+        }
+        
+        if (!conta.lancamentos.find(x => x.data === nD && x.desc === l.desc && x.pAtual === proxP)) {
+            const oM = Math.max(...conta.lancamentos.map(lx => lx.ordem || 0));
+            conta.lancamentos.push({ 
+                id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), 
+                data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, 
+                ordem: oM + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, 
+                cartaoId: l.cartaoId 
+            });
+        }
+    }
+
+    function toggleStatus(tipo) {
+        if(tipo === 'Data') {
+            dataOk = !dataOk;
+            document.getElementById('tData').innerHTML = dataOk ? '<span class="ico-lock">🔒</span> Conf.' : '<span class="ico-lock">🔓</span> Est.';
+            document.getElementById('tData').classList.toggle('active', dataOk);
+            document.getElementById('f_data').classList.toggle('incerto', !dataOk);
+        } else if(tipo === 'Valor') {
+            valorOk = !valorOk;
+            document.getElementById('tValor').innerHTML = valorOk ? '<span class="ico-lock">🔒</span> Conf.' : '<span class="ico-lock">🔓</span> Est.';
+            document.getElementById('tValor').classList.toggle('active', valorOk);
+            document.getElementById('f_valor').classList.toggle('incerto', !valorOk);
+        } else if(tipo === 'Mensal') {
+            eRecurrente = !eRecurrente;
+            document.getElementById('tMensal').innerText = eRecurrente ? "🔄 Recorrente" : "🔄 Único";
+            document.getElementById('tMensal').classList.toggle('active', eRecurrente);
+            document.querySelectorAll('.group-recurr').forEach(el => el.style.display = eRecurrente ? 'flex' : 'none');
+        }
+    }
+
+    function abrirSubRelatorio(tipo) {
+        relatorioAtivo = tipo;
+        document.getElementById('painelRelResumo').style.display = tipo === 'resumo' ? 'block' : 'none';
+        document.getElementById('painelRelRecorrente').style.display = tipo === 'recorrente' ? 'block' : 'none';
+        document.getElementById('painelRelRendimentos').style.display = tipo === 'rendimentos' ? 'block' : 'none';
+        document.getElementById('painelRelAuditoria').style.display = tipo === 'auditoria' ? 'block' : 'none';
+        
+        document.getElementById('btnAbaResumo').classList.toggle('active', tipo === 'resumo');
+        document.getElementById('btnAbaRecorrente').classList.toggle('active', tipo === 'recorrente');
+        document.getElementById('btnAbaRendimentos').classList.toggle('active', tipo === 'rendimentos');
+        document.getElementById('btnAbaAuditoria').classList.toggle('active', tipo === 'auditoria');
+        
+        gerarDadosRelatorio();
+    }
+
+    function gerarDadosRelatorio() {
+        if (!relatorioAtivo) {
+            document.getElementById('painelRelResumo').style.display = 'none';
+            document.getElementById('painelRelRecorrente').style.display = 'none';
+            document.getElementById('painelRelRendimentos').style.display = 'none';
+            document.getElementById('painelRelAuditoria').style.display = 'none';
+            return;
+        }
+
+        if (relatorioAtivo === 'resumo') {
+            document.getElementById('labelMesAnoResumo').innerText = formatarMesInteligente(dataFiltro);
+            
+            let y = dataFiltro.getFullYear();
+            let m = String(dataFiltro.getMonth() + 1).padStart(2, '0');
+            let dStr = String(new Date(y, dataFiltro.getMonth() + 1, 0).getDate()).padStart(2, '0');
+            let dataFimMes = `${y}-${m}-${dStr}`;
+
+            let contasNormais = [];
+            let contasCartoes = [];
+            let subtotalDisponivel = 0;
+            let subtotalFaturas = 0;
+
+            contas.forEach(c => {
+                let saldo = 0;
+                c.lancamentos.forEach(l => {
+                    if (l.data <= dataFimMes) {
+                        if (c.tipoConta === 'cartao' && l.isFaturaCartao && !l.valorOk && l.data === dataFimMes) return; 
+                        saldo += (l.tipo === 'credito' ? l.valor : -l.valor);
+                    }
+                });
+
+                if (c.tipoConta === 'cartao') {
+                    contasCartoes.push({ nome: c.nome, saldo: saldo });
+                    subtotalFaturas += saldo;
+                } else {
+                    contasNormais.push({ nome: c.nome, saldo: saldo });
+                    subtotalDisponivel += saldo;
+                }
+            });
+
+            let tbodyResumo = document.getElementById('corpoTabelaResumo');
+            tbodyResumo.innerHTML = "";
+            
+            tbodyResumo.innerHTML += `<tr><td colspan="2" style="background:#f8fafc; font-weight:bold; color:var(--success);">🟢 Minhas Contas</td></tr>`;
+            contasNormais.forEach(c => {
+                tbodyResumo.innerHTML += `<tr><td>${c.nome}</td><td class="val-col" style="color:${c.saldo >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(c.saldo)}</td></tr>`;
+            });
+            tbodyResumo.innerHTML += `<tr><td style="text-align:right; font-size:0.85rem;">Subtotal Disponível:</td><td class="val-col" style="font-weight:bold; color:${subtotalDisponivel >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(subtotalDisponivel)}</td></tr>`;
+
+            if (contasCartoes.length > 0) {
+                tbodyResumo.innerHTML += `<tr><td colspan="2" style="background:#f8fafc; font-weight:bold; color:var(--danger);">🟡 Meus Cartões (Faturas)</td></tr>`;
+                contasCartoes.forEach(c => {
+                    tbodyResumo.innerHTML += `<tr><td>${c.nome}</td><td class="val-col" style="color:var(--danger)">${fmt(c.saldo)}</td></tr>`;
+                });
+                tbodyResumo.innerHTML += `<tr><td style="text-align:right; font-size:0.85rem;">Subtotal Faturas:</td><td class="val-col" style="font-weight:bold; color:var(--danger)">${fmt(subtotalFaturas)}</td></tr>`;
+            }
+
+            let saldoLiquido = subtotalDisponivel + subtotalFaturas; 
+            document.getElementById('totalResumoLiquido').innerText = fmt(saldoLiquido);
+            document.getElementById('totalResumoLiquido').style.color = saldoLiquido >= 0 ? 'var(--success)' : 'var(--danger)';
+
+        } else if (relatorioAtivo === 'recorrente') {
+            document.getElementById('labelMesAnoRelatorio').innerText = formatarMesInteligente(dataFiltro);
+            
+            document.getElementById('descRelatorio').innerText = incluirParceladosRelatorio 
+                ? "Exibindo lançamentos fixos e parcelamentos do mês selecionado na aba principal." 
+                : "Exibindo apenas lançamentos fixos (diários/mensais/anuais) do mês selecionado. Exclui parcelamentos e pagamentos de fatura.";
+                
+            document.getElementById('labelTotalRelatorio').innerText = incluirParceladosRelatorio
+                ? "Total de Despesas (Recorrentes + Parceladas):"
+                : "Total de Despesas Recorrentes:";
+
+            const bodyTabela = document.getElementById('corpoTabelaRelatorio');
+            bodyTabela.innerHTML = "";
+            
+            let totalDespesas = 0;
+            let lancamentosFiltrados = [];
+
+            contas.forEach(c => {
+                c.lancamentos.forEach(l => {
+                    const dL = new Date(l.data + 'T12:00:00');
+                    if (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()) {
+                        if (l.tipo === 'debito' && !l.isFaturaCartao) {
+                            const ehRecorrenteFixo = (l.eRecurrente || l.eMensal) && (!l.pTotal || l.pTotal === 0);
+                            const ehParcelado = l.pTotal > 0;
+                            
+                            if (ehRecorrenteFixo || (incluirParceladosRelatorio && ehParcelado)) {
+                                lancamentosFiltrados.push({ ...l, nomeConta: c.nome });
+                            }
+                        }
+                    }
+                });
+            });
+
+            lancamentosFiltrados.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+            if (lancamentosFiltrados.length === 0) {
+                bodyTabela.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 20px; color: #64748b;">Nenhuma despesa recorrente registrada para este mês.</td></tr>`;
+            } else {
+                lancamentosFiltrados.forEach(l => {
+                    totalDespesas += l.valor;
+                    
+                    let tagsHtml = "";
+                    if (l.pTotal > 0) {
+                        tagsHtml += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`;
+                    } else if (l.eRecurrente || l.eMensal) {
+                        let badgeClass = l.freq === 'anual' ? 'badge-anual' : (l.freq === 'diario' ? 'badge-diario' : 'badge-mensal');
+                        tagsHtml += `<span class="badge ${badgeClass}">${(l.freq||'').toUpperCase()}</span>`;
+                    }
+
+                    const dParts = l.data.split('-');
+                    const dataFormatada = `${dParts[2]}/${dParts[1]}/${dParts[0].slice(2)}`;
+
+                    bodyTabela.innerHTML += `
+                        <tr>
+                            <td>${dataFormatada}</td>
+                            <td>${l.desc} ${tagsHtml} <span style="font-size: 0.75rem; color: #94a3b8; margin-left: 8px;">(${l.nomeConta})</span></td>
+                            <td class="val-col" style="color: var(--danger);">${fmt(l.valor)}</td>
+                        </tr>`;
+                });
+            }
+            document.getElementById('totalRelatorio').innerText = fmt(totalDespesas);
+
+        } else if (relatorioAtivo === 'rendimentos') {
+            document.getElementById('labelMesAnoRendimentos').innerText = formatarMesInteligente(dataFiltro);
+            let tbodyRend = document.getElementById('corpoTabelaRendimentos');
+            tbodyRend.innerHTML = "";
+            
+            let totalGeralRendimentos = 0;
+            let temRendimento = false;
+
+            contas.forEach(c => {
+                let somaConta = 0;
+                c.lancamentos.forEach(l => {
+                    const dL = new Date(l.data + 'T12:00:00');
+                    if (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()) {
+                        if (l.desc.toLowerCase() === "rendimento diário" && l.tipo === 'credito') {
+                            somaConta += l.valor;
+                        }
+                    }
+                });
+                
+                if (somaConta > 0) {
+                    temRendimento = true;
+                    totalGeralRendimentos += somaConta;
+                    tbodyRend.innerHTML += `
+                        <tr>
+                            <td>${c.nome}</td>
+                            <td class="val-col" style="color: var(--success);">${fmt(somaConta)}</td>
+                        </tr>`;
+                }
+            });
+
+            if (!temRendimento) {
+                tbodyRend.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 20px; color: #64748b;">Nenhum rendimento registrado para este mês.</td></tr>`;
+            }
+            
+            document.getElementById('totalRendimentos').innerText = fmt(totalGeralRendimentos);
+            
+        } else if (relatorioAtivo === 'auditoria') {
+            document.getElementById('labelMesAnoAuditoria').innerText = formatarMesInteligente(dataFiltro);
+            let tbodyAuditoria = document.getElementById('corpoTabelaAuditoria');
+            tbodyAuditoria.innerHTML = "";
+            
+            let temDados = false;
+
+            contas.forEach(c => {
+                if (!c.remun) return;
+
+                let chronoList = [...c.lancamentos].sort((a, b) => new Date(a.data) - new Date(b.data));
+
+                const getSaldoBase = (dataAlvo) => {
+                    let s = 0;
+                    for (let l of chronoList) {
+                        if (l.data < dataAlvo) {
+                            let val = l.valor;
+                            if ((l.tipo === 'cartao' && l.cartaoId && !l.valorOk) || (l.isFaturaCartao && !l.valorOk)) {
+                                val = Math.abs(obterSaldoCartao(l.cartaoId || l.isFaturaCartao, l.data));
+                            }
+                            s += (l.tipo === 'credito' ? val : -val);
+                        } else {
+                            break;
+                        }
+                    }
+                    return s;
+                };
+
+                const selic = parseFloat(c.selic) || 14.5;
+                const cdi = parseFloat(c.cdi) || 120;
+                const baseDias = parseInt(c.baseDias) || 252;
+                
+                const taxaAnual = ((selic - 0.1) / 100) * (cdi / 100);
+                const taxaDiaria = Math.pow(1 + taxaAnual, 1 / baseDias) - 1;
+                
+                const taxaAnual100 = ((selic - 0.1) / 100);
+                const taxaDiaria100 = Math.pow(1 + taxaAnual100, 1 / baseDias) - 1;
+
+                let rendimentosDoMes = chronoList.filter(l => {
+                    const dL = new Date(l.data + 'T12:00:00');
+                    return dL.getMonth() === dataFiltro.getMonth() &&
+                           dL.getFullYear() === dataFiltro.getFullYear() &&
+                           l.desc.toLowerCase() === "rendimento diário" &&
+                           l.tipo === 'credito';
+                });
+
+                if (rendimentosDoMes.length > 0) {
+                    temDados = true;
+                    tbodyAuditoria.innerHTML += `<tr><td colspan="6" style="background:#f8fafc; font-weight:bold; color:var(--primary);">🏦 ${c.nome} (CDI Configurado: ${cdi}%)</td></tr>`;
+
+                    rendimentosDoMes.forEach(r => {
+                        let dObj = new Date(r.data + 'T12:00:00');
+                        if (dObj.getDay() === 0 || dObj.getDay() === 6) return; 
+
+                        let saldoBase = getSaldoBase(r.data);
+                        let rendReal = r.valor;
+                        let rendEsperado = parseFloat((saldoBase * taxaDiaria).toFixed(2));
+                        let dif = rendReal - rendEsperado;
+                        
+                        let cdiEfetivo = 0;
+                        if (saldoBase > 0 && taxaDiaria100 > 0) {
+                            let taxaDiariaReal = rendReal / saldoBase;
+                            cdiEfetivo = (taxaDiariaReal / taxaDiaria100) * 100;
+                        }
+
+                        const dParts = r.data.split('-');
+                        const dataFmt = `${dParts[2]}/${dParts[1]}/${dParts[0].slice(2)}`;
+
+                        let corDif = dif < -0.05 ? 'var(--danger)' : (dif > 0.05 ? 'var(--success)' : '#64748b');
+
+                        tbodyAuditoria.innerHTML += `
+                            <tr>
+                                <td>${dataFmt}</td>
+                                <td class="val-col">${fmt(saldoBase)}</td>
+                                <td class="val-col" style="color:var(--success)">${fmt(rendReal)}</td>
+                                <td class="val-col" style="color:#64748b">${fmt(rendEsperado)}</td>
+                                <td class="val-col" style="font-size:0.85rem; color:#94a3b8;">${cdiEfetivo.toFixed(2)}%</td>
+                                <td class="val-col" style="color:${corDif}; font-weight:${Math.abs(dif)>0.05?'bold':'normal'};">${dif > 0 ? '+' : ''}${fmt(dif)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+
+            if (!temDados) {
+                tbodyAuditoria.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #64748b;">Nenhum rendimento auditável neste mês.</td></tr>`;
+            }
+        }
+    }
+
+    // ==========================================
+    // DRAG AND DROP - REORDENAÇÃO MANUAL
+    // ==========================================
+    let dragIdL = null;
+    let dragDataRef = null;
+
+    function iniciarDrag(ev, id, dataStr) {
+        dragIdL = id;
+        dragDataRef = dataStr;
+        ev.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => ev.target.classList.add('linha-arrastando'), 0);
+    }
+
+    function permitirDrop(ev) {
+        ev.preventDefault(); 
+    }
+
+    function entrarDrag(ev) {
+        ev.preventDefault();
+        let tr = ev.target.closest('tr');
+        if(tr && !tr.classList.contains('linha-arrastando')) {
+            tr.classList.add('linha-alvo-drop');
+        }
+    }
+
+    function sairDrag(ev) {
+        let tr = ev.target.closest('tr');
+        if(tr) {
+            tr.classList.remove('linha-alvo-drop');
+        }
+    }
+
+    function finalizarDrag(ev) {
+        ev.target.classList.remove('linha-arrastando');
+        document.querySelectorAll('.linha-alvo-drop').forEach(el => el.classList.remove('linha-alvo-drop'));
+    }
+
+    function soltarDrop(ev, dropId, dropDataRef) {
+        ev.preventDefault();
+        finalizarDrag(ev);
+
+        if (!dragIdL || dragIdL === dropId) return;
+
+        if (dragDataRef !== dropDataRef) {
+            alert("A reordenação manual só é permitida entre lançamentos do mesmo dia.");
+            return;
+        }
+
+        let c = contas.find(x => x.id === contaAtiva);
+
+        let lancamentosDoDia = c.lancamentos.filter(x => x.data === dragDataRef).sort((a,b) => (a.ordem || 0) - (b.ordem || 0));
+
+        const idxOrigem = lancamentosDoDia.findIndex(x => x.id === dragIdL);
+        const idxDestino = lancamentosDoDia.findIndex(x => x.id === dropId);
+
+        if (idxOrigem !== -1 && idxDestino !== -1) {
+            let ordensAtuais = lancamentosDoDia.map(l => l.ordem || 0).sort((a,b) => a - b);
+
+            const itemArrastado = lancamentosDoDia.splice(idxOrigem, 1)[0];
+            lancamentosDoDia.splice(idxDestino, 0, itemArrastado);
+
+            lancamentosDoDia.forEach((lDia, index) => {
+                lDia.ordem = ordensAtuais[index];
+            });
+
+            salvarEAtualizar();
+        }
+    }
+
+    function render() {
+        document.getElementById('labelMesAno').innerText = formatarMesInteligente(dataFiltro);
+        
+        const painelPrincipal = document.getElementById('painelPrincipalLancamentos');
+        const estadoVazio = document.getElementById('estadoVazio');
+        
+        if (contas.length === 0) {
+            painelPrincipal.style.display = 'none';
+            estadoVazio.style.display = 'block';
+            
+            const lc = document.getElementById('listaConfigContas'); 
+            if(lc) lc.innerHTML = "";
+            
+            gerarDadosRelatorio();
+            atualizarSaudeBanco();
+            return; 
+        } else {
+            painelPrincipal.style.display = 'block';
+            estadoVazio.style.display = 'none';
+        }
+
+        const pend = verificarPendencias();
+        
+        const cp = document.getElementById('containerPills'); cp.innerHTML = "";
+        contas.forEach(c => {
+            const p = document.createElement('div');
+            p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
+            
+            p.innerText = c.nome;
+            if (c.tipoConta === 'cartao') {
+                p.innerText += ' 💳';
+            } else if (c.remun) {
+                const spn = document.createElement('span');
+                spn.className = 'badge badge-mensal';
+                spn.innerText = '📈 REMUN';
+                p.appendChild(spn);
+            }
+            
+            p.onclick = () => { contaAtiva = c.id; render(); };
+            cp.appendChild(p);
+        });
+
+        if(contaAtiva) {
+            document.getElementById('painelOperacional').style.display = 'block';
+
+            let c = contas.find(x => x.id === contaAtiva);
+            if (c) {
+                document.getElementById('tituloConta').innerText = c.nome;
+                checkTransf();
+                
+                if (c.tipoConta === 'cartao') {
+                    let yF = dataFiltro.getFullYear();
+                    let mF = String(dataFiltro.getMonth() + 1).padStart(2, '0');
+                    let dF = String(c.vencimento || 10).padStart(2, '0');
+                    let dataFaturaAtual = `${yF}-${mF}-${dF}`;
+                    
+                    let dataCorteAtual = getDataFechamentoParaFatura(c, dataFaturaAtual);
+
+                    let parcial = 0;
+                    c.lancamentos.forEach(lx => {
+                        let dataEfetiva = lx.data;
+                        if (lx.pulaFatura) {
+                            let dObj = new Date(lx.data + 'T12:00:00');
+                            dObj.setMonth(dObj.getMonth() + 1);
+                            dataEfetiva = dObj.toISOString().split('T')[0];
+                        }
+
+                        if (dataEfetiva <= dataCorteAtual) {
+                            if (!lx.valorOk) return; 
+                            if (lx.isFaturaCartao && lx.data === dataFaturaAtual) return; 
+                            parcial += (lx.tipo === 'credito' ? lx.valor : -lx.valor);
+                        }
+                    });
+                    document.getElementById('boxFaturaParcial').style.display = 'block';
+                    document.getElementById('valFaturaParcial').innerText = fmt(Math.abs(parcial));
+                } else {
+                    document.getElementById('boxFaturaParcial').style.display = 'none';
+                }
+
+                const body = document.getElementById('corpoTabela'); body.innerHTML = "";
+                const hj = new Date(); hj.setHours(0,0,0,0);
+                
+                const ord = [...c.lancamentos].sort((a, b) => {
+                    let dataA = new Date(a.data).getTime();
+                    let dataB = new Date(b.data).getTime();
+                    
+                    if (dataA !== dataB) {
+                        return ordemDesc ? dataB - dataA : dataA - dataB;
+                    } else {
+                        return ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0);
+                    }
+                });
+                
+                let sld = 0; const ftr = [];
+                
+                const chronoList = [...c.lancamentos].sort((a, b) => {
+                    let dA = new Date(a.data).getTime();
+                    let dB = new Date(b.data).getTime();
+                    if (dA !== dB) return dA - dB;
+                    return (a.ordem || 0) - (b.ordem || 0);
+                });
+
+                let saldoTemp = 0;
+                let mapSaldos = {};
+                let saldoInicialMes = 0; 
+                
+                let yFilter = dataFiltro.getFullYear();
+                let mFilterStr = String(dataFiltro.getMonth() + 1).padStart(2, '0');
+                let primeiroDiaMes = `${yFilter}-${mFilterStr}-01`;
+
+                chronoList.forEach(l => {
+                    if (l.isFaturaCartao && !l.valorOk) {
+                        l.valor = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
+                    }
+                    
+                    if (l.data < primeiroDiaMes) {
+                        saldoInicialMes += (l.tipo === 'credito' ? l.valor : -l.valor);
+                    }
+
+                    saldoTemp += (l.tipo === 'credito' ? l.valor : -l.valor);
+                    mapSaldos[l.id] = saldoTemp;
+                });
+
+                let termoBusca = "";
+                let campoBusca = document.getElementById('inputBusca');
+                if (campoBusca) termoBusca = campoBusca.value.toLowerCase().trim();
+
+                const rodape = document.getElementById('rodapeTabela');
+                const celulaSI = document.getElementById('celulaSaldoInicial');
+                if(rodape && celulaSI) {
+                    rodape.style.display = termoBusca !== "" ? 'none' : 'table-footer-group';
+                    celulaSI.innerText = fmt(saldoInicialMes);
+                    celulaSI.style.color = saldoInicialMes < 0 ? 'var(--danger)' : 'var(--text)';
+                }
+
+                ord.forEach(l => {
+                    const dL = new Date(l.data + 'T12:00:00');
+                    if (termoBusca !== "") {
+                        if (l.desc.toLowerCase().includes(termoBusca) || l.valor.toString().includes(termoBusca)) {
+                            ftr.push({ ...l, s: mapSaldos[l.id] });
+                        }
+                    } else {
+                        if (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()) {
+                            ftr.push({ ...l, s: mapSaldos[l.id] });
+                        }
+                    }
+                });
+                
+                let dadosRender = [...ftr]; 
+
+                dadosRender.forEach((l, idx) => {
+                    const dL = new Date(l.data + 'T00:00:00');
+                    let cls = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : "");
+                    if (l.s < 0) cls += " linha-negativa";
+                    if (dadosRender[idx + 1] && dadosRender[idx + 1].data !== l.data) cls += " separador-dia";
+                    
+                    let tagsHtml = "";
+                    if (l.pulaFatura) {
+                        tagsHtml += `<span class="badge" style="background:#fef08a; color:#854d0e;">⏭️ ADIADO</span>`;
+                    }
+                    if (l.isFaturaCartao) {
+                        tagsHtml += `<span class="badge badge-anual">💳 FATURA</span>`;
+                    } else if (l.pTotal > 0) {
+                        tagsHtml += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`;
+                    } else if (l.eRecurrente || l.eMensal) {
+                        let badgeClass = l.freq === 'anual' ? 'badge-anual' : (l.freq === 'diario' ? 'badge-diario' : 'badge-mensal');
+                        tagsHtml += `<span class="badge ${badgeClass}">${(l.freq||'').toUpperCase()}</span>`;
+                    }
+                    
+                    const dParts = l.data.split('-');
+                    const dataFormatada = `${dParts[2]}/${dParts[1]}/${dParts[0].slice(2)}`;
+                    
+                    let btnConfirmar = (!l.dataOk || !l.valorOk) ? `<button class="mini-btn btn-confirm" onclick="confirmarRapidoL('${l.id}')" title="Confirmar (Mudar para status exato na conta)">C</button>` : '';
+
+                    body.innerHTML += `
+                        <tr class="${cls}" draggable="true" ondragstart="iniciarDrag(event, '${l.id}', '${l.data}')" ondragover="permitirDrop(event)" ondrop="soltarDrop(event, '${l.id}', '${l.data}')" ondragenter="entrarDrag(event)" ondragleave="sairDrag(event)" ondragend="finalizarDrag(event)" style="cursor: grab;">
+                            <td class="${l.dataOk?'':'incerto'}">
+                                ${dataFormatada}
+                                <div class="order-controls">
+                                    <button class="btn-ord" onclick="mover('${l.id}','sobe')" title="Mover para cima">▲</button>
+                                    <button class="btn-ord" onclick="mover('${l.id}','desce')" title="Mover para baixo">▼</button>
+                                </div>
+                            </td>
+                            <td>${l.desc} ${tagsHtml}</td>
+                            <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor)}</td>
+                            <td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td>
+                            <td class="actions">
+                                ${btnConfirmar}
+                                <button class="mini-btn btn-primary" onclick="editarL('${l.id}')" title="Editar este lançamento">E</button>
+                                <button class="mini-btn btn-move" onclick="moverParaConta('${l.id}')" title="Mover para outra conta">M</button>
+                                <button class="mini-btn btn-danger" onclick="deletaL('${l.id}')" title="Excluir este lançamento">X</button>
+                            </td>
+                        </tr>`;
+                });
+            }
+        }
+
+        const lc = document.getElementById('listaConfigContas'); 
+        if(lc) {
+            lc.innerHTML = "";
+            contas.forEach(c => {
+                let infoTipoBadge = '';
+                if (c.tipoConta === 'cartao') {
+                    infoTipoBadge = ` <span class="badge badge-anual">💳 CARTÃO (Venc: ${c.vencimento || 10})</span>`;
+                } else if (c.remun) {
+                    infoTipoBadge = ` <span class="badge badge-mensal">📈 REMUNERADA</span>`;
+                }
+
+                let txtNivel = (c.alertaNivel === '2') ? ' [Ignora Rend.]' : (c.alertaNivel === '3' ? ' [Silenciada]' : '');
+
+                lc.innerHTML += `
+                    <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px; margin-bottom:10px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <b>${c.nome}</b><span style="font-size:0.8rem; color:#64748b;" title="Comportamento de notificações desta conta">${txtNivel}</span>${infoTipoBadge}
+                            <div class="order-controls" style="display:inline-flex; margin-left: 10px;">
+                                <button class="btn-ord" onclick="moverConta('${c.id}','sobe')" title="Reordenar conta na lista">▲</button>
+                                <button class="btn-ord" onclick="moverConta('${c.id}','desce')" title="Reordenar conta na lista">▼</button>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button class="mini-btn btn-primary" onclick="editarC('${c.id}')" title="Editar esta conta">E</button>
+                            <button class="mini-btn btn-danger" onclick="if(confirm('Tem certeza? Isso apagará a conta e todo o histórico dela!')) {contas=contas.filter(x=>x.id!=='${c.id}'); salvarEAtualizar();}" title="Excluir conta definitivamente">X</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        gerarDadosRelatorio();
+        atualizarSaudeBanco();
+    }
+
+    function verificarPendencias() {
+        const hj = new Date(); hj.setHours(23, 59, 59, 999);
+        let totalGlobal = 0; let pendenciasPorConta = {};
+        
+        contas.forEach(c => {
+            let contaPendente = 0;
+            let nivel = c.alertaNivel || '1'; 
+
+            if (nivel !== '3') { 
+                c.lancamentos.forEach(l => {
+                    const dataL = new Date(l.data + 'T12:00:00');
+                    if (dataL <= hj && (!l.dataOk || !l.valorOk)) {
+                        
+                        if (nivel === '2' && l.desc.toLowerCase() === "rendimento diário") {
+                            return;
+                        }
+                        
+                        contaPendente++; 
+                        totalGlobal++; 
+                    }
+                });
+            }
+            pendenciasPorConta[c.id] = contaPendente;
+        });
+        
+        const bGeral = document.getElementById('alertaGeral');
+        if (totalGlobal > 0) { bGeral.innerText = totalGlobal; bGeral.style.display = 'inline-block'; } 
+        else { bGeral.style.display = 'none'; }
+        return { totalGlobal, pendenciasPorConta };
+    }
+
+    function salvarC() {
+        const idEdit = document.getElementById('c_id_editando').value;
+        const nome = document.getElementById('c_nome').value;
+        if(!nome) return;
+        const dados = { 
+            nome, 
+            tipoConta: document.getElementById('c_tipo').value,
+            vencimento: parseInt(document.getElementById('c_vencimento').value) || 10,
+            fechamento: parseInt(document.getElementById('c_fechamento').value) || '',
+            remun: document.getElementById('c_remun').value === 's', 
+            selic: parseFloat(document.getElementById('c_selic').value) || 0, 
+            cdi: parseFloat(document.getElementById('c_cdi').value) || 0, 
+            baseDias: parseInt(document.getElementById('c_base_dias').value) || 252,
+            alertaNivel: document.getElementById('c_alerta_nivel').value || '1', 
+            obs: document.getElementById('c_obs').value 
+        };
+        if(idEdit) { const idx = contas.findIndex(x => x.id === idEdit); contas[idx] = { ...contas[idx], ...dados }; }
+        else { contas.push({ id: Date.now().toString(), ...dados, padrao: contas.length === 0, lancamentos: [] }); }
+        salvarEAtualizar(); limparFC();
+    }
+
+    function editarC(id) {
+        const c = contas.find(x => x.id === id); if(!c) return;
+        document.getElementById('c_id_editando').value = c.id;
+        document.getElementById('c_nome').value = c.nome;
+        document.getElementById('c_tipo').value = c.tipoConta || "normal";
+        document.getElementById('c_vencimento').value = c.vencimento || 10;
+        document.getElementById('c_fechamento').value = c.fechamento || '';
+        document.getElementById('c_remun').value = c.remun ? 's' : 'n';
+        document.getElementById('c_selic').value = c.selic || 14.5;
+        document.getElementById('c_cdi').value = c.cdi || 120;
+        document.getElementById('c_base_dias').value = c.baseDias || 252;
+        document.getElementById('c_alerta_nivel').value = c.alertaNivel || '1'; 
+        document.getElementById('c_obs').value = c.obs || "";
+        
+        document.getElementById('tituloConfigSummary').innerText = "✏️ Editando: " + c.nome;
+        document.getElementById('btnSalvarC').innerText = "Atualizar Conta";
+        document.getElementById('btnCancC').style.display = "block";
+        toggleRemunInput();
+        toggleTipoContaInput();
+        
+        const formConta = document.getElementById('accFormConta');
+        formConta.setAttribute('open', true);
+        formConta.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function limparFC() { 
+        document.getElementById('c_id_editando').value = ""; 
+        document.getElementById('c_nome').value = ""; 
+        document.getElementById('c_tipo').value = "normal";
+        document.getElementById('c_vencimento').value = "10";
+        document.getElementById('c_fechamento').value = "";
+        document.getElementById('c_alerta_nivel').value = "1";
+        document.getElementById('tituloConfigSummary').innerText = "➕ Criar Nova Conta"; 
+        document.getElementById('btnSalvarC').innerText = "Guardar Conta"; 
+        document.getElementById('btnCancC').style.display = "none"; 
+        document.getElementById('c_base_dias').value = "252";
+        toggleRemunInput(); 
+        toggleTipoContaInput();
+        
+        document.getElementById('accFormConta').removeAttribute('open');
+    }
+    
+    function toggleRemunInput() { 
+        const isRemun = document.getElementById('c_remun').value === 's'; 
+        document.querySelectorAll('.remun-fields').forEach(el => el.style.display = isRemun ? 'block' : 'none'); 
+    }
+
+    function toggleTipoContaInput() {
+        const isCartao = document.getElementById('c_tipo').value === 'cartao';
+        document.querySelectorAll('.cartao-fields').forEach(el => el.style.display = isCartao ? 'block' : 'none');
+        
+        const remunToggleField = document.querySelector('.remun-toggle-field');
+        if (isCartao) {
+            document.getElementById('c_remun').value = 'n';
+            toggleRemunInput();
+            if (remunToggleField) remunToggleField.style.display = 'none';
+        } else {
+            if (remunToggleField) remunToggleField.style.display = 'block';
+        }
+    }
+    
+    function limparFL() {
+        document.getElementById('id_editando_l').value = "";
+        document.getElementById('f_valor').value = "0,00";
+        document.getElementById('f_desc').value = "";
+        document.getElementById('f_parc_total').value = "0";
+        document.getElementById('f_parc_atual').value = "1";
+        document.getElementById('f_data').value = ultimaDataUsada;
+        document.getElementById('f_tipo').value = "debito";
+        document.getElementById('f_freq').value = "mensal";
+        document.getElementById('groupDestino').style.display = 'none';
+        document.getElementById('groupCartao').style.display = 'none';
+        document.getElementById('btnSalvarL').innerText = "Salvar";
+        document.getElementById('btnCancL').style.display = "none";
+        
+        dataOk = true; toggleStatus('Data'); 
+        valorOk = true; toggleStatus('Valor'); 
+        eRecurrente = true; toggleStatus('Mensal');
+
+        pulaFatura = false; 
+        if(document.getElementById('tPula')) {
+            document.getElementById('tPula').classList.remove('active');
+            document.getElementById('tPula').innerText = "⏭️ Próx. Fatura";
+            document.getElementById('tPula').style.background = "#f1f5f9";
+            document.getElementById('tPula').style.borderColor = "#cbd5e1";
+        }
+        checkTransf();
+
+        setTimeout(() => {
+            const fDesc = document.getElementById('f_desc');
+            if(fDesc) fDesc.focus();
+        }, 10);
+    }
+    
+    function mover(id, dir) { 
+        let c = contas.find(x => x.id === contaAtiva); 
+        const cr = [...c.lancamentos].sort((a,b) => {
+            let dataA = new Date(a.data).getTime();
+            let dataB = new Date(b.data).getTime();
+            if (dataA !== dataB) return dataA - dataB;
+            return (a.ordem || 0) - (b.ordem || 0);
+        }); 
+        const idx = cr.findIndex(l => l.id === id); 
+        
+        let realDir = dir;
+        if (ordemDesc) {
+            realDir = (dir === 'sobe') ? 'desce' : 'sobe';
+        }
+        
+        const aIdx = realDir === 'sobe' ? idx - 1 : idx + 1; 
+        
+        if(idx !== -1 && cr[aIdx] && cr[idx].data === cr[aIdx].data) { 
+            const t = cr[idx].ordem || 0; 
+            cr[idx].ordem = cr[aIdx].ordem || 0; 
+            cr[aIdx].ordem = t; 
+            
+            if(cr[idx].ordem === cr[aIdx].ordem) {
+                cr[idx].ordem = t + (realDir === 'sobe' ? -1 : 1);
+            }
+            salvarEAtualizar(); 
+        } 
+    }
+    
+    function mudarAba(id, b) { 
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        b.classList.add('active'); 
+        render(); 
+    }
+    
+    function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
+    
+    function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); }
+    
+    function proximaConta() {
+        if (contas.length === 0) return;
+        const idx = contas.findIndex(c => c.id === contaAtiva);
+        contaAtiva = contas[(idx + 1) % contas.length].id;
+        render();
+    }
+
+    function deletaL(id) {
+        if(confirm("Tem certeza que deseja excluir este lançamento?")) {
+            let c = contas.find(x => x.id === contaAtiva);
+            c.lancamentos = c.lancamentos.filter(l => l.id !== id);
+            salvarEAtualizar();
+        }
+    }
+    
+    function moverParaConta(idL) {
+        let contaO = contas.find(x => x.id === contaAtiva);
+        let lIdx = contaO.lancamentos.findIndex(x => x.id === idL);
+        let l = contaO.lancamentos[lIdx];
+        let outras = contas.filter(c => c.id !== contaAtiva);
+        if(outras.length === 0) return;
+        let sel = prompt("Para qual conta?\n" + outras.map((c, i) => `${i + 1} - ${c.nome}`).join('\n'));
+        let contaD = outras[parseInt(sel) - 1];
+        if(contaD && confirm(`Mover para ${contaD.nome}?`)) {
+            contaO.lancamentos.splice(lIdx, 1);
+            l.ordem = (contaD.lancamentos.length > 0 ? Math.max(...contaD.lancamentos.map(x => x.ordem || 0)) : 0) + 1;
+            contaD.lancamentos.push(l);
+            salvarEAtualizar();
+        }
+    }
+    
+    function editarL(id) {
+        let c = contas.find(x => x.id === contaAtiva);
+        let l = c.lancamentos.find(x => x.id === id);
+        
+        document.querySelectorAll('.tab-btn')[0].click();
+
+        document.getElementById('id_editando_l').value = l.id;
+        document.getElementById('f_data').value = l.data;
+        document.getElementById('f_desc').value = l.desc.replace(/ \(Parc\. \d+\/\d+\)$/, "");
+        document.getElementById('f_valor').value = l.valor.toFixed(2).replace('.', ',');
+        document.getElementById('f_tipo').value = l.tipo;
+        document.getElementById('f_freq').value = l.freq || "mensal";
+        document.getElementById('f_parc_total').value = l.pTotal || 0;
+        document.getElementById('f_parc_atual').value = l.pAtual || 1;
+        
+        checkTransf();
+        if (l.tipo === 'cartao' && l.cartaoId) {
+            document.getElementById('f_cartao_vinculado').value = l.cartaoId;
+        }
+
+        pulaFatura = l.pulaFatura || false;
+        if (pulaFatura) {
+            document.getElementById('tPula').classList.add('active');
+            document.getElementById('tPula').innerText = "⏭️ Adiado (+1 Mês)";
+            document.getElementById('tPula').style.background = "#dcfce7";
+            document.getElementById('tPula').style.borderColor = "#86efac";
+        } else {
+            document.getElementById('tPula').classList.remove('active');
+            document.getElementById('tPula').innerText = "⏭️ Próx. Fatura";
+            document.getElementById('tPula').style.background = "#f1f5f9";
+            document.getElementById('tPula').style.borderColor = "#cbd5e1";
+        }
+        
+        let rec = l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false);
+        dataOk = !l.dataOk; toggleStatus('Data');
+        valorOk = !l.valorOk; toggleStatus('Valor');
+        eRecurrente = !rec; toggleStatus('Mensal');
+        document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento";
+        document.getElementById('btnCancL').style.display = "block";
+        
+        window.scrollTo(0,0);
+        document.getElementById('f_desc').focus();
+    }
+
+    window.onload = () => {
+        carregarDados();
+    };
+</script>
+</body>
+</html>
