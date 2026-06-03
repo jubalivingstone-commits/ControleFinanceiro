@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v15.0.01</title>
+    <title>Meu Controle Financeiro Pro - v15.0.02</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -53,17 +53,19 @@
         /* Estilos para a caixa sanfonada (Accordion) principal */
         details.accordion { background: white; padding: 20px 25px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: background 0.3s; }
         details.accordion:hover { background: #f8fafc; }
-        details.accordion summary { font-weight: bold; font-size: 1.15rem; cursor: pointer; color: var(--text); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none; }
-        details.accordion summary::-webkit-details-marker { display: none; }
-        details.accordion summary::after { content: "▼"; font-size: 0.9rem; color: #64748b; transition: transform 0.2s;}
-        details.accordion[open] summary::after { transform: rotate(180deg); }
+        /* MUDANÇA 15.0.02: Operador > adicionado para evitar vazamento de estilo para os netos */
+        details.accordion > summary { font-weight: bold; font-size: 1.15rem; cursor: pointer; color: var(--text); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        details.accordion > summary::-webkit-details-marker { display: none; }
+        details.accordion > summary::after { content: "▼"; font-size: 0.9rem; color: #64748b; transition: transform 0.2s;}
+        details.accordion[open] > summary::after { transform: rotate(180deg); }
         details.accordion[open] { background: white; }
         details.accordion > div { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9; }
         
         /* Triângulos animados para sanfonas internas (Histórico e API) */
-        details.acc-interno > summary { cursor: pointer; outline: none; list-style: none; position: relative; user-select: none; }
+        /* MUDANÇA 15.0.02: Adicionado flexbox para manter os triângulos internos colados à direita perfeitamente */
+        details.acc-interno > summary { cursor: pointer; outline: none; list-style: none; position: relative; user-select: none; display: flex; justify-content: space-between; align-items: center; }
         details.acc-interno > summary::-webkit-details-marker { display: none; }
-        details.acc-interno > summary::after { content: "▼"; font-size: 0.8rem; color: #64748b; margin-left: 8px; display: inline-block; transition: transform 0.2s; }
+        details.acc-interno > summary::after { content: "▼"; font-size: 0.8rem; color: #64748b; margin-left: 8px; transition: transform 0.2s; }
         details.acc-interno[open] > summary::after { transform: rotate(180deg); }
 
         .incerto { background-color: rgba(250, 204, 21, 0.15) !important; border: 1px solid #facc15 !important; }
@@ -92,7 +94,7 @@
         .fg-freq { flex: 0 0 100px; }
         .fg-parc { flex: 0 0 65px; }
         .fg-destino { flex: 0 0 130px; }
-        .fg-tag { flex: 0 0 110px; }
+        .fg-tag { flex: 0 0 110px; } 
         .fg-btn { flex: 0 0 auto; display: flex; gap: 5px; height: 38px; align-items: center; margin-bottom: 2px; }
 
         label { font-weight: 700; font-size: 0.85rem; color: #475569; display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 4px; white-space: nowrap; }
@@ -156,7 +158,6 @@
         .val-col { text-align: right; font-weight: bold; white-space: nowrap; }
         .actions { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
         
-        /* MUDANÇA 15.0.01: Botões de ação 25% maiores */
         .mini-btn { padding: 5px 10px; border-radius: 5px; font-size: 12px; color: white; border: none; cursor: pointer; font-weight: bold; height: auto; }
         .btn-confirm { background: var(--success); }
         
@@ -620,7 +621,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8; letter-spacing: 0.5px;">
-        Meu Controle Financeiro Pro • v15.0.01
+        Meu Controle Financeiro Pro • v15.0.02
     </div>
 
 </div>
@@ -628,8 +629,9 @@
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 15.0.01
+     * @version 15.0.02
      * @changelog
+     * - [FIX] Correção do vazamento de CSS que mantinha os triângulos das sanfonas internas (Nuvem) sempre apontados para cima.
      * - [UX] Ajuste de usabilidade: Campos numéricos (Valor, Parcelas) agora selecionam todo o texto automaticamente ao receberem foco (onfocus="this.select()"), agilizando a digitação no celular.
      * - [UX] Botões de ação (Confirmar, Editar, Mover, Excluir) da tabela aumentados em 25% para melhor ergonomia em telas touch.
      * - [FEATURE] Etiquetas (Tags) para Cartões de Crédito: Permite classificar compras na fatura por cartão virtual, físico ou categoria sem necessidade de subcontas.
