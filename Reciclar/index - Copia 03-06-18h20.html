@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v15.0.01</title>
+    <title>Meu Controle Financeiro Pro - v15.0.00</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -92,7 +92,7 @@
         .fg-freq { flex: 0 0 100px; }
         .fg-parc { flex: 0 0 65px; }
         .fg-destino { flex: 0 0 130px; }
-        .fg-tag { flex: 0 0 110px; }
+        .fg-tag { flex: 0 0 110px; } /* MUDANÇA 15.0.00: Estilo para o novo campo de Tag */
         .fg-btn { flex: 0 0 auto; display: flex; gap: 5px; height: 38px; align-items: center; margin-bottom: 2px; }
 
         label { font-weight: 700; font-size: 0.85rem; color: #475569; display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 4px; white-space: nowrap; }
@@ -117,6 +117,7 @@
         .pill { padding: 8px 15px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-right: 5px; margin-bottom: 5px; display: inline-flex; align-items: center; gap: 6px; }
         .pill.active { background: var(--primary); color: white; border-color: var(--primary); }
 
+        /* Container da tabela com rolagem interna e redimensionável */
         .table-container { 
             overflow-x: auto; 
             overflow-y: auto; 
@@ -131,6 +132,7 @@
         
         table { width: 100%; border-collapse: collapse; min-width: 800px; background: white; }
         
+        /* Cabeçalho grudado (sticky) no topo */
         th { 
             background: #f8fafc; 
             padding: 12px; 
@@ -144,6 +146,7 @@
             box-shadow: 0 2px 4px -2px rgba(0,0,0,0.1);
         }
         
+        /* Rodapé grudado (sticky) no fundo */
         tfoot td {
             position: sticky;
             bottom: 0;
@@ -155,8 +158,6 @@
         td { padding: 12px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
         .val-col { text-align: right; font-weight: bold; white-space: nowrap; }
         .actions { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
-        
-        /* MUDANÇA 15.0.01: Botões de ação 25% maiores */
         .mini-btn { padding: 5px 10px; border-radius: 5px; font-size: 12px; color: white; border: none; cursor: pointer; font-weight: bold; height: auto; }
         .btn-confirm { background: var(--success); }
         
@@ -169,6 +170,7 @@
         .badge-anual { background: #fef3c7; color: #92400e; }
         .badge-parc { background: #e2e8f0; color: #475569; }
         
+        /* MUDANÇA 15.0.00: Estilo da pílula visual da etiqueta na tabela */
         .badge-tag { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-weight: bold; text-transform: uppercase; }
 
         .form-grid-config { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
@@ -180,12 +182,15 @@
         .tutorial-steps { list-style-type: decimal; margin-left: 20px; padding-left: 10px; color: #334155; font-size: 0.9rem;}
         .tutorial-steps li { margin-bottom: 10px; }
         
+        /* ESTADO VAZIO */
         #estadoVazio { text-align: center; padding: 60px 20px; }
         #estadoVazio h2 { color: var(--primary); margin-bottom: 15px; }
         #estadoVazio p { color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; }
         
+        /* METADADOS NUVEM */
         .box-metadados { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; color: #166534; margin-bottom: 15px; display: flex; align-items: flex-start; gap: 10px; }
 
+        /* DRAG AND DROP - LANÇAMENTOS */
         .linha-arrastando { opacity: 0.4; transform: scale(0.99); }
         .linha-alvo-drop { border-top: 2px dashed var(--primary) !important; background-color: rgba(52, 152, 219, 0.05) !important; }
     </style>
@@ -256,7 +261,7 @@
                             </div>
                             <div class="field-group fg-valor">
                                 <label>Valor <span id="tValor" class="toggle-btn" onclick="toggleStatus('Valor')" title="Clique para alternar: [Est.] Valor pode sofrer alterações. [Conf.] O valor já está exato na conta."><span class="ico-lock">🔓</span> Est.</span></label>
-                                <input type="text" inputmode="decimal" id="f_valor" value="0,00" onfocus="this.select()" onblur="calcularValor()" onkeydown="if(event.key === 'Enter'){ calcularValor(); salvarL(); }" title="Você pode digitar contas matemáticas aqui (Ex: 15,50 + 20)">
+                                <input type="text" inputmode="decimal" id="f_valor" value="0,00" onblur="calcularValor()" onkeydown="if(event.key === 'Enter'){ calcularValor(); salvarL(); }" title="Você pode digitar contas matemáticas aqui (Ex: 15,50 + 20)">
                             </div>
                             <div class="field-group fg-tipo">
                                 <label>Tipo</label>
@@ -278,11 +283,11 @@
                             </div>
                             <div class="field-group group-recurr fg-parc" style="display:none;">
                                 <label title="Deixe 0 para parcelas infinitas (ex: Netflix) ou preencha a quantidade limite.">Parcelas</label>
-                                <input type="number" id="f_parc_total" class="input-mini" min="0" value="0" onfocus="this.select()" onkeydown="if(event.key === 'Enter') salvarL()">
+                                <input type="number" id="f_parc_total" class="input-mini" min="0" value="0" onkeydown="if(event.key === 'Enter') salvarL()">
                             </div>
                             <div class="field-group group-recurr fg-parc" style="display:none;">
                                 <label>Parcela</label>
-                                <input type="number" id="f_parc_atual" class="input-mini" min="1" value="1" onfocus="this.select()" onkeydown="if(event.key === 'Enter') salvarL()">
+                                <input type="number" id="f_parc_atual" class="input-mini" min="1" value="1" onkeydown="if(event.key === 'Enter') salvarL()">
                             </div>
 
                             <div class="field-group fg-destino" id="groupDestino" style="display:none;">
@@ -620,7 +625,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8; letter-spacing: 0.5px;">
-        Meu Controle Financeiro Pro • v15.0.01
+        Meu Controle Financeiro Pro • v15.0.00
     </div>
 
 </div>
@@ -628,12 +633,11 @@
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 15.0.01
+     * @version 15.0.00
      * @changelog
-     * - [UX] Ajuste de usabilidade: Campos numéricos (Valor, Parcelas) agora selecionam todo o texto automaticamente ao receberem foco (onfocus="this.select()"), agilizando a digitação no celular.
-     * - [UX] Botões de ação (Confirmar, Editar, Mover, Excluir) da tabela aumentados em 25% para melhor ergonomia em telas touch.
      * - [FEATURE] Etiquetas (Tags) para Cartões de Crédito: Permite classificar compras na fatura por cartão virtual, físico ou categoria sem necessidade de subcontas.
      * - [FEATURE] Modo Conciliação de Fatura: Um botão de agrupamento (toggle) para reordenar a fatura inteira agrupando-a por Tags alfabeticamente para facilitar a conferência com o extrato bancário.
+     * - [FIX] Auto-scroll inteligente é suspenso dinamicamente caso o Modo de Conciliação esteja ativo, para evitar saltos indesejados na tela.
      */
 
     let contas = [];
@@ -651,6 +655,7 @@
     let ultimaDataUsada = new Date().toISOString().split('T')[0];
     let relatorioAtivo = null;
     
+    // MUDANÇA 15.0.00: Nova variável de controle para o Modo Conciliação
     let modoConciliacao = false;
 
     const fmt = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -841,6 +846,7 @@
         render();
     }
     
+    // MUDANÇA 15.0.00: Função para ativar/desativar o agrupamento de faturas
     function toggleConciliacao() {
         modoConciliacao = !modoConciliacao;
         document.getElementById('btnModoConciliacao').classList.toggle('active', modoConciliacao);
@@ -1170,6 +1176,7 @@
         const pTotal = parseInt(document.getElementById('f_parc_total').value) || 0;
         const pAtual = parseInt(document.getElementById('f_parc_atual').value) || 0;
         
+        // MUDANÇA 15.0.00: Coletando o campo de Tag
         const tag = document.getElementById('f_tag').value.trim();
 
         if(!d || (!descBase && tipo !== 'transferencia' && !idEdit)) return;
@@ -1226,7 +1233,7 @@
                     }
                 }
 
-                if (confirmandoAgora && eRecurrente && !l.isFaturaCartao && !l.transferId) processarProximo(c, l);
+                if (confirmandoAgora && eRecurrente && !l.isFaturaCartao) processarProximo(c, l);
             } else {
                 const oM = c.lancamentos.length > 0 ? Math.max(...c.lancamentos.map(l => l.ordem || 0)) : 0;
                 const novoL = { id: Date.now().toString(), data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, ordem: oM + 1, eRecurrente, freq, pTotal, pAtual, cartaoId, tag };
@@ -1700,6 +1707,7 @@
     // AUTO-SCROLL INTELIGENTE
     // ==========================================
     function focarDataRelevante() {
+        // MUDANÇA 15.0.00: Se a conciliação estiver ativa, não fazemos scroll automático para não bagunçar a visão do usuário
         if (modoConciliacao) return;
 
         const tbody = document.getElementById('corpoTabela');
@@ -1795,6 +1803,7 @@
                     }
                 }
 
+                // MUDANÇA 15.0.00: Mostra o campo Tag e o botão de conciliar apenas se for conta Cartão
                 if (c.tipoConta === 'cartao') {
                     document.getElementById('groupTag').style.display = 'flex';
                     document.getElementById('boxFaturaParcial').style.display = 'block';
@@ -1819,19 +1828,22 @@
                 } else {
                     document.getElementById('groupTag').style.display = 'none';
                     document.getElementById('boxFaturaParcial').style.display = 'none';
-                    modoConciliacao = false; 
+                    modoConciliacao = false; // Se sair da conta de cartão, desliga o agrupamento
                 }
 
                 const body = document.getElementById('corpoTabela'); body.innerHTML = "";
                 const hj = new Date(); hj.setHours(0,0,0,0);
                 
+                // MUDANÇA 15.0.00: Ordenação com interceptador de Conciliação
                 const ord = [...c.lancamentos].sort((a, b) => {
+                    // Se estivermos em modo conciliação num cartão de crédito, ordenamos primeiro pela TAG alfabeticamente
                     if (modoConciliacao && c.tipoConta === 'cartao') {
                         let tagA = (a.tag || "").toLowerCase();
                         let tagB = (b.tag || "").toLowerCase();
                         if (tagA !== tagB) return tagA.localeCompare(tagB);
                     }
                     
+                    // Se não tiver conciliação, ou se as tags forem iguais, cai para a ordenação de data normal
                     let dataA = new Date(a.data).getTime();
                     let dataB = new Date(b.data).getTime();
                     
@@ -1894,6 +1906,7 @@
                     let cls = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : "");
                     if (l.s < 0) cls += " linha-negativa";
                     
+                    // MUDANÇA 15.0.00: Separadores visuais reagem à conciliação
                     if (dadosRender[idx + 1]) {
                         if (modoConciliacao && c.tipoConta === 'cartao') {
                             if ((l.tag || "").toLowerCase() !== (dadosRender[idx + 1].tag || "").toLowerCase()) {
@@ -1916,6 +1929,7 @@
                         tagsHtml += `<span class="badge ${badgeClass}">${(l.freq||'').toUpperCase()}</span>`;
                     }
                     
+                    // MUDANÇA 15.0.00: Exibindo a Pílula da Etiqueta
                     if (l.tag) {
                         tagsHtml += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
                     }
@@ -2107,7 +2121,7 @@
         document.getElementById('f_data').value = ultimaDataUsada;
         document.getElementById('f_tipo').value = "debito";
         document.getElementById('f_freq').value = "mensal";
-        document.getElementById('f_tag').value = ""; 
+        document.getElementById('f_tag').value = ""; // MUDANÇA 15.0.00: Limpa o campo de tag
         document.getElementById('groupDestino').style.display = 'none';
         document.getElementById('groupCartao').style.display = 'none';
         document.getElementById('btnSalvarL').innerText = "Salvar";
@@ -2239,7 +2253,7 @@
         document.getElementById('f_freq').value = l.freq || "mensal";
         document.getElementById('f_parc_total').value = l.pTotal || 0;
         document.getElementById('f_parc_atual').value = l.pAtual || 1;
-        document.getElementById('f_tag').value = l.tag || ""; 
+        document.getElementById('f_tag').value = l.tag || ""; // MUDANÇA 15.0.00: Puxa a tag na edição
         
         if (l.transferId) {
             document.getElementById('f_tipo').value = 'transferencia';
@@ -2254,9 +2268,18 @@
                 document.getElementById('f_destino').value = outraConta.id;
             }
             
-            document.getElementById('f_destino').disabled = true;
-            document.getElementById('f_destino').title = "As contas envolvidas não podem ser alteradas. Exclua e refaça caso tenha errado a conta.";
-            
+            if (l.isFaturaCartao) {
+                if (c.tipoConta === 'cartao') {
+                    document.getElementById('f_destino').disabled = false;
+                    document.getElementById('f_destino').title = "Escolha de qual conta o dinheiro saiu.";
+                } else {
+                    document.getElementById('f_destino').disabled = true;
+                    document.getElementById('f_destino').title = "A conta de destino (Cartão) não pode ser alterada aqui.";
+                }
+            } else {
+                document.getElementById('f_destino').disabled = true;
+                document.getElementById('f_destino').title = "As contas envolvidas não podem ser alteradas. Exclua e refaça caso tenha errado a conta.";
+            }
         } else if (l.tipo === 'cartao') {
             const optCartao = document.querySelector('#f_tipo option[value="cartao"]');
             if (optCartao) {
