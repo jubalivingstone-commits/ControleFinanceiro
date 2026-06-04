@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v15.0.04</title>
+    <title>Meu Controle Financeiro Pro - v15.0.03</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -619,7 +619,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8; letter-spacing: 0.5px;">
-        Meu Controle Financeiro Pro • v15.0.04
+        Meu Controle Financeiro Pro • v15.0.03
     </div>
 
 </div>
@@ -627,12 +627,11 @@
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 15.0.04
+     * @version 15.0.03
      * @changelog
-     * - [FIX] Correção Crítica (Anti-Vazamento): Motor de salvamento, espelhamento e faturas automáticas reescrito para copiar e preservar a propriedade 'tag' em todas as transições e edições.
-     * - [FIX] Preservação de Faturas Abertas: O sistema não recria mais do zero as faturas dinâmicas, preservando tags e descrições customizadas inseridas antes do fechamento.
-     * - [UX] Remoção completa dos elementos bloqueantes (alert e confirm) de inicialização e edição.
-     * - [FEATURE] Etiquetas (Tags) para Cartões de Crédito com Modo Conciliação de Fatura.
+     * - [UX] Remoção completa dos elementos bloqueantes (alert e confirm) de inicialização e edição, melhorando a fluidez da navegação.
+     * - [FIX] Correção do vazamento de CSS que mantinha os triângulos das sanfonas internas (Nuvem) sempre apontados para cima.
+     * - [UX] Ajuste de usabilidade: Campos numéricos (Valor, Parcelas) agora selecionam todo o texto automaticamente ao receberem foco (onfocus="this.select()"), agilizando a digitação no celular.
      */
 
     let contas = [];
@@ -990,7 +989,6 @@
                 } else {
                     faturas.sort((a,b) => new Date(b.data) - new Date(a.data));
                     let ultima = faturas[0];
-                    // MUDANÇA 15.0.04: Preservar faturas abertas em vez de apagá-las. Só cria nova se a antiga estiver Ok.
                     if (ultima.valorOk && ultima.dataOk) {
                         let dataUltima = new Date(ultima.data + 'T12:00:00');
                         dataUltima.setMonth(dataUltima.getMonth() + 1);
@@ -1178,8 +1176,7 @@
             const idD = document.getElementById('f_destino').value;
             if(!idD) return alert("Selecione destino.");
             const tId = Date.now().toString();
-            // MUDANÇA 15.0.04: Transferindo TAG para a geração da transferência
-            execTransf(c, d, v, descBase, contas.find(x => x.id === idD), tId, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, tag);
+            execTransf(c, d, v, descBase, contas.find(x => x.id === idD), tId, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual);
             
             let novoL = c.lancamentos[c.lancamentos.length - 1];
             if (dataOk && valorOk && eRecurrente) processarProximo(c, novoL);
@@ -1193,17 +1190,14 @@
                 const confirmandoAgora = (!l.dataOk || !l.valorOk) && (dataOk && valorOk);
                 
                 if (l.transferId) {
-                    // MUDANÇA 15.0.04: Preservação de TAG na edição de espelhos
                     l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk;
                     l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual;
-                    l.tag = tag;
                     
                     contas.forEach(conta => {
                         let irma = conta.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
                         if (irma) {
                             irma.data = d; irma.valor = v; irma.dataOk = dataOk; irma.valorOk = valorOk;
                             irma.eRecurrente = eRecurrente; irma.freq = freq; irma.pTotal = pTotal; irma.pAtual = pAtual;
-                            irma.tag = tag;
                         }
                     });
                 } else {
@@ -1217,7 +1211,6 @@
                         if (siblingL) {
                             siblingL.dataOk = dataOk; siblingL.valorOk = valorOk;
                             siblingL.valor = v; siblingL.data = d;
-                            // Faturas automáticas não usam tag do usuário
                         }
                     }
                 }
@@ -1236,8 +1229,7 @@
         limparFL();
     }
 
-    // MUDANÇA 15.0.04: Suporte a tag na criação de transferências manuais
-    function execTransf(cO, d, v, descBase, cD, tI, isDataOk, isValorOk, isRec, freq, pT, pA, tagUser) {
+    function execTransf(cO, d, v, descBase, cD, tI, isDataOk, isValorOk, isRec, freq, pT, pA) {
         const oO = (cO.lancamentos.length > 0 ? Math.max(...cO.lancamentos.map(l => l.ordem || 0)) : 0) + 1;
         const oD = (cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(l => l.ordem || 0)) : 0) + 1;
         
@@ -1247,14 +1239,14 @@
             id: tI+"A", transferId: tI, data: d, valor: v, 
             desc: `Transf. para ${cD.nome}${obs}`, 
             tipo: 'debito', dataOk: isDataOk, valorOk: isValorOk, ordem: oO,
-            eRecurrente: isRec || false, freq: freq || 'mensal', pTotal: pT || 0, pAtual: pA || 1, tag: tagUser || ""
+            eRecurrente: isRec || false, freq: freq || 'mensal', pTotal: pT || 0, pAtual: pA || 1
         });
         
         cD.lancamentos.push({ 
             id: tI+"B", transferId: tI, data: d, valor: v, 
             desc: `Transf. de ${cO.nome}${obs}`, 
             tipo: 'credito', dataOk: isDataOk, valorOk: isValorOk, ordem: oD,
-            eRecurrente: isRec || false, freq: freq || 'mensal', pTotal: pT || 0, pAtual: pA || 1, tag: tagUser || ""
+            eRecurrente: isRec || false, freq: freq || 'mensal', pTotal: pT || 0, pAtual: pA || 1
         });
     }
 
@@ -1317,13 +1309,13 @@
                     const oO = Math.max(...conta.lancamentos.map(lx => lx.ordem || 0));
                     conta.lancamentos.push({ 
                         id: novoTId+"A", transferId: novoTId, data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, 
-                        dataOk: false, valorOk: false, ordem: oO + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: l.tag 
+                        dataOk: false, valorOk: false, ordem: oO + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP 
                     });
 
                     const oD = Math.max(...contaOutra.lancamentos.map(lx => lx.ordem || 0));
                     contaOutra.lancamentos.push({ 
                         id: novoTId+"B", transferId: novoTId, data: nD, valor: nValor, desc: lOutra.desc, tipo: lOutra.tipo, 
-                        dataOk: false, valorOk: false, ordem: oD + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: lOutra.tag 
+                        dataOk: false, valorOk: false, ordem: oD + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP 
                     });
                 }
             }
