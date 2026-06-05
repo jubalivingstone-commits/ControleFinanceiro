@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v16.0.01</title>
+    <title>Meu Controle Financeiro Pro - v16.0.02</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -296,7 +296,7 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.01</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.02</div>
 </div>
 
 <script>
@@ -953,7 +953,6 @@
         document.getElementById('f_tipo').disabled = false; document.getElementById('f_desc').disabled = false; document.getElementById('f_destino').disabled = false; document.getElementById('f_cartao_vinculado').disabled = false; document.getElementById('f_desc').title = "";
         const oc = document.querySelector('#f_tipo option[value="cartao"]'); if (oc) { oc.style.display = 'none'; oc.disabled = true; }
         dataOk = true; toggleStatus('Data'); valorOk = true; toggleStatus('Valor'); eRecurrente = true; toggleStatus('Mensal');
-        setTimeout(() => { const fd = document.getElementById('f_desc'); if(fd) fd.focus(); }, 10);
     }
     
     function mover(id, dir) { 
@@ -1011,7 +1010,10 @@
         let rec = l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false);
         dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
-        window.scrollTo(0,0); document.getElementById('f_valor').focus();
+        
+        // MUDANÇA 16.0.02: Scroll suave para o form de edição ao invés do topo da página
+        document.querySelector('.painel-insercao').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => { document.getElementById('f_valor').focus(); }, 300);
     }
 
     window.onload = () => { carregarDados(); };
