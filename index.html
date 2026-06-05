@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v16.0.03</title>
+    <title>Meu Controle Financeiro Pro - v16.0.04</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -58,7 +58,10 @@
         .btn-nav { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .pill { padding: 8px 15px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-right: 5px; margin-bottom: 5px; display: inline-flex; align-items: center; gap: 6px; }
         .pill.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .table-container { overflow-x: auto; overflow-y: auto; max-height: 500px; min-height: 250px; resize: vertical; border-radius: 12px; border: 1px solid #e2e8f0; background: white; position: relative; }
+        
+        /* MUDANÇA 16.0.04: Altura da tabela expandida para 75vh */
+        .table-container { overflow-x: auto; overflow-y: auto; max-height: 75vh; min-height: 250px; resize: vertical; border-radius: 12px; border: 1px solid #e2e8f0; background: white; position: relative; }
+        
         table { width: 100%; border-collapse: collapse; min-width: 800px; background: white; }
         th { background: #f8fafc; padding: 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px -2px rgba(0,0,0,0.1); }
         tfoot td { position: sticky; bottom: 0; background: #f8fafc; z-index: 9; box-shadow: 0 -2px 4px -2px rgba(0,0,0,0.1); }
@@ -124,7 +127,7 @@
                 </div>
 
                 <div id="painelOperacional" style="display:block;">
-                    <div class="painel-insercao">
+                    <div class="painel-insercao" onclick="this.scrollIntoView({ behavior: 'smooth', block: 'start' })">
                         <div class="painel-insercao-title">✏️ Área de Lançamento</div>
                         <input type="hidden" id="id_editando_l">
                         <div class="flex-form" style="margin-bottom: 0;">
@@ -142,7 +145,7 @@
                         </div>
                     </div>
 
-                    <div class="table-container">
+                    <div class="table-container" onclick="this.scrollIntoView({ behavior: 'smooth', block: 'start' })">
                         <table>
                             <thead><tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">▼</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr></thead>
                             <tbody id="corpoTabela"></tbody>
@@ -296,16 +299,16 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.03</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.04</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 16.0.03
+     * @version 16.0.04
      * @changelog
-     * - [FIX] Correção do Bug de Deslizamento do Drag and Drop: O sistema agora espelha milimetricamente a visão do usuário (ordem decrescente/crescente e os blocos de conciliação por Tag) na hora de calcular e distribuir as posições exatas das linhas arrastadas.
-     * - [UX] Correção Crítica de Edição no Mobile: Removido o "pulo para o topo absoluto" ao editar lançamentos. Substituído por um deslizamento suave que centraliza o formulário e impede que o teclado agrida a interface bruscamente.
+     * - [UX] Foco Inteligente e "Smooth Scroll" implementado em toda a navegação (Troca de Contas, Mudança de Mês, Painel de Inserção e Tabela).
+     * - [UX] Altura da Tabela de Lançamentos expandida (max-height: 75vh) para melhor aproveitamento do espaço em telas mobile.
      */
 
     let contas = [];
@@ -800,199 +803,33 @@
         }
     }
 
-    let dragIdL = null; let dragDataRef = null;
-    function iniciarDrag(ev, id, dS) { dragIdL = id; dragDataRef = dS; ev.dataTransfer.effectAllowed = 'move'; setTimeout(() => ev.target.classList.add('linha-arrastando'), 0); }
-    function permitirDrop(ev) { ev.preventDefault(); }
-    function entrarDrag(ev) { ev.preventDefault(); let t = ev.target.closest('tr'); if(t && !t.classList.contains('linha-arrastando')) t.classList.add('linha-alvo-drop'); }
-    function sairDrag(ev) { let t = ev.target.closest('tr'); if(t) t.classList.remove('linha-alvo-drop'); }
-    function finalizarDrag(ev) { ev.target.classList.remove('linha-arrastando'); document.querySelectorAll('.linha-alvo-drop').forEach(e => e.classList.remove('linha-alvo-drop')); }
-    
-    // MUDANÇA 16.0.03: Lógica ajustada para ler a tela perfeitamente e colar no lugar milimétrico.
-    function soltarDrop(ev, dId, dDR) {
-        ev.preventDefault(); finalizarDrag(ev); if (!dragIdL || dragIdL === dId) return;
-        if (dragDataRef !== dDR) return alert("Reordenação apenas no mesmo dia.");
-        
-        let c = contas.find(x => x.id === contaAtiva); 
-        
-        let ld = c.lancamentos.filter(x => x.data === dragDataRef).sort((a,b) => {
-            if (modoConciliacao && c.tipoConta === 'cartao') { 
-                let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); 
-                if (tA !== tB) return tA.localeCompare(tB); 
-            }
-            return ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0);
-        });
-        
-        const iO = ld.findIndex(x => x.id === dragIdL); 
-        const iD = ld.findIndex(x => x.id === dId);
-        
-        if (iO !== -1 && iD !== -1) {
-            let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b);
-            
-            ld.splice(iD, 0, ld.splice(iO, 1)[0]);
-            
-            if (ordemDesc) oA.reverse();
-            
-            ld.forEach((l, i) => l.ordem = oA[i]); 
-            salvarEAtualizar();
-        }
-    }
-
-    function focarDataRelevante() {
-        if (modoConciliacao) return;
-        const inP = document.getElementById('inputPesquisa'); if (inP && inP.value.trim() !== "") return;
-        const tb = document.getElementById('corpoTabela'); if (!tb || tb.innerHTML === "") return;
-        const ls = tb.getElementsByTagName('tr'); if (ls.length === 0) return;
-        const hj = new Date(); const aA = hj.getFullYear(); const mA = hj.getMonth();
-        const aF = dataFiltro.getFullYear(); const mF = dataFiltro.getMonth();
-
-        if (aF === aA && mF === mA) {
-            let a = document.querySelector('.linha-hoje') || document.querySelector('.linha-passada') || ls[ls.length - 1];
-            if(a) a.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else if (aF < aA || (aF === aA && mF < mA)) ls[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
-        else ls[ls.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }
-
-    function render() {
-        document.getElementById('labelMesAno').innerText = formatarMesInteligente(dataFiltro);
-        const pP = document.getElementById('painelPrincipalLancamentos'); const eV = document.getElementById('estadoVazio');
-        if (contas.length === 0) { pP.style.display = 'none'; eV.style.display = 'block'; const lc = document.getElementById('listaConfigContas'); if(lc) lc.innerHTML = ""; gerarDadosRelatorio(); atualizarSaudeBanco(); return; } 
-        else { pP.style.display = 'block'; eV.style.display = 'none'; }
-
-        const pend = verificarPendencias();
-        const cp = document.getElementById('containerPills'); cp.innerHTML = "";
-        contas.forEach(c => {
-            const p = document.createElement('div'); p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
-            p.innerText = c.nome; if (c.tipoConta === 'cartao') p.innerText += ' 💳'; else if (c.remun) { const s = document.createElement('span'); s.className = 'badge badge-mensal'; s.innerText = '📈 REMUN'; p.appendChild(s); }
-            p.onclick = () => { contaAtiva = c.id; render(); }; cp.appendChild(p);
-        });
-
-        if(contaAtiva) {
-            document.getElementById('painelOperacional').style.display = 'block';
-            let c = contas.find(x => x.id === contaAtiva);
-            if (c) {
-                document.getElementById('tituloConta').innerText = c.nome;
-                const inP = document.getElementById('inputPesquisa'); const tP = inP ? inP.value.trim().toLowerCase() : ""; const mP = tP !== "";
-                const mNB = document.getElementById('mesNavegadorBox'); if (mNB) mNB.style.display = mP ? 'none' : 'flex';
-                
-                const oC = document.querySelector('#f_tipo option[value="cartao"]');
-                if (oC) { oC.style.display = 'none'; oC.disabled = true; if (document.getElementById('f_tipo').value === 'cartao') { document.getElementById('f_tipo').value = 'debito'; checkTransf(); } }
-
-                if (c.tipoConta === 'cartao') {
-                    document.getElementById('groupTag').style.display = 'flex'; document.getElementById('boxFaturaParcial').style.display = mP ? 'none' : 'block'; document.getElementById('btnModoConciliacao').classList.toggle('active', modoConciliacao);
-                    if (!mP) {
-                        let dFA = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
-                        let dCA = getDataFechamentoParaFatura(c, dFA); let pc = 0;
-                        if(c.lancamentos) c.lancamentos.forEach(lx => { if (lx.data <= dCA && lx.valorOk && !(lx.isFaturaCartao && lx.data === dFA)) pc += (lx.tipo === 'credito' ? (lx.valor||0) : -(lx.valor||0)); });
-                        document.getElementById('valFaturaParcial').innerText = fmt(Math.abs(pc));
-                    }
-                } else { document.getElementById('groupTag').style.display = 'none'; document.getElementById('boxFaturaParcial').style.display = 'none'; modoConciliacao = false; }
-
-                const bd = document.getElementById('corpoTabela'); bd.innerHTML = ""; const hj = new Date(); hj.setHours(0,0,0,0);
-                const ord = [...(c.lancamentos||[])].sort((a, b) => {
-                    if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); }
-                    let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
-                    return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
-                });
-                
-                let mS = {}; let sI = 0; let sT = 0; let pD = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-01`;
-                [...(c.lancamentos||[])].sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }).forEach(l => {
-                    let v = l.valor||0; if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                    if (l.data < pD) sI += (l.tipo === 'credito' ? v : -v);
-                    sT += (l.tipo === 'credito' ? v : -v); mS[l.id] = sT;
-                });
-
-                const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial');
-                if(rT && cSI) { if(mP) rT.style.display = 'none'; else { rT.style.display = 'table-footer-group'; cSI.innerText = fmt(sI); cSI.style.color = sI < 0 ? 'var(--danger)' : 'var(--text)'; } }
-
-                let dR = [];
-                ord.forEach(l => {
-                    let dL = new Date((l.data||"") + 'T12:00:00'); let inc = false;
-                    if (mP) inc = `${l.desc||''} ${l.tag||''} ${(l.data||"").split('-').reverse().join('/')} ${fmt(l.valor||0)}`.toLowerCase().includes(tP);
-                    else inc = (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear());
-                    if (inc) dR.push({ ...l, s: mS[l.id] });
-                });
-
-                dR.forEach((l, i) => {
-                    let dL = new Date((l.data||"") + 'T00:00:00'); let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : "");
-                    if (l.s < 0) cl += " linha-negativa";
-                    if (dR[i+1]) { if (modoConciliacao && c.tipoConta === 'cartao') { if ((l.tag||"").toLowerCase() !== (dR[i+1].tag||"").toLowerCase()) cl += " separador-dia"; } else if (dR[i+1].data !== l.data) cl += " separador-dia"; }
-                    
-                    let th = ""; if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
-                    if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
-                    
-                    let bC = (!l.dataOk || !l.valorOk) ? `<button class="mini-btn btn-confirm" onclick="confirmarRapidoL('${l.id}')">C</button>` : '';
-                    bd.innerHTML += `<tr class="${cl}" draggable="true" ondragstart="iniciarDrag(event, '${l.id}', '${l.data}')" ondragover="permitirDrop(event)" ondrop="soltarDrop(event, '${l.id}', '${l.data}')" ondragenter="entrarDrag(event)" ondragleave="sairDrag(event)" ondragend="finalizarDrag(event)" style="cursor: grab;">
-                        <td class="${l.dataOk?'':'incerto'}">${(l.data||"").split('-').reverse().join('/')}<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div></td>
-                        <td>${l.desc||''} ${th}</td><td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor||0)}</td>
-                        <td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td><td class="actions">${bC}<button class="mini-btn btn-primary" onclick="editarL('${l.id}')">E</button><button class="mini-btn btn-move" onclick="moverParaConta('${l.id}')">M</button><button class="mini-btn btn-danger" onclick="deletaL('${l.id}')">X</button></td></tr>`;
-                });
-            }
-        }
-
-        const lc = document.getElementById('listaConfigContas'); 
-        if(lc) {
-            lc.innerHTML = "";
-            contas.forEach(c => {
-                let ib = ''; if (c.tipoConta === 'cartao') { let fd = c.fechamento || (c.vencimento - 7 <= 0 ? c.vencimento + 23 : c.vencimento - 7); ib = ` <span class="badge badge-anual">💳 CARTÃO (Venc: ${c.vencimento || 10} | Fech: ${fd})</span>`; } else if (c.remun) ib = ` <span class="badge badge-mensal">📈 REMUNERADA</span>`;
-                let tn = (c.alertaNivel === '2') ? ' [Ignora Rend.]' : (c.alertaNivel === '3' ? ' [Silenciada]' : '');
-                lc.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px; margin-bottom:10px; flex-wrap: wrap; gap: 10px;"><div><b>${c.nome}</b><span style="font-size:0.8rem; color:#64748b;">${tn}</span>${ib}<div class="order-controls" style="display:inline-flex; margin-left: 10px;"><button class="btn-ord" onclick="moverConta('${c.id}','sobe')">▲</button><button class="btn-ord" onclick="moverConta('${c.id}','desce')">▼</button></div></div><div class="actions"><button class="mini-btn btn-primary" onclick="editarC('${c.id}')">E</button><button class="mini-btn btn-danger" onclick="if(confirm('Apagar a conta e todo o histórico?')) {contas=contas.filter(x=>x.id!=='${c.id}'); salvarEAtualizar();}">X</button></div></div>`;
-            });
-        }
-        gerarDadosRelatorio(); atualizarSaudeBanco(); setTimeout(focarDataRelevante, 150);
-    }
-
-    function verificarPendencias() {
-        const hj = new Date(); hj.setHours(23, 59, 59, 999); let tG = 0; let pC = {};
-        contas.forEach(c => {
-            let cp = 0; let n = c.alertaNivel || '1'; 
-            if (n !== '3' && c.lancamentos) c.lancamentos.forEach(l => { if (new Date((l.data||"") + 'T12:00:00') <= hj && (!l.dataOk || !l.valorOk)) { if (n === '2' && (l.desc||"").toLowerCase() === "rendimento diário") return; cp++; tG++; } });
-            pC[c.id] = cp;
-        });
-        const bG = document.getElementById('alertaGeral'); if (tG > 0) { bG.innerText = tG; bG.style.display = 'inline-block'; } else bG.style.display = 'none';
-        return { totalGlobal: tG, pendenciasPorConta: pC };
-    }
-
-    function salvarC() {
-        const iE = document.getElementById('c_id_editando').value; const n = document.getElementById('c_nome').value; if(!n) return;
-        const d = { nome: n, tipoConta: document.getElementById('c_tipo').value, vencimento: parseInt(document.getElementById('c_vencimento').value) || 10, fechamento: parseInt(document.getElementById('c_fechamento').value) || '', remun: document.getElementById('c_remun').value === 's', selic: parseFloat(document.getElementById('c_selic').value) || 0, cdi: parseFloat(document.getElementById('c_cdi').value) || 0, baseDias: parseInt(document.getElementById('c_base_dias').value) || 252, alertaNivel: document.getElementById('c_alerta_nivel').value || '1', obs: document.getElementById('c_obs').value };
-        if(iE) { const i = contas.findIndex(x => x.id === iE); contas[i] = { ...contas[i], ...d }; } else { let nI = Date.now().toString(); contas.push({ id: nI, ...d, padrao: contas.length === 0, lancamentos: [] }); if (contas.length === 1) contaAtiva = nI; }
-        salvarEAtualizar(); limparFC();
-    }
-
-    function editarC(id) {
-        const c = contas.find(x => x.id === id); if(!c) return;
-        document.getElementById('c_id_editando').value = c.id; document.getElementById('c_nome').value = c.nome; document.getElementById('c_tipo').value = c.tipoConta || "normal"; document.getElementById('c_vencimento').value = c.vencimento || 10; document.getElementById('c_fechamento').value = c.fechamento || (c.vencimento ? (c.vencimento - 7 <= 0 ? c.vencimento + 23 : c.vencimento - 7) : 3); document.getElementById('c_remun').value = c.remun ? 's' : 'n'; document.getElementById('c_selic').value = c.selic || 14.5; document.getElementById('c_cdi').value = c.cdi || 120; document.getElementById('c_base_dias').value = c.baseDias || 252; document.getElementById('c_alerta_nivel').value = c.alertaNivel || '1'; document.getElementById('c_obs').value = c.obs || "";
-        document.getElementById('tituloConfigSummary').innerText = "✏️ Editando: " + c.nome; document.getElementById('btnSalvarC').innerText = "Atualizar Conta"; document.getElementById('btnCancC').style.display = "block";
-        toggleRemunInput(); toggleTipoContaInput(); document.getElementById('accFormConta').setAttribute('open', true); document.getElementById('accFormConta').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function limparFC() { 
-        document.getElementById('c_id_editando').value = ""; document.getElementById('c_nome').value = ""; document.getElementById('c_tipo').value = "normal"; document.getElementById('c_vencimento').value = "10"; document.getElementById('c_fechamento').value = ""; document.getElementById('c_alerta_nivel').value = "1";
-        document.getElementById('tituloConfigSummary').innerText = "➕ Criar Nova Conta"; document.getElementById('btnSalvarC').innerText = "Guardar Conta"; document.getElementById('btnCancC').style.display = "none"; document.getElementById('c_base_dias').value = "252";
-        toggleRemunInput(); toggleTipoContaInput(); document.getElementById('accFormConta').removeAttribute('open');
+    // MUDANÇA 16.0.04: Adicionados eventos de Scroll para Mudança de Aba
+    function mudarAba(id, b) { 
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); b.classList.add('active'); 
+        render(); 
+        if (id === 'aba-lancamentos') window.scrollTo({ top: 0, behavior: 'smooth' }); 
     }
     
-    function toggleRemunInput() { const ir = document.getElementById('c_remun').value === 's'; document.querySelectorAll('.remun-fields').forEach(el => el.style.display = ir ? 'block' : 'none'); }
-    function toggleTipoContaInput() { const ic = document.getElementById('c_tipo').value === 'cartao'; document.querySelectorAll('.cartao-fields').forEach(el => el.style.display = ic ? 'block' : 'none'); const rtf = document.querySelector('.remun-toggle-field'); if (ic) { document.getElementById('c_remun').value = 'n'; toggleRemunInput(); if (rtf) rtf.style.display = 'none'; } else { if (rtf) rtf.style.display = 'block'; } }
-    
-    function limparFL() {
-        document.getElementById('id_editando_l').value = ""; document.getElementById('f_valor').value = "0,00"; document.getElementById('f_desc').value = ""; document.getElementById('f_parc_total').value = "0"; document.getElementById('f_parc_atual').value = "1"; document.getElementById('f_data').value = ultimaDataUsada; document.getElementById('f_tipo').value = "debito"; document.getElementById('f_freq').value = "mensal"; document.getElementById('f_tag').value = ""; document.getElementById('groupDestino').style.display = 'none'; document.getElementById('groupCartao').style.display = 'none'; document.getElementById('btnSalvarL').innerText = "Salvar"; document.getElementById('btnCancL').style.display = "none";
-        document.getElementById('f_tipo').disabled = false; document.getElementById('f_desc').disabled = false; document.getElementById('f_destino').disabled = false; document.getElementById('f_cartao_vinculado').disabled = false; document.getElementById('f_desc').title = "";
-        const oc = document.querySelector('#f_tipo option[value="cartao"]'); if (oc) { oc.style.display = 'none'; oc.disabled = true; }
-        dataOk = true; toggleStatus('Data'); valorOk = true; toggleStatus('Valor'); eRecurrente = true; toggleStatus('Mensal');
+    // MUDANÇA 16.0.04: Adicionados eventos de Scroll para Navegação de Mês
+    function alterarMes(delta) { 
+        dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); 
+        setTimeout(() => { const e = document.getElementById('mesNavegadorBox'); if(e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+    }
+    function irParaHoje() { 
+        dataFiltro = new Date(); dataFiltro.setDate(1); render(); 
+        setTimeout(() => { const e = document.getElementById('mesNavegadorBox'); if(e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
     }
     
-    function mover(id, dir) { 
-        let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return;
-        const cr = [...c.lancamentos].sort((a,b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }); 
-        const i = cr.findIndex(l => l.id === id); let rD = ordemDesc ? (dir === 'sobe' ? 'desce' : 'sobe') : dir; const aI = rD === 'sobe' ? i - 1 : i + 1; 
-        if(i !== -1 && cr[aI] && cr[i].data === cr[aI].data) { const t = cr[i].ordem || 0; cr[i].ordem = cr[aI].ordem || 0; cr[aI].ordem = t; if(cr[i].ordem === cr[aI].ordem) cr[i].ordem = t + (rD === 'sobe' ? -1 : 1); salvarEAtualizar(); } 
+    // MUDANÇA 16.0.04: Adicionados eventos de Scroll para Troca de Conta
+    function proximaConta() { 
+        if (contas.length === 0) return; 
+        const i = contas.findIndex(c => c.id === contaAtiva); 
+        contaAtiva = contas[(i + 1) % contas.length].id; 
+        render(); 
+        setTimeout(() => { const e = document.getElementById('tituloConta'); if(e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
     }
-    
-    function mudarAba(id, b) { document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(id).classList.add('active'); b.classList.add('active'); render(); }
-    function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
-    function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); }
-    function proximaConta() { if (contas.length === 0) return; const i = contas.findIndex(c => c.id === contaAtiva); contaAtiva = contas[(i + 1) % contas.length].id; render(); }
 
     function deletaL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return;
@@ -1038,7 +875,7 @@
         dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
-        document.querySelector('.painel-insercao').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.querySelector('.painel-insercao').scrollIntoView({ behavior: 'smooth', block: 'start' });
         setTimeout(() => { document.getElementById('f_valor').focus(); }, 300);
     }
 
