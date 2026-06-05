@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v16.0.02</title>
+    <title>Meu Controle Financeiro Pro - v16.0.03</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -296,10 +296,18 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.02</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.03</div>
 </div>
 
 <script>
+    /**
+     * @file Controle Financeiro Pro
+     * @version 16.0.03
+     * @changelog
+     * - [FIX] Correção do Bug de Deslizamento do Drag and Drop: O sistema agora espelha milimetricamente a visão do usuário (ordem decrescente/crescente e os blocos de conciliação por Tag) na hora de calcular e distribuir as posições exatas das linhas arrastadas.
+     * - [UX] Correção Crítica de Edição no Mobile: Removido o "pulo para o topo absoluto" ao editar lançamentos. Substituído por um deslizamento suave que centraliza o formulário e impede que o teclado agrida a interface bruscamente.
+     */
+
     let contas = [];
     let dbConfig = JSON.parse(localStorage.getItem('financas_db_setup')) || { mode: 'local', keys: '', deviceName: 'Meu Dispositivo' };
     let db = null;
@@ -798,15 +806,34 @@
     function entrarDrag(ev) { ev.preventDefault(); let t = ev.target.closest('tr'); if(t && !t.classList.contains('linha-arrastando')) t.classList.add('linha-alvo-drop'); }
     function sairDrag(ev) { let t = ev.target.closest('tr'); if(t) t.classList.remove('linha-alvo-drop'); }
     function finalizarDrag(ev) { ev.target.classList.remove('linha-arrastando'); document.querySelectorAll('.linha-alvo-drop').forEach(e => e.classList.remove('linha-alvo-drop')); }
+    
+    // MUDANÇA 16.0.03: Lógica ajustada para ler a tela perfeitamente e colar no lugar milimétrico.
     function soltarDrop(ev, dId, dDR) {
         ev.preventDefault(); finalizarDrag(ev); if (!dragIdL || dragIdL === dId) return;
         if (dragDataRef !== dDR) return alert("Reordenação apenas no mesmo dia.");
-        let c = contas.find(x => x.id === contaAtiva); let ld = c.lancamentos.filter(x => x.data === dragDataRef).sort((a,b) => (a.ordem || 0) - (b.ordem || 0));
-        const iO = ld.findIndex(x => x.id === dragIdL); const iD = ld.findIndex(x => x.id === dId);
+        
+        let c = contas.find(x => x.id === contaAtiva); 
+        
+        let ld = c.lancamentos.filter(x => x.data === dragDataRef).sort((a,b) => {
+            if (modoConciliacao && c.tipoConta === 'cartao') { 
+                let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); 
+                if (tA !== tB) return tA.localeCompare(tB); 
+            }
+            return ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0);
+        });
+        
+        const iO = ld.findIndex(x => x.id === dragIdL); 
+        const iD = ld.findIndex(x => x.id === dId);
+        
         if (iO !== -1 && iD !== -1) {
             let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b);
+            
             ld.splice(iD, 0, ld.splice(iO, 1)[0]);
-            ld.forEach((l, i) => l.ordem = oA[i]); salvarEAtualizar();
+            
+            if (ordemDesc) oA.reverse();
+            
+            ld.forEach((l, i) => l.ordem = oA[i]); 
+            salvarEAtualizar();
         }
     }
 
@@ -1011,7 +1038,6 @@
         dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
-        // MUDANÇA 16.0.02: Scroll suave para o form de edição ao invés do topo da página
         document.querySelector('.painel-insercao').scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(() => { document.getElementById('f_valor').focus(); }, 300);
     }
