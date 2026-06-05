@@ -1,7 +1,0 @@
-apiKey: "AIzaSyAYUQl8bED03j28CaDW10BDHDN8KrvdzTk",
-authDomain: "controlefinanceiro-aad0e.firebaseapp.com",
-projectId: "controlefinanceiro-aad0e",
-storageBucket: "controlefinanceiro-aad0e.firebasestorage.app",
-messagingSenderId: "337369132578",
-appId: "1:337369132578:web:71a709fd9fae84edeb247b",
-measurementId: "G-GNJVERGWN2"

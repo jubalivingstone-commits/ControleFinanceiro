@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v15.0.04</title>
+    <title>Meu Controle Financeiro Pro - v16.0.00</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -27,7 +27,6 @@
 
         .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #f1f5f9; }
         
-        /* DESIGN: PAINEL DE INSERÇÃO DESTACADO */
         .painel-insercao {
             background: #ffffff;
             border: 2px solid var(--primary);
@@ -50,7 +49,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Estilos para a caixa sanfonada (Accordion) principal */
         details.accordion { background: white; padding: 20px 25px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: background 0.3s; }
         details.accordion:hover { background: #f8fafc; }
         details.accordion > summary { font-weight: bold; font-size: 1.15rem; cursor: pointer; color: var(--text); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none; }
@@ -60,7 +58,6 @@
         details.accordion[open] { background: white; }
         details.accordion > div { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9; }
         
-        /* Triângulos animados para sanfonas internas (Histórico e API) */
         details.acc-interno > summary { cursor: pointer; outline: none; list-style: none; position: relative; user-select: none; display: flex; justify-content: space-between; align-items: center; }
         details.acc-interno > summary::-webkit-details-marker { display: none; }
         details.acc-interno > summary::after { content: "▼"; font-size: 0.8rem; color: #64748b; margin-left: 8px; transition: transform 0.2s; }
@@ -222,7 +219,11 @@
 
                 <div id="containerPills" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;"></div>
                 
-                <div class="mes-navegador">
+                <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
+                    <input type="text" id="inputPesquisa" placeholder="🔍 Pesquisar em todo o histórico..." oninput="render()" style="width: 100%; max-width: 350px; background: #fff;">
+                </div>
+                
+                <div class="mes-navegador" id="mesNavegadorBox">
                     <button class="btn-nav" onclick="alterarMes(-1)" title="Ver o mês anterior">◀ Anterior</button>
                     <div class="mes-atual-label" id="labelMesAno" title="Mês e ano sendo exibidos atualmente">CARREGANDO...</div>
                     <button class="btn-nav" onclick="irParaHoje()" title="Voltar para o mês atual">Hoje</button>
@@ -619,7 +620,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8; letter-spacing: 0.5px;">
-        Meu Controle Financeiro Pro • v15.0.04
+        Meu Controle Financeiro Pro • v16.0.00
     </div>
 
 </div>
@@ -627,12 +628,11 @@
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 15.0.04
+     * @version 16.0.00
      * @changelog
-     * - [FIX] Correção Crítica (Anti-Vazamento): Motor de salvamento, espelhamento e faturas automáticas reescrito para copiar e preservar a propriedade 'tag' em todas as transições e edições.
-     * - [FIX] Preservação de Faturas Abertas: O sistema não recria mais do zero as faturas dinâmicas, preservando tags e descrições customizadas inseridas antes do fechamento.
-     * - [UX] Remoção completa dos elementos bloqueantes (alert e confirm) de inicialização e edição.
-     * - [FEATURE] Etiquetas (Tags) para Cartões de Crédito com Modo Conciliação de Fatura.
+     * - [FEATURE] Filtro de Pesquisa Universal: Adicionado campo de busca na aba Lançamentos que suspende o filtro de mês atual e pesquisa todo o histórico por Data, Descrição, Tag e Valor.
+     * - [FIX] Correção do Crash Silencioso Inicial: Ao criar a primeira conta em um sistema vazio, ela agora é automaticamente ativada como 'contaAtiva', destravando a engrenagem de lançamentos imediatamente.
+     * - [FIX] Correção Crítica (Anti-Vazamento): Motor de salvamento e espelhamento reescrito para copiar e preservar a propriedade 'tag' em todas as transições e edições.
      */
 
     let contas = [];
@@ -990,7 +990,6 @@
                 } else {
                     faturas.sort((a,b) => new Date(b.data) - new Date(a.data));
                     let ultima = faturas[0];
-                    // MUDANÇA 15.0.04: Preservar faturas abertas em vez de apagá-las. Só cria nova se a antiga estiver Ok.
                     if (ultima.valorOk && ultima.dataOk) {
                         let dataUltima = new Date(ultima.data + 'T12:00:00');
                         dataUltima.setMonth(dataUltima.getMonth() + 1);
@@ -1178,7 +1177,6 @@
             const idD = document.getElementById('f_destino').value;
             if(!idD) return alert("Selecione destino.");
             const tId = Date.now().toString();
-            // MUDANÇA 15.0.04: Transferindo TAG para a geração da transferência
             execTransf(c, d, v, descBase, contas.find(x => x.id === idD), tId, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, tag);
             
             let novoL = c.lancamentos[c.lancamentos.length - 1];
@@ -1193,7 +1191,6 @@
                 const confirmandoAgora = (!l.dataOk || !l.valorOk) && (dataOk && valorOk);
                 
                 if (l.transferId) {
-                    // MUDANÇA 15.0.04: Preservação de TAG na edição de espelhos
                     l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk;
                     l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual;
                     l.tag = tag;
@@ -1217,7 +1214,6 @@
                         if (siblingL) {
                             siblingL.dataOk = dataOk; siblingL.valorOk = valorOk;
                             siblingL.valor = v; siblingL.data = d;
-                            // Faturas automáticas não usam tag do usuário
                         }
                     }
                 }
@@ -1236,7 +1232,6 @@
         limparFL();
     }
 
-    // MUDANÇA 15.0.04: Suporte a tag na criação de transferências manuais
     function execTransf(cO, d, v, descBase, cD, tI, isDataOk, isValorOk, isRec, freq, pT, pA, tagUser) {
         const oO = (cO.lancamentos.length > 0 ? Math.max(...cO.lancamentos.map(l => l.ordem || 0)) : 0) + 1;
         const oD = (cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(l => l.ordem || 0)) : 0) + 1;
@@ -1698,6 +1693,10 @@
     // ==========================================
     function focarDataRelevante() {
         if (modoConciliacao) return;
+        
+        // MUDANÇA 16.0.00: Se a busca estiver ativa, desliga o auto-scroll para não roubar a tela
+        const inputP = document.getElementById('inputPesquisa');
+        if (inputP && inputP.value.trim() !== "") return;
 
         const tbody = document.getElementById('corpoTabela');
         if (!tbody || tbody.innerHTML === "") return;
@@ -1782,6 +1781,14 @@
             if (c) {
                 document.getElementById('tituloConta').innerText = c.nome;
                 
+                // MUDANÇA 16.0.00: Controle de modo de Pesquisa
+                const inputP = document.getElementById('inputPesquisa');
+                const termoPesquisa = inputP ? inputP.value.trim().toLowerCase() : "";
+                const modoPesquisa = termoPesquisa !== "";
+                
+                const mesNavBox = document.getElementById('mesNavegadorBox');
+                if (mesNavBox) mesNavBox.style.display = modoPesquisa ? 'none' : 'flex';
+                
                 const optCartao = document.querySelector('#f_tipo option[value="cartao"]');
                 if (optCartao) {
                     optCartao.style.display = 'none';
@@ -1794,25 +1801,28 @@
 
                 if (c.tipoConta === 'cartao') {
                     document.getElementById('groupTag').style.display = 'flex';
-                    document.getElementById('boxFaturaParcial').style.display = 'block';
+                    // Esconde a fatura parcial se estiver pesquisando para não confundir
+                    document.getElementById('boxFaturaParcial').style.display = modoPesquisa ? 'none' : 'block';
                     document.getElementById('btnModoConciliacao').classList.toggle('active', modoConciliacao);
                     
-                    let yF = dataFiltro.getFullYear();
-                    let mF = String(dataFiltro.getMonth() + 1).padStart(2, '0');
-                    let dF = String(c.vencimento || 10).padStart(2, '0');
-                    let dataFaturaAtual = `${yF}-${mF}-${dF}`;
-                    
-                    let dataCorteAtual = getDataFechamentoParaFatura(c, dataFaturaAtual);
+                    if (!modoPesquisa) {
+                        let yF = dataFiltro.getFullYear();
+                        let mF = String(dataFiltro.getMonth() + 1).padStart(2, '0');
+                        let dF = String(c.vencimento || 10).padStart(2, '0');
+                        let dataFaturaAtual = `${yF}-${mF}-${dF}`;
+                        
+                        let dataCorteAtual = getDataFechamentoParaFatura(c, dataFaturaAtual);
 
-                    let parcial = 0;
-                    c.lancamentos.forEach(lx => {
-                        if (lx.data <= dataCorteAtual) {
-                            if (!lx.valorOk) return; 
-                            if (lx.isFaturaCartao && lx.data === dataFaturaAtual) return; 
-                            parcial += (lx.tipo === 'credito' ? lx.valor : -lx.valor);
-                        }
-                    });
-                    document.getElementById('valFaturaParcial').innerText = fmt(Math.abs(parcial));
+                        let parcial = 0;
+                        c.lancamentos.forEach(lx => {
+                            if (lx.data <= dataCorteAtual) {
+                                if (!lx.valorOk) return; 
+                                if (lx.isFaturaCartao && lx.data === dataFaturaAtual) return; 
+                                parcial += (lx.tipo === 'credito' ? lx.valor : -lx.valor);
+                            }
+                        });
+                        document.getElementById('valFaturaParcial').innerText = fmt(Math.abs(parcial));
+                    }
                 } else {
                     document.getElementById('groupTag').style.display = 'none';
                     document.getElementById('boxFaturaParcial').style.display = 'none';
@@ -1871,15 +1881,33 @@
 
                 const rodape = document.getElementById('rodapeTabela');
                 const celulaSI = document.getElementById('celulaSaldoInicial');
+                
+                // MUDANÇA 16.0.00: Oculta o rodapé de saldo inicial se estiver no modo pesquisa
                 if(rodape && celulaSI) {
-                    rodape.style.display = 'table-footer-group';
-                    celulaSI.innerText = fmt(saldoInicialMes);
-                    celulaSI.style.color = saldoInicialMes < 0 ? 'var(--danger)' : 'var(--text)';
+                    if(modoPesquisa) {
+                        rodape.style.display = 'none';
+                    } else {
+                        rodape.style.display = 'table-footer-group';
+                        celulaSI.innerText = fmt(saldoInicialMes);
+                        celulaSI.style.color = saldoInicialMes < 0 ? 'var(--danger)' : 'var(--text)';
+                    }
                 }
 
                 ord.forEach(l => {
                     const dL = new Date(l.data + 'T12:00:00');
-                    if (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()) {
+                    
+                    // MUDANÇA 16.0.00: Lógica de Filtro da Pesquisa Universal
+                    let incluir = false;
+                    if (modoPesquisa) {
+                        const dParts = l.data.split('-');
+                        const dataFmt = `${dParts[2]}/${dParts[1]}/${dParts[0].slice(2)}`;
+                        const stringBusca = `${l.desc} ${l.tag || ''} ${dataFmt} ${fmt(l.valor)}`.toLowerCase();
+                        incluir = stringBusca.includes(termoPesquisa);
+                    } else {
+                        incluir = (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear());
+                    }
+                    
+                    if (incluir) {
                         ftr.push({ ...l, s: mapSaldos[l.id] });
                     }
                 });
@@ -1982,37 +2010,6 @@
         setTimeout(focarDataRelevante, 150);
     }
 
-    function verificarPendencias() {
-        const hj = new Date(); hj.setHours(23, 59, 59, 999);
-        let totalGlobal = 0; let pendenciasPorConta = {};
-        
-        contas.forEach(c => {
-            let contaPendente = 0;
-            let nivel = c.alertaNivel || '1'; 
-
-            if (nivel !== '3') { 
-                c.lancamentos.forEach(l => {
-                    const dataL = new Date(l.data + 'T12:00:00');
-                    if (dataL <= hj && (!l.dataOk || !l.valorOk)) {
-                        
-                        if (nivel === '2' && l.desc.toLowerCase() === "rendimento diário") {
-                            return;
-                        }
-                        
-                        contaPendente++; 
-                        totalGlobal++; 
-                    }
-                });
-            }
-            pendenciasPorConta[c.id] = contaPendente;
-        });
-        
-        const bGeral = document.getElementById('alertaGeral');
-        if (totalGlobal > 0) { bGeral.innerText = totalGlobal; bGeral.style.display = 'inline-block'; } 
-        else { bGeral.style.display = 'none'; }
-        return { totalGlobal, pendenciasPorConta };
-    }
-
     function salvarC() {
         const idEdit = document.getElementById('c_id_editando').value;
         const nome = document.getElementById('c_nome').value;
@@ -2029,8 +2026,16 @@
             alertaNivel: document.getElementById('c_alerta_nivel').value || '1', 
             obs: document.getElementById('c_obs').value 
         };
-        if(idEdit) { const idx = contas.findIndex(x => x.id === idEdit); contas[idx] = { ...contas[idx], ...dados }; }
-        else { contas.push({ id: Date.now().toString(), ...dados, padrao: contas.length === 0, lancamentos: [] }); }
+        if(idEdit) { 
+            const idx = contas.findIndex(x => x.id === idEdit); 
+            contas[idx] = { ...contas[idx], ...dados }; 
+        }
+        else { 
+            // MUDANÇA 16.0.00: Ativação automática da primeira conta
+            let novoId = Date.now().toString();
+            contas.push({ id: novoId, ...dados, padrao: contas.length === 0, lancamentos: [] }); 
+            if (contas.length === 1) contaAtiva = novoId;
+        }
         salvarEAtualizar(); limparFC();
     }
 
@@ -2251,9 +2256,18 @@
                 document.getElementById('f_destino').value = outraConta.id;
             }
             
-            document.getElementById('f_destino').disabled = true;
-            document.getElementById('f_destino').title = "As contas envolvidas não podem ser alteradas. Exclua e refaça caso tenha errado a conta.";
-            
+            if (l.isFaturaCartao) {
+                if (c.tipoConta === 'cartao') {
+                    document.getElementById('f_destino').disabled = false;
+                    document.getElementById('f_destino').title = "Escolha de qual conta o dinheiro saiu.";
+                } else {
+                    document.getElementById('f_destino').disabled = true;
+                    document.getElementById('f_destino').title = "A conta de destino (Cartão) não pode ser alterada aqui.";
+                }
+            } else {
+                document.getElementById('f_destino').disabled = true;
+                document.getElementById('f_destino').title = "As contas envolvidas não podem ser alteradas. Exclua e refaça caso tenha errado a conta.";
+            }
         } else if (l.tipo === 'cartao') {
             const optCartao = document.querySelector('#f_tipo option[value="cartao"]');
             if (optCartao) {
@@ -2298,9 +2312,6 @@
         carregarDados();
     };
 
-    // ==========================================
-    // PROTEÇÃO 2: ATUALIZAÇÃO AO DESPERTAR A ABA
-    // ==========================================
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
             if (dbConfig.mode === 'nuvem') {
