@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v16.0.03</title>
+    <title>Meu Controle Financeiro Pro - v16.0.04</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -101,15 +101,17 @@
 
         <div id="painelPrincipalLancamentos" style="display:none;">
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
+                <!-- 1. NOVA BARRA GLOBAL E COM BOTÃO "X" (type="search") -->
+                <div style="margin-bottom: 20px;">
+                    <input type="search" id="inputPesquisa" placeholder="🔍 Pesquisar em todas as contas (Nome, Data, Valor ou Tag)..." oninput="render()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 1rem;">
+                </div>
+
+                <!-- 2. CABEÇALHO COM ID PARA PODER SER OCULTADO DURANTE A PESQUISA -->
+                <div id="cabecalhoContas" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
                     <h2 id="tituloConta" style="margin:0;">Selecionar Conta</h2>
                     <button class="btn btn-primary" onclick="proximaConta()">🔄 Trocar Conta<span id="alertaGeral" class="badge-alerta-geral" style="display:none;">0</span></button>
                 </div>
                 <div id="containerPills" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;"></div>
-                
-                <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
-                    <input type="text" id="inputPesquisa" placeholder="🔍 Pesquisar em todo o histórico..." oninput="render()" style="width: 100%; max-width: 350px; background: #fff;">
-                </div>
                 
                 <div class="mes-navegador" id="mesNavegadorBox">
                     <button class="btn-nav" onclick="alterarMes(-1)">◀ Anterior</button>
@@ -296,13 +298,13 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.03</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.04</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 16.0.03
+     * @version 16.0.04
      * @changelog
      * - [FIX] Correção do Bug de Deslizamento do Drag and Drop: O sistema agora espelha milimetricamente a visão do usuário (ordem decrescente/crescente e os blocos de conciliação por Tag) na hora de calcular e distribuir as posições exatas das linhas arrastadas.
      * - [UX] Correção Crítica de Edição no Mobile: Removido o "pulo para o topo absoluto" ao editar lançamentos. Substituído por um deslizamento suave que centraliza o formulário e impede que o teclado agrida a interface bruscamente.
@@ -807,7 +809,7 @@
     function sairDrag(ev) { let t = ev.target.closest('tr'); if(t) t.classList.remove('linha-alvo-drop'); }
     function finalizarDrag(ev) { ev.target.classList.remove('linha-arrastando'); document.querySelectorAll('.linha-alvo-drop').forEach(e => e.classList.remove('linha-alvo-drop')); }
     
-    // MUDANÇA 16.0.03: Lógica ajustada para ler a tela perfeitamente e colar no lugar milimétrico.
+    // MUDANÇA 16.0.04: Lógica ajustada para ler a tela perfeitamente e colar no lugar milimétrico.
     function soltarDrop(ev, dId, dDR) {
         ev.preventDefault(); finalizarDrag(ev); if (!dragIdL || dragIdL === dId) return;
         if (dragDataRef !== dDR) return alert("Reordenação apenas no mesmo dia.");
@@ -852,7 +854,7 @@
         else ls[ls.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
 
-    function render() {
+function render() {
         document.getElementById('labelMesAno').innerText = formatarMesInteligente(dataFiltro);
         const pP = document.getElementById('painelPrincipalLancamentos'); const eV = document.getElementById('estadoVazio');
         if (contas.length === 0) { pP.style.display = 'none'; eV.style.display = 'block'; const lc = document.getElementById('listaConfigContas'); if(lc) lc.innerHTML = ""; gerarDadosRelatorio(); atualizarSaudeBanco(); return; } 
@@ -870,8 +872,11 @@
             document.getElementById('painelOperacional').style.display = 'block';
             let c = contas.find(x => x.id === contaAtiva);
             if (c) {
-                document.getElementById('tituloConta').innerText = c.nome;
                 const inP = document.getElementById('inputPesquisa'); const tP = inP ? inP.value.trim().toLowerCase() : ""; const mP = tP !== "";
+                
+                // MUDANÇA: Esconder navegação visual se a pesquisa estiver ativa
+                const cabContas = document.getElementById('cabecalhoContas'); if (cabContas) cabContas.style.display = mP ? 'none' : 'flex';
+                document.getElementById('containerPills').style.display = mP ? 'none' : 'flex';
                 const mNB = document.getElementById('mesNavegadorBox'); if (mNB) mNB.style.display = mP ? 'none' : 'flex';
                 
                 const oC = document.querySelector('#f_tipo option[value="cartao"]');
@@ -887,44 +892,82 @@
                     }
                 } else { document.getElementById('groupTag').style.display = 'none'; document.getElementById('boxFaturaParcial').style.display = 'none'; modoConciliacao = false; }
 
+                // MUDANÇA: Transformação dinâmica do cabeçalho da tabela
+                const thead = document.querySelector('.table-container table thead');
+                if (mP) {
+                    thead.innerHTML = `<tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">${ordemDesc ? '▼' : '▲'}</span></th><th>Conta</th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:center">Ações</th></tr>`;
+                } else {
+                    thead.innerHTML = `<tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">${ordemDesc ? '▼' : '▲'}</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr>`;
+                }
+
                 const bd = document.getElementById('corpoTabela'); bd.innerHTML = ""; const hj = new Date(); hj.setHours(0,0,0,0);
-                const ord = [...(c.lancamentos||[])].sort((a, b) => {
-                    if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); }
-                    let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
-                    return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
-                });
-                
-                let mS = {}; let sI = 0; let sT = 0; let pD = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-01`;
-                [...(c.lancamentos||[])].sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }).forEach(l => {
-                    let v = l.valor||0; if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                    if (l.data < pD) sI += (l.tipo === 'credito' ? v : -v);
-                    sT += (l.tipo === 'credito' ? v : -v); mS[l.id] = sT;
-                });
-
-                const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial');
-                if(rT && cSI) { if(mP) rT.style.display = 'none'; else { rT.style.display = 'table-footer-group'; cSI.innerText = fmt(sI); cSI.style.color = sI < 0 ? 'var(--danger)' : 'var(--text)'; } }
-
                 let dR = [];
-                ord.forEach(l => {
-                    let dL = new Date((l.data||"") + 'T12:00:00'); let inc = false;
-                    if (mP) inc = `${l.desc||''} ${l.tag||''} ${(l.data||"").split('-').reverse().join('/')} ${fmt(l.valor||0)}`.toLowerCase().includes(tP);
-                    else inc = (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear());
-                    if (inc) dR.push({ ...l, s: mS[l.id] });
-                });
+                
+                if (mP) {
+                    // LÓGICA DE PESQUISA: Busca em todas as contas e oculta cálculos de saldo
+                    contas.forEach(ct => {
+                        if (ct.lancamentos) {
+                            ct.lancamentos.forEach(l => {
+                                let strBusca = `${l.desc||''} ${l.tag||''} ${(l.data||"").split('-').reverse().join('/')} ${fmt(l.valor||0)} ${ct.nome}`.toLowerCase();
+                                if (strBusca.includes(tP)) dR.push({ ...l, s: 0, nomeConta: ct.nome, contaOrigemId: ct.id });
+                            });
+                        }
+                    });
+                    dR.sort((a, b) => {
+                        let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
+                        return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
+                    });
+                } else {
+                    // LÓGICA NORMAL: Exibe apenas a conta ativa com matemática de saldo
+                    document.getElementById('tituloConta').innerText = c.nome;
+                    const ord = [...(c.lancamentos||[])].sort((a, b) => {
+                        if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); }
+                        let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
+                        return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
+                    });
+                    
+                    let mS = {}; let sI = 0; let sT = 0; let pD = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-01`;
+                    [...(c.lancamentos||[])].sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }).forEach(l => {
+                        let v = l.valor||0; if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
+                        if (l.data < pD) sI += (l.tipo === 'credito' ? v : -v);
+                        sT += (l.tipo === 'credito' ? v : -v); mS[l.id] = sT;
+                    });
+
+                    const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial');
+                    if(rT && cSI) { rT.style.display = 'table-footer-group'; cSI.innerText = fmt(sI); cSI.style.color = sI < 0 ? 'var(--danger)' : 'var(--text)'; }
+
+                    ord.forEach(l => {
+                        let dL = new Date((l.data||"") + 'T12:00:00');
+                        if (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()) {
+                            dR.push({ ...l, s: mS[l.id], contaOrigemId: c.id });
+                        }
+                    });
+                }
+
+                // Oculta o rodapé de Saldo Inicial na pesquisa
+                const rT = document.getElementById('rodapeTabela'); 
+                if (rT) rT.style.display = mP ? 'none' : 'table-footer-group';
 
                 dR.forEach((l, i) => {
                     let dL = new Date((l.data||"") + 'T00:00:00'); let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : "");
-                    if (l.s < 0) cl += " linha-negativa";
-                    if (dR[i+1]) { if (modoConciliacao && c.tipoConta === 'cartao') { if ((l.tag||"").toLowerCase() !== (dR[i+1].tag||"").toLowerCase()) cl += " separador-dia"; } else if (dR[i+1].data !== l.data) cl += " separador-dia"; }
+                    if (l.s < 0 && !mP) cl += " linha-negativa"; 
+                    if (dR[i+1]) { if (!mP && modoConciliacao && c.tipoConta === 'cartao') { if ((l.tag||"").toLowerCase() !== (dR[i+1].tag||"").toLowerCase()) cl += " separador-dia"; } else if (dR[i+1].data !== l.data) cl += " separador-dia"; }
                     
                     let th = ""; if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
                     if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
                     
-                    let bC = (!l.dataOk || !l.valorOk) ? `<button class="mini-btn btn-confirm" onclick="confirmarRapidoL('${l.id}')">C</button>` : '';
+                    // MUDANÇA: Ações inteligentes. Injetam a 'contaAtiva' certa antes de rodar a função
+                    let bC = (!l.dataOk || !l.valorOk) ? `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>` : '';
+                    let cCen = mP ? `<td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td><td>${l.desc||''} ${th}</td>` : `<td>${l.desc||''} ${th}</td>`;
+                    let cSal = mP ? "" : `<td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td>`;
+                    let setOr = mP ? "" : `<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div>`;
+
                     bd.innerHTML += `<tr class="${cl}" draggable="true" ondragstart="iniciarDrag(event, '${l.id}', '${l.data}')" ondragover="permitirDrop(event)" ondrop="soltarDrop(event, '${l.id}', '${l.data}')" ondragenter="entrarDrag(event)" ondragleave="sairDrag(event)" ondragend="finalizarDrag(event)" style="cursor: grab;">
-                        <td class="${l.dataOk?'':'incerto'}">${(l.data||"").split('-').reverse().join('/')}<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div></td>
-                        <td>${l.desc||''} ${th}</td><td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor||0)}</td>
-                        <td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td><td class="actions">${bC}<button class="mini-btn btn-primary" onclick="editarL('${l.id}')">E</button><button class="mini-btn btn-move" onclick="moverParaConta('${l.id}')">M</button><button class="mini-btn btn-danger" onclick="deletaL('${l.id}')">X</button></td></tr>`;
+                        <td class="${l.dataOk?'':'incerto'}">${(l.data||"").split('-').reverse().join('/')}${setOr}</td>
+                        ${cCen}
+                        <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor||0)}</td>
+                        ${cSal}
+                        <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaOrigemId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-move" onclick="contaAtiva='${l.contaOrigemId}'; moverParaConta('${l.id}')">M</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaOrigemId}'; deletaL('${l.id}')">X</button></td></tr>`;
                 });
             }
         }
@@ -941,7 +984,7 @@
         gerarDadosRelatorio(); atualizarSaudeBanco(); setTimeout(focarDataRelevante, 150);
     }
 
-    function verificarPendencias() {
+        function verificarPendencias() {
         const hj = new Date(); hj.setHours(23, 59, 59, 999); let tG = 0; let pC = {};
         contas.forEach(c => {
             let cp = 0; let n = c.alertaNivel || '1'; 
