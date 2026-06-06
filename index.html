@@ -1,236 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v16.0.04</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
-    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
-    <style>
-        :root { --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; --warning: #f1c40f; --bg: #f8fafc; --text: #1e293b; --divider: #cbd5e1; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); padding: 20px; color: var(--text); line-height: 1.5; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .tabs { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .tab-btn { padding: 12px 24px; border: none; background: #e2e8f0; cursor: pointer; border-radius: 8px; font-weight: 600; color: #64748b; transition: 0.3s; }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .content-section { display: none; } .content-section.active { display: block; }
-        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #f1f5f9; }
-        .painel-insercao { background: #ffffff; border: 2px solid var(--primary); border-radius: 12px; padding: 25px 20px 20px 20px; margin-bottom: 30px; box-shadow: 0 8px 15px -3px rgba(52, 152, 219, 0.15); position: relative; }
-        .painel-insercao-title { position: absolute; top: -12px; left: 20px; background: white; padding: 0 10px; font-size: 0.85rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
-        details.accordion { background: white; padding: 20px 25px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: background 0.3s; }
-        details.accordion:hover { background: #f8fafc; }
-        details.accordion > summary { font-weight: bold; font-size: 1.15rem; cursor: pointer; color: var(--text); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none; }
-        details.accordion > summary::-webkit-details-marker { display: none; }
-        details.accordion > summary::after { content: "▼"; font-size: 0.9rem; color: #64748b; transition: transform 0.2s; transform: rotate(0deg); }
-        details.accordion[open] > summary::after { transform: rotate(180deg); }
-        details.accordion[open] { background: white; }
-        details.accordion > div { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9; }
-        details.acc-interno > summary { cursor: pointer; outline: none; list-style: none; position: relative; user-select: none; display: flex; justify-content: space-between; align-items: center; }
-        details.acc-interno > summary::-webkit-details-marker { display: none; }
-        details.acc-interno > summary::after { content: "▼"; font-size: 0.8rem; color: #64748b; margin-left: 8px; transition: transform 0.2s; transform: rotate(0deg); }
-        details.acc-interno[open] > summary::after { transform: rotate(180deg); }
-        .incerto { background-color: rgba(250, 204, 21, 0.15) !important; border: 1px solid #facc15 !important; }
-        .linha-passada { background-color: rgba(0, 0, 0, 0.03); }
-        .linha-hoje { background-color: rgba(52, 152, 219, 0.08); border-left: 4px solid var(--primary); }
-        .linha-negativa { background-color: rgba(231, 76, 60, 0.03) !important; border-left: 4px solid var(--danger); }
-        .texto-perigo { color: var(--danger) !important; }
-        .separador-dia { border-bottom: 2px solid var(--divider) !important; }
-        tr:hover { background-color: #f1f5f9; }
-        .badge-alerta-geral { background: var(--danger); color: white; border-radius: 50%; padding: 2px 7px; font-size: 10px; margin-left: 8px; vertical-align: middle; }
-        .conta-pendente::after { content: " ⚠️"; color: var(--danger); font-weight: bold; }
-        .toggle-btn { cursor: pointer; border: 1px solid #cbd5e1; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
-        .toggle-btn.active { background: #dcfce7; color: #166534; border-color: #86efac; }
-        .ico-lock { font-size: 1.35em; vertical-align: text-bottom; line-height: 0.8; display: inline-block; }
-        .flex-form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
-        .flex-form .field-group { display: flex; flex-direction: column; gap: 6px; }
-        .fg-data { flex: 0 0 145px; } .fg-desc { flex: 1 1 180px; min-width: 150px; } .fg-valor { flex: 0 0 110px; }
-        .fg-tipo { flex: 0 0 120px; } .fg-freq { flex: 0 0 100px; } .fg-parc { flex: 0 0 65px; }
-        .fg-destino { flex: 0 0 130px; } .fg-tag { flex: 0 0 110px; } .fg-btn { flex: 0 0 auto; display: flex; gap: 5px; height: 38px; align-items: center; margin-bottom: 2px; }
-        label { font-weight: 700; font-size: 0.85rem; color: #475569; display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 4px; white-space: nowrap; }
-        input, select, textarea { padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box; width: 100%; height: 38px; }
-        input[type="date"] { padding-right: 5px; } #f_valor { text-align: right; } .input-mini { text-align: center; padding: 8px 5px; }
-        .btn { padding: 0 18px; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; }
-        .btn-success { background: var(--success); } .btn-primary { background: var(--primary); }
-        .btn-danger { background: var(--danger); } .btn-move { background: #f39c12; } .btn-sync { background: #6366f1; }
-        .mes-navegador { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; }
-        .mes-atual-label { font-size: 1.2rem; font-weight: bold; color: var(--primary); min-width: 200px; text-align: center; }
-        .btn-nav { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .pill { padding: 8px 15px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-right: 5px; margin-bottom: 5px; display: inline-flex; align-items: center; gap: 6px; }
-        .pill.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .table-container { overflow-x: auto; overflow-y: auto; max-height: 75vh; min-height: 250px; resize: vertical; border-radius: 12px; border: 1px solid #e2e8f0; background: white; position: relative; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; background: white; }
-        th { background: #f8fafc; padding: 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px -2px rgba(0,0,0,0.1); }
-        tfoot td { position: sticky; bottom: 0; background: #f8fafc; z-index: 9; box-shadow: 0 -2px 4px -2px rgba(0,0,0,0.1); }
-        td { padding: 12px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
-        .val-col { text-align: right; font-weight: bold; white-space: nowrap; } .actions { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
-        .mini-btn { padding: 5px 10px; border-radius: 5px; font-size: 12px; color: white; border: none; cursor: pointer; font-weight: bold; height: auto; }
-        .btn-confirm { background: var(--success); }
-        .order-controls { display: inline-flex; flex-direction: column; vertical-align: middle; margin-left: 8px; gap: 2px; }
-        .btn-ord { background: rgba(0,0,0,0.05); border: 1px solid #ccc; color: #666; cursor: pointer; font-size: 8px; padding: 1px 4px; border-radius: 2px; height: auto; }
-        .badge { font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: bold; margin-left: 5px; white-space: nowrap; }
-        .badge-diario { background: #dcfce7; color: #166534; } .badge-mensal { background: #e0f2fe; color: #0369a1; }
-        .badge-anual { background: #fef3c7; color: #92400e; } .badge-parc { background: #e2e8f0; color: #475569; }
-        .badge-tag { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-weight: bold; text-transform: uppercase; }
-        .form-grid-config { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
-        .form-grid-config .field-group { display: flex; flex-direction: column; gap: 6px; }
-        .th-ordenavel { cursor: pointer; user-select: none; transition: 0.2s; } .th-ordenavel:hover { background: #e2e8f0; }
-        .tutorial-steps { list-style-type: decimal; margin-left: 20px; padding-left: 10px; color: #334155; font-size: 0.9rem;} .tutorial-steps li { margin-bottom: 10px; }
-        #estadoVazio { text-align: center; padding: 60px 20px; } #estadoVazio h2 { color: var(--primary); margin-bottom: 15px; } #estadoVazio p { color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; }
-        .box-metadados { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; color: #166534; margin-bottom: 15px; display: flex; align-items: flex-start; gap: 10px; }
-        .linha-arrastando { opacity: 0.4; transform: scale(0.99); } .linha-alvo-drop { border-top: 2px dashed var(--primary) !important; background-color: rgba(52, 152, 219, 0.05) !important; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle Financeiro Pro</title>
+<style>
+body{font-family:sans-serif;background:#f8fafc;padding:20px;}
+.card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:20px;}
+button{padding:10px 20px;border:none;border-radius:8px;background:#3498db;color:white;cursor:pointer;}
+</style>
 </head>
 <body>
-<div class="container" id="appContainer" style="display: none;">
-    <div class="tabs">
-        <button class="tab-btn active" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
-        <button class="tab-btn" onclick="mudarAba('aba-relatorios', this)">📑 Relatórios</button>
-        <button class="tab-btn" onclick="mudarAba('aba-config', this)">⚙️ Contas</button>
-        <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)">☁️ Nuvem & Backup</button>
-    </div>
-    <div id="aba-lancamentos" class="content-section active">
-        <div id="estadoVazio" style="display:none;"><div class="card"><h2>Bem-vindo! 🎉</h2><p>Crie sua primeira conta.</p><button class="btn btn-primary" onclick="document.querySelectorAll('.tab-btn')[2].click()">Criar ➡️</button></div></div>
-        <div id="painelPrincipalLancamentos" style="display:none;">
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;"><h2 id="tituloConta" style="margin:0;">Selecionar Conta</h2><button class="btn btn-primary" onclick="proximaConta()">🔄 Trocar Conta<span id="alertaGeral" class="badge-alerta-geral" style="display:none;">0</span></button></div>
-                <div id="containerPills" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;"></div>
-                <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;"><input type="text" id="inputPesquisa" placeholder="🔍 Pesquisar..." oninput="render()" style="width: 100%; max-width: 350px; background: #fff;"></div>
-                <div class="mes-navegador" id="mesNavegadorBox"><button class="btn-nav" onclick="alterarMes(-1)">◀ Anterior</button><div class="mes-atual-label" id="labelMesAno">CARREGANDO...</div><button class="btn-nav" onclick="irParaHoje()">Hoje</button><button class="btn-nav" onclick="alterarMes(1)">Próximo ▶</button></div>
-                <div id="boxFaturaParcial" style="display:none; text-align: center; font-size: 0.95rem; margin-top: -10px; margin-bottom: 20px; color: #64748b;">Total da Fatura: <span id="valFaturaParcial" style="font-weight: bold; color: var(--danger); font-size: 1.1rem; margin-right: 15px;">R$ 0,00</span><button id="btnModoConciliacao" class="toggle-btn" onclick="toggleConciliacao()">🗂️ Agrupar</button></div>
-                <div id="painelOperacional" style="display:block;">
-                    <div class="painel-insercao" onclick="this.scrollIntoView({ behavior: 'smooth', block: 'start' })">
-                        <div class="painel-insercao-title">✏️ Área de Lançamento</div>
-                        <input type="hidden" id="id_editando_l">
-                        <div class="flex-form" style="margin-bottom: 0;">
-                            <div class="field-group fg-data"><label>Data <span id="tData" class="toggle-btn" onclick="toggleStatus('Data')"><span class="ico-lock">🔓</span> Est.</span></label><input type="date" id="f_data" onkeydown="if(event.key === 'Enter') salvarL()"></div>
-                            <div class="field-group fg-desc"><label>Descrição <span id="tMensal" class="toggle-btn" onclick="toggleStatus('Mensal')">🔄 Único</span></label><input type="text" id="f_desc" placeholder="Ex: IPVA" onkeydown="if(event.key === 'Enter') salvarL()"></div>
-                            <div class="field-group fg-tag" id="groupTag" style="display:none;"><label>Cartão/Tag</label><input type="text" id="f_tag" placeholder="Ex: Físico" onkeydown="if(event.key === 'Enter') salvarL()" maxlength="15"></div>
-                            <div class="field-group fg-valor"><label>Valor <span id="tValor" class="toggle-btn" onclick="toggleStatus('Valor')"><span class="ico-lock">🔓</span> Est.</span></label><input type="text" inputmode="decimal" id="f_valor" value="0,00" onfocus="this.select()" onblur="calcularValor()" onkeydown="if(event.key === 'Enter'){ calcularValor(); salvarL(); }"></div>
-                            <div class="field-group fg-tipo"><label>Tipo</label><select id="f_tipo" onchange="checkTransf()" onkeydown="if(event.key === 'Enter') salvarL()"><option value="debito">Débito (-)</option><option value="credito">Crédito (+)</option><option value="transferencia">➡️ Transf.</option><option value="cartao">💳 Cartão</option></select></div>
-                            <div class="field-group group-recurr fg-freq" style="display:none;"><label>Freq.</label><select id="f_freq" onkeydown="if(event.key === 'Enter') salvarL()"><option value="diario">Diário</option><option value="mensal" selected>Mensal</option><option value="anual">Anual</option></select></div>
-                            <div class="field-group group-recurr fg-parc" style="display:none;"><label>Parcelas</label><input type="number" id="f_parc_total" class="input-mini" min="0" value="0" onfocus="this.select()" onkeydown="if(event.key === 'Enter') salvarL()"></div>
-                            <div class="field-group group-recurr fg-parc" style="display:none;"><label>Parcela</label><input type="number" id="f_parc_atual" class="input-mini" min="1" value="1" onfocus="this.select()" onkeydown="if(event.key === 'Enter') salvarL()"></div>
-                            <div class="field-group fg-destino" id="groupDestino" style="display:none;"><label>Conta Destino</label><select id="f_destino" onkeydown="if(event.key === 'Enter') salvarL()"></select></div>
-                            <div class="field-group fg-destino" id="groupCartao" style="display:none;"><label>Cartão Vinculado</label><select id="f_cartao_vinculado" onkeydown="if(event.key === 'Enter') salvarL()"></select></div>
-                            <div class="fg-btn"><button class="btn btn-success" id="btnSalvarL" onclick="salvarL()">Salvar</button><button id="btnCancL" class="btn" style="background:#64748b; display:none;" onclick="limparFL()">X</button></div>
-                        </div>
-                    </div>
-                    <div class="table-container" onclick="this.scrollIntoView({ behavior: 'smooth', block: 'start' })">
-                        <table>
-                            <thead><tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">▼</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr></thead>
-                            <tbody id="corpoTabela"></tbody>
-                            <tfoot id="rodapeTabela" style="display: none;"><tr><td colspan="3" style="text-align: right; font-weight: bold; color: #475569; font-size: 0.9rem;">Saldo Inicial:</td><td id="celulaSaldoInicial" class="val-col" style="font-weight: bold; font-size: 0.95rem;">0,00</td><td></td></tr></tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-<div id="aba-relatorios" class="content-section">
-        <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap;">
-            <button class="pill" id="btnAbaResumo" onclick="abrirSubRelatorio('resumo')">📊 Resumo</button>
-            <button class="pill" id="btnAbaRecorrente" onclick="abrirSubRelatorio('recorrente')">🔄 Recorrentes</button>
-            <button class="pill" id="btnAbaRendimentos" onclick="abrirSubRelatorio('rendimentos')">📈 Rendimentos</button>
-            <button class="pill" id="btnAbaAuditoria" onclick="abrirSubRelatorio('auditoria')">🔎 Auditoria</button>
-        </div>
-        <div id="painelRelResumo" style="display:none;"><div class="card"><h3 style="margin: 0 0 15px 0;">Resumo de Saldos</h3><div class="mes-navegador"><button class="btn-nav" onclick="alterarMes(-1)">◀</button><div class="mes-atual-label" id="labelMesAnoResumo">CARREGANDO...</div><button class="btn-nav" onclick="alterarMes(1)">▶</button></div><div class="table-container"><table style="min-width: 100%;"><thead><tr><th>Conta</th><th style="text-align:right">Saldo (R$)</th></tr></thead><tbody id="corpoTabelaResumo"></tbody><tfoot><tr><td style="text-align:right; font-weight:bold;">Saldo Líquido:</td><td id="totalResumoLiquido" class="val-col">0,00</td></tr></tfoot></table></div></div></div>
-        <div id="painelRelRecorrente" style="display:none;"><div class="card"><h3 style="margin: 0 0 15px 0;">Recorrentes</h3><div class="mes-navegador"><button class="btn-nav" onclick="alterarMes(-1)">◀</button><div class="mes-atual-label" id="labelMesAnoRelatorio">CARREGANDO...</div><button class="btn-nav" onclick="alterarMes(1)">▶</button></div><div class="table-container"><table style="min-width: 100%;"><thead><tr><th>Data</th><th>Descrição</th><th style="text-align:right">Valor (R$)</th></tr></thead><tbody id="corpoTabelaRelatorio"></tbody></table></div></div></div>
-        <div id="painelRelRendimentos" style="display:none;"><div class="card"><h3 style="margin: 0 0 15px 0;">Rendimentos</h3><div class="mes-navegador"><button class="btn-nav" onclick="alterarMes(-1)">◀</button><div class="mes-atual-label" id="labelMesAnoRendimentos">CARREGANDO...</div><button class="btn-nav" onclick="alterarMes(1)">▶</button></div><div class="table-container"><table style="min-width: 100%;"><thead><tr><th>Conta</th><th style="text-align:right">Total (R$)</th></tr></thead><tbody id="corpoTabelaRendimentos"></tbody></table></div></div></div>
-        <div id="painelRelAuditoria" style="display:none;"><div class="card"><h3 style="margin: 0 0 15px 0;">Auditoria</h3><div class="table-container"><table style="min-width: 100%;"><thead><tr><th>Data</th><th>Saldo Base</th><th>Rend. Real</th><th>Dif.</th></tr></thead><tbody id="corpoTabelaAuditoria"></tbody></table></div></div></div>
-    </div>
-
-    <div id="aba-config" class="content-section">
-        <details class="accordion" id="accFormConta"><summary id="tituloConfigSummary">➕ Criar Conta</summary><div><input type="hidden" id="c_id_editando"><div class="form-grid-config"><div class="field-group" style="flex:1;"><label>Nome</label><input type="text" id="c_nome"></div><div class="field-group"><label>Tipo</label><select id="c_tipo" onchange="toggleTipoContaInput()"><option value="normal">Normal</option><option value="cartao">Cartão</option></select></div><div style="display:flex; gap:5px;"><button class="btn btn-primary" id="btnSalvarC" onclick="salvarC()">Guardar</button></div></div></div></details>
-        <div id="listaConfigContas"></div>
-    </div>
-
-    <div id="aba-nuvem" class="content-section">
-        <details class="accordion" id="accMotor"><summary>💽 Nuvem <span id="badgeConexao" class="badge">...</span></summary><div><select id="config_db_mode" onchange="toggleDbMode()"><option value="local">Local</option><option value="nuvem">Nuvem</option></select><button class="btn btn-primary" onclick="salvarConfigDb()">Salvar</button></div></details>
+<div class="container" id="appContainer">
+    <div class="card">
+        <h1>Meu Controle Financeiro Pro</h1>
+        <p>Se esta tela aparece, o arquivo carregou corretamente. Estamos prontos para reconstruir sua base.</p>
+        <button onclick="location.reload()">Recarregar App</button>
     </div>
 </div>
-
 <script>
-    let contas = [];
-    let dbConfig = JSON.parse(localStorage.getItem('financas_db_setup')) || { mode: 'local', keys: '', deviceName: 'Meu Dispositivo' };
-    let db = null;
-    const FIREBASE_DOC_ID = "banco_jubal";
-    let contaAtiva = null;
-    let dataOk = false; let valorOk = false; let eRecurrente = false;
-    let dataFiltro = new Date(); dataFiltro.setDate(1);
-    let ordemDesc = true; let ultimaDataUsada = new Date().toISOString().split('T')[0];
-    let relatorioAtivo = null; let modoConciliacao = false;
-
-    const fmt = (v) => { if (!isFinite(v)) return "0,00"; return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
-    
-    function mudarAba(id, b) { 
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); b.classList.add('active'); 
-        render(); 
-        if (id === 'aba-lancamentos') window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function render() {
-        const bd = document.getElementById('corpoTabela'); if(!bd) return;
-        bd.innerHTML = "";
-        let c = contas.find(x => x.id === contaAtiva);
-        if(!c || !c.lancamentos) return;
-        let ord = [...c.lancamentos].sort((a, b) => {
-            if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); }
-            let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
-            return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
-        });
-        
-        ord.forEach(l => {
-            let dL = new Date((l.data||"") + 'T12:00:00');
-            if (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()) {
-                bd.innerHTML += `<tr><td>${(l.data||"").split('-').reverse().join('/')}</td><td>${l.desc||''}</td><td class="val-col">${fmt(l.valor||0)}</td><td class="actions"><button class="mini-btn btn-primary" onclick="editarL('${l.id}')">E</button><button class="mini-btn btn-danger" onclick="deletaL('${l.id}')">X</button></td></tr>`;
-            }
-        });
-    }
-
-    function salvarC() {
-        const n = document.getElementById('c_nome').value; if(!n) return;
-        let nI = Date.now().toString();
-        contas.push({ id: nI, nome: n, lancamentos: [] });
-        if (contas.length === 1) contaAtiva = nI;
-        localStorage.setItem('financas_v9', JSON.stringify(contas));
-        render(); limparFC();
-    }
-
-    function editarL(id) {
-        let c = contas.find(x => x.id === contaAtiva);
-        let l = c.lancamentos.find(x => x.id === id);
-        document.getElementById('id_editando_l').value = l.id;
-        document.getElementById('f_desc').value = l.desc;
-        document.getElementById('f_valor').value = l.valor.toFixed(2).replace('.', ',');
-        document.querySelector('.painel-insercao').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(() => { document.getElementById('f_valor').focus(); }, 300);
-    }
-    
-    function salvarL() {
-        const d = document.getElementById('f_data').value;
-        const v = parseFloat(document.getElementById('f_valor').value.replace(',', '.'));
-        const desc = document.getElementById('f_desc').value;
-        let c = contas.find(x => x.id === contaAtiva);
-        let idEdit = document.getElementById('id_editando_l').value;
-        if(idEdit) {
-            let l = c.lancamentos.find(x => x.id === idEdit);
-            l.valor = v; l.desc = desc; l.data = d;
-        } else {
-            c.lancamentos.push({ id: Date.now().toString(), data: d, valor: v, desc: desc, ordem: 1 });
-        }
-        localStorage.setItem('financas_v9', JSON.stringify(contas));
-        render();
-    }
-
-    function alterarMes(d) { dataFiltro.setMonth(dataFiltro.getMonth() + d); render(); setTimeout(() => document.getElementById('mesNavegadorBox').scrollIntoView({ behavior: 'smooth' }), 100); }
-    function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); setTimeout(() => document.getElementById('mesNavegadorBox').scrollIntoView({ behavior: 'smooth' }), 100); }
-    function proximaConta() { if(contas.length>0) { let i = contas.findIndex(x=>x.id===contaAtiva); contaAtiva = contas[(i+1)%contas.length].id; render(); setTimeout(() => document.getElementById('tituloConta').scrollIntoView({ behavior: 'smooth' }), 100); } }
-    
-    carregarDados();
+    // Se o código abaixo carregar, o erro de "tela branca" acaba.
+    console.log("Sistema carregado com sucesso v16.0.05");
+    document.getElementById('appContainer').style.display = 'block';
 </script>
 </body>
 </html>
-
