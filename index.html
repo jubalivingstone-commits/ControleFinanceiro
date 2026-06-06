@@ -259,6 +259,7 @@
     </div>
 
     <div id="aba-nuvem" class="content-section">
+        
         <details class="accordion" id="accMotor">
             <summary><div style="display: flex; align-items: center; gap: 10px;">💽 Sincronização e Acesso Online <span id="badgeConexao" class="badge badge-diario" style="font-weight: normal;">Verificando...</span></div></summary>
             <div>
@@ -282,20 +283,6 @@
             </div>
         </details>
 
-        <details class="accordion">
-            <summary>📖 Como Criar sua Nuvem Gratuita (Tutorial)</summary>
-            <div>
-                <ol class="tutorial-steps">
-                    <li>Acesse <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--primary);">Firebase Console</a> e faça login.</li>
-                    <li>Clique em <b>Adicionar projeto</b>.</li>
-                    <li>Vá em <b>Criação > Firestore Database</b> e clique em <b>Criar banco de dados</b>.</li>
-                    <li>Na aba <b>Regras (Rules)</b>, mude para: <code>allow read, write: if true;</code> e <b>Publicar</b>.</li>
-                    <li>Nas Configurações do projeto (⚙️), clique em <b>&lt;/&gt; (Web)</b> para registrar o app.</li>
-                    <li>Copie o código gerado de <code>apiKey</code> até <code>appId</code> e cole nas chaves do sistema.</li>
-                </ol>
-            </div>
-        </details>
-
         <details class="accordion" open>
             <summary>📦 Backups e Exportação Local</summary>
             <div>
@@ -313,6 +300,35 @@
                 </div>
             </div>
         </details>
+
+        <details class="accordion">
+            <summary>📖 Como Criar sua Nuvem Gratuita (Tutorial)</summary>
+            <div>
+                <ol class="tutorial-steps">
+                    <li>Acesse <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--primary);">Firebase Console</a> e faça login.</li>
+                    <li>Clique em <b>Adicionar projeto</b>.</li>
+                    <li>Vá em <b>Criação > Firestore Database</b> e clique em <b>Criar banco de dados</b>.</li>
+                    <li>Na aba <b>Regras (Rules)</b>, mude para: <code>allow read, write: if true;</code> e <b>Publicar</b>.</li>
+                    <li>Nas Configurações do projeto (⚙️), clique em <b>&lt;/&gt; (Web)</b> para registrar o app.</li>
+                    <li>Copie o código gerado de <code>apiKey</code> até <code>appId</code> e cole nas chaves do sistema.</li>
+                </ol>
+            </div>
+        </details>
+
+        <details class="accordion">
+            <summary>📖 O que este sistema pode fazer por você?</summary>
+            <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
+                <p style="margin-top: 0;">O <b>Meu Controle Financeiro Pro</b> é uma ferramenta completa e de alta precisão para organizar sua vida financeira. Veja os principais recursos:</p>
+                <ul style="margin-left: 20px; padding-left: 10px; margin-bottom: 0;">
+                    <li style="margin-bottom: 8px;"><b>💳 Cartões e Conciliação:</b> Controle de faturas, datas de fechamento e agrupamento por Etiquetas (Tags) para facilitar a conferência cruzada com o seu extrato bancário.</li>
+                    <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
+                    <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
+                    <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas recorrentes no seu orçamento.</li>
+                    <li><b>☁️ Segurança BBB:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
+                </ul>
+            </div>
+        </details>
+
     </div>
 
     <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.04</div>
