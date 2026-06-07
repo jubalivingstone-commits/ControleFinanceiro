@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v16.0.04</title>
+    <title>Meu Controle Financeiro Pro - v17.0.00</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -85,6 +85,7 @@
 <div class="container" id="appContainer" style="display: none;">
     <div class="tabs">
         <button class="tab-btn active" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
+        <button id="btnAbaAgenda" class="tab-btn" onclick="mudarAba('aba-agenda', this)" style="display:none;">🗓️ Agenda</button>
         <button class="tab-btn" onclick="mudarAba('aba-relatorios', this)">📑 Relatórios</button>
         <button class="tab-btn" onclick="mudarAba('aba-config', this)">⚙️ Contas</button>
         <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)">☁️ Nuvem & Backup</button>
@@ -95,7 +96,7 @@
             <div class="card">
                 <h2>Bem-vindo ao seu Controle Financeiro! 🎉</h2>
                 <p>Parece que você ainda não tem nenhuma conta configurada. Crie sua primeira conta corrente, poupança ou cartão.</p>
-                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[2].click()">Criar Minha Primeira Conta ➡️</button>
+                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[3].click()">Criar Minha Primeira Conta ➡️</button>
                 
                 <div style="margin-top: 35px; text-align: left;">
                     <details class="accordion" style="box-shadow: none; border: 1px dashed #cbd5e1;">
@@ -112,17 +113,15 @@
                         </div>
                     </details>
                 </div>
-                </div>
+            </div>
         </div>
 
         <div id="painelPrincipalLancamentos" style="display:none;">
             <div class="card">
-                <!-- 1. NOVA BARRA GLOBAL E COM BOTÃO "X" (type="search") -->
                 <div style="margin-bottom: 20px;">
                     <input type="search" id="inputPesquisa" placeholder="🔍 Pesquisar em todas as contas (Nome, Data, Valor ou Tag)..." oninput="render()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 1rem;">
                 </div>
 
-                <!-- 2. CABEÇALHO COM ID PARA PODER SER OCULTADO DURANTE A PESQUISA -->
                 <div id="cabecalhoContas" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
                     <h2 id="tituloConta" style="margin:0;">Selecionar Conta</h2>
                     <button class="btn btn-primary" onclick="proximaConta()">🔄 Trocar Conta<span id="alertaGeral" class="badge-alerta-geral" style="display:none;">0</span></button>
@@ -168,6 +167,37 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="aba-agenda" class="content-section">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0;">🗓️ Agenda Financeira (Fluxo Previsto)</h3>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0px; margin-bottom: 20px;">Visão cronológica de todos os lançamentos não confirmados.</p>
+            
+            <div id="agendaVazia" style="display:none; text-align: center; padding: 40px 20px;">
+                <span style="font-size: 3rem;">🎉</span>
+                <h3 style="color: var(--success); margin-top: 10px;">Tudo em dia!</h3>
+                <p style="color: #64748b; font-size: 1.1rem;">Você não possui nenhum compromisso pendente no sistema.</p>
+            </div>
+            
+            <div id="agendaTabelaContainer" class="table-container" style="max-height: 70vh;">
+                <table style="min-width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Conta Base</th>
+                            <th>Descrição</th>
+                            <th style="text-align:right">Valor (R$)</th>
+                            <th style="text-align:right" title="Qual será o saldo da conta base após esta operação">Caixa Previsto (R$)</th>
+                            <th style="text-align:center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabelaAgenda"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -259,7 +289,6 @@
     </div>
 
     <div id="aba-nuvem" class="content-section">
-        
         <details class="accordion" id="accMotor">
             <summary><div style="display: flex; align-items: center; gap: 10px;">💽 Sincronização e Acesso Online <span id="badgeConexao" class="badge badge-diario" style="font-weight: normal;">Verificando...</span></div></summary>
             <div>
@@ -300,21 +329,7 @@
                 </div>
             </div>
         </details>
-
-        <details class="accordion">
-            <summary>📖 O que este sistema pode fazer por você?</summary>
-            <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
-                <p style="margin-top: 0;">O <b>Meu Controle Financeiro Pro</b> é uma ferramenta completa e de alta precisão para organizar sua vida financeira. Veja os principais recursos:</p>
-                <ul style="margin-left: 20px; padding-left: 10px; margin-bottom: 0;">
-                    <li style="margin-bottom: 8px;"><b>💳 Cartões e Conciliação:</b> Controle de faturas, datas de fechamento e agrupamento por Etiquetas (Tags) para facilitar a conferência cruzada com o seu extrato bancário.</li>
-                    <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
-                    <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
-                    <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas recorrentes no seu orçamento.</li>
-                    <li><b>☁️ Segurança BBB:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
-                </ul>
-            </div>
-        </details>
-
+        
         <details class="accordion">
             <summary>📖 Como Criar sua Nuvem Gratuita (Tutorial)</summary>
             <div>
@@ -328,21 +343,19 @@
                 </ol>
             </div>
         </details>
-
-
-
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v16.0.04</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v17.0.00</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 16.0.04
+     * @version 17.0.00
      * @changelog
-     * - [FIX] Correção do Bug de Deslizamento do Drag and Drop: O sistema agora espelha milimetricamente a visão do usuário (ordem decrescente/crescente e os blocos de conciliação por Tag) na hora de calcular e distribuir as posições exatas das linhas arrastadas.
-     * - [UX] Correção Crítica de Edição no Mobile: Removido o "pulo para o topo absoluto" ao editar lançamentos. Substituído por um deslizamento suave que centraliza o formulário e impede que o teclado agrida a interface bruscamente.
+     * - [FEATURE] Implementada a aba "Agenda Financeira": Painel inteligente de fluxo de caixa previsto que reúne apenas os lançamentos não confirmados de todas as contas não-cartão, incluindo a matemática precisa de projeção de saldo por conta origem.
+     * - [UX] A aba Agenda permanece oculta automaticamente se não houver contas configuradas, e exibe uma tela comemorativa de "Tudo em dia" caso o usuário não possua compromissos pendentes.
+     * - [FIX] Pesquisa Global unificada aprimorada, mantendo os mesmos botões de confirmação e edição contextuais.
      */
 
     let contas = [];
@@ -837,6 +850,76 @@
         }
     }
 
+    // NOVA FUNÇÃO: Renderização da Agenda Financeira
+    function renderAgenda() {
+        const bdAgenda = document.getElementById('corpoTabelaAgenda');
+        const agendaVazia = document.getElementById('agendaVazia');
+        const agendaTabelaContainer = document.getElementById('agendaTabelaContainer');
+        
+        if (!bdAgenda) return;
+        bdAgenda.innerHTML = '';
+        
+        let agendaItems = [];
+        
+        contas.forEach(c => {
+            if (c.tipoConta === 'cartao') return; 
+            
+            let ordens = [...(c.lancamentos||[])].sort((a,b) => {
+                let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
+                return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0);
+            });
+            
+            let sT = 0; let mS = {};
+            ordens.forEach(l => {
+                let v = l.valor||0; 
+                if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
+                sT += (l.tipo === 'credito' ? v : -v);
+                mS[l.id] = sT;
+            });
+            
+            c.lancamentos.forEach(l => {
+                if (!l.dataOk || !l.valorOk) { 
+                    if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
+                    agendaItems.push({ ...l, nomeConta: c.nome, contaId: c.id, saldoProjetado: mS[l.id] });
+                }
+            });
+        });
+        
+        agendaItems.sort((a, b) => {
+            let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
+            return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0);
+        });
+        
+        if (agendaItems.length === 0) {
+            agendaVazia.style.display = 'block'; agendaTabelaContainer.style.display = 'none';
+        } else {
+            agendaVazia.style.display = 'none'; agendaTabelaContainer.style.display = 'block';
+            const hj = new Date(); hj.setHours(0,0,0,0);
+            
+            agendaItems.forEach(l => {
+                let dL = new Date((l.data||"") + 'T00:00:00'); 
+                let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-negativa" : "");
+                
+                let th = ""; 
+                if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; 
+                else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; 
+                else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
+                if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
+                
+                let bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaId}'; confirmarRapidoL('${l.id}')" title="Confirmar pagamento">C</button>`;
+                
+                bdAgenda.innerHTML += `<tr class="${cl}">
+                    <td>${(l.data||"").split('-').reverse().join('/')}</td>
+                    <td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td>
+                    <td>${l.desc||''} ${th}</td>
+                    <td class="val-col" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor||0)}</td>
+                    <td class="val-col ${l.saldoProjetado < 0 ? 'texto-perigo' : ''}">${fmt(l.saldoProjetado)}</td>
+                    <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaId}'; deletaL('${l.id}')">X</button></td>
+                </tr>`;
+            });
+        }
+    }
+
     let dragIdL = null; let dragDataRef = null;
     function iniciarDrag(ev, id, dS) { dragIdL = id; dragDataRef = dS; ev.dataTransfer.effectAllowed = 'move'; setTimeout(() => ev.target.classList.add('linha-arrastando'), 0); }
     function permitirDrop(ev) { ev.preventDefault(); }
@@ -844,7 +927,6 @@
     function sairDrag(ev) { let t = ev.target.closest('tr'); if(t) t.classList.remove('linha-alvo-drop'); }
     function finalizarDrag(ev) { ev.target.classList.remove('linha-arrastando'); document.querySelectorAll('.linha-alvo-drop').forEach(e => e.classList.remove('linha-alvo-drop')); }
     
-    // MUDANÇA 16.0.04: Lógica ajustada para ler a tela perfeitamente e colar no lugar milimétrico.
     function soltarDrop(ev, dId, dDR) {
         ev.preventDefault(); finalizarDrag(ev); if (!dragIdL || dragIdL === dId) return;
         if (dragDataRef !== dDR) return alert("Reordenação apenas no mesmo dia.");
@@ -889,11 +971,20 @@
         else ls[ls.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
 
-function render() {
+    function render() {
         document.getElementById('labelMesAno').innerText = formatarMesInteligente(dataFiltro);
         const pP = document.getElementById('painelPrincipalLancamentos'); const eV = document.getElementById('estadoVazio');
-        if (contas.length === 0) { pP.style.display = 'none'; eV.style.display = 'block'; const lc = document.getElementById('listaConfigContas'); if(lc) lc.innerHTML = ""; gerarDadosRelatorio(); atualizarSaudeBanco(); return; } 
-        else { pP.style.display = 'block'; eV.style.display = 'none'; }
+        const btnAgenda = document.getElementById('btnAbaAgenda');
+        
+        if (contas.length === 0) { 
+            pP.style.display = 'none'; eV.style.display = 'block'; 
+            if(btnAgenda) btnAgenda.style.display = 'none'; // Some se banco zerado
+            const lc = document.getElementById('listaConfigContas'); if(lc) lc.innerHTML = ""; 
+            gerarDadosRelatorio(); atualizarSaudeBanco(); return; 
+        } else { 
+            pP.style.display = 'block'; eV.style.display = 'none'; 
+            if(btnAgenda) btnAgenda.style.display = 'inline-block';
+        }
 
         const pend = verificarPendencias();
         const cp = document.getElementById('containerPills'); cp.innerHTML = "";
@@ -907,12 +998,11 @@ function render() {
             document.getElementById('painelOperacional').style.display = 'block';
             let c = contas.find(x => x.id === contaAtiva);
             if (c) {
+                document.getElementById('tituloConta').innerText = c.nome;
                 const inP = document.getElementById('inputPesquisa'); const tP = inP ? inP.value.trim().toLowerCase() : ""; const mP = tP !== "";
-                
-                // MUDANÇA: Esconder navegação visual se a pesquisa estiver ativa
+                const mNB = document.getElementById('mesNavegadorBox'); if (mNB) mNB.style.display = mP ? 'none' : 'flex';
                 const cabContas = document.getElementById('cabecalhoContas'); if (cabContas) cabContas.style.display = mP ? 'none' : 'flex';
                 document.getElementById('containerPills').style.display = mP ? 'none' : 'flex';
-                const mNB = document.getElementById('mesNavegadorBox'); if (mNB) mNB.style.display = mP ? 'none' : 'flex';
                 
                 const oC = document.querySelector('#f_tipo option[value="cartao"]');
                 if (oC) { oC.style.display = 'none'; oC.disabled = true; if (document.getElementById('f_tipo').value === 'cartao') { document.getElementById('f_tipo').value = 'debito'; checkTransf(); } }
@@ -927,7 +1017,6 @@ function render() {
                     }
                 } else { document.getElementById('groupTag').style.display = 'none'; document.getElementById('boxFaturaParcial').style.display = 'none'; modoConciliacao = false; }
 
-                // MUDANÇA: Transformação dinâmica do cabeçalho da tabela
                 const thead = document.querySelector('.table-container table thead');
                 if (mP) {
                     thead.innerHTML = `<tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">${ordemDesc ? '▼' : '▲'}</span></th><th>Conta</th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:center">Ações</th></tr>`;
@@ -939,7 +1028,6 @@ function render() {
                 let dR = [];
                 
                 if (mP) {
-                    // LÓGICA DE PESQUISA: Busca em todas as contas e oculta cálculos de saldo
                     contas.forEach(ct => {
                         if (ct.lancamentos) {
                             ct.lancamentos.forEach(l => {
@@ -953,7 +1041,6 @@ function render() {
                         return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
                     });
                 } else {
-                    // LÓGICA NORMAL: Exibe apenas a conta ativa com matemática de saldo
                     document.getElementById('tituloConta').innerText = c.nome;
                     const ord = [...(c.lancamentos||[])].sort((a, b) => {
                         if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); }
@@ -979,7 +1066,6 @@ function render() {
                     });
                 }
 
-                // Oculta o rodapé de Saldo Inicial na pesquisa
                 const rT = document.getElementById('rodapeTabela'); 
                 if (rT) rT.style.display = mP ? 'none' : 'table-footer-group';
 
@@ -991,7 +1077,6 @@ function render() {
                     let th = ""; if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
                     if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
                     
-                    // MUDANÇA: Ações inteligentes. Injetam a 'contaAtiva' certa antes de rodar a função
                     let bC = (!l.dataOk || !l.valorOk) ? `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>` : '';
                     let cCen = mP ? `<td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td><td>${l.desc||''} ${th}</td>` : `<td>${l.desc||''} ${th}</td>`;
                     let cSal = mP ? "" : `<td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td>`;
@@ -1016,10 +1101,10 @@ function render() {
                 lc.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px; margin-bottom:10px; flex-wrap: wrap; gap: 10px;"><div><b>${c.nome}</b><span style="font-size:0.8rem; color:#64748b;">${tn}</span>${ib}<div class="order-controls" style="display:inline-flex; margin-left: 10px;"><button class="btn-ord" onclick="moverConta('${c.id}','sobe')">▲</button><button class="btn-ord" onclick="moverConta('${c.id}','desce')">▼</button></div></div><div class="actions"><button class="mini-btn btn-primary" onclick="editarC('${c.id}')">E</button><button class="mini-btn btn-danger" onclick="if(confirm('Apagar a conta e todo o histórico?')) {contas=contas.filter(x=>x.id!=='${c.id}'); salvarEAtualizar();}">X</button></div></div>`;
             });
         }
-        gerarDadosRelatorio(); atualizarSaudeBanco(); setTimeout(focarDataRelevante, 150);
+        gerarDadosRelatorio(); atualizarSaudeBanco(); renderAgenda(); setTimeout(focarDataRelevante, 150);
     }
 
-        function verificarPendencias() {
+    function verificarPendencias() {
         const hj = new Date(); hj.setHours(23, 59, 59, 999); let tG = 0; let pC = {};
         contas.forEach(c => {
             let cp = 0; let n = c.alertaNivel || '1'; 
