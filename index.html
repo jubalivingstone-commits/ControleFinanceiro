@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v17.0.01</title>
+    <title>Meu Controle Financeiro Pro - v17.0.00</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -84,15 +84,14 @@
 <body>
 <div class="container" id="appContainer" style="display: none;">
     <div class="tabs">
-        <button class="tab-btn" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
-        <!-- BOTÃO DA AGENDA VISÍVEL E ATIVO POR PADRÃO NO HTML -->
-        <button id="btnAbaAgenda" class="tab-btn active" onclick="mudarAba('aba-agenda', this)">🗓️ Agenda</button>
+        <button class="tab-btn active" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
+        <button id="btnAbaAgenda" class="tab-btn" onclick="mudarAba('aba-agenda', this)" style="display:none;">🗓️ Agenda</button>
         <button class="tab-btn" onclick="mudarAba('aba-relatorios', this)">📑 Relatórios</button>
         <button class="tab-btn" onclick="mudarAba('aba-config', this)">⚙️ Contas</button>
         <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)">☁️ Nuvem & Backup</button>
     </div>
 
-    <div id="aba-lancamentos" class="content-section">
+    <div id="aba-lancamentos" class="content-section active">
         <div id="estadoVazio" style="display:none;">
             <div class="card">
                 <h2>Bem-vindo ao seu Controle Financeiro! 🎉</h2>
@@ -119,7 +118,6 @@
 
         <div id="painelPrincipalLancamentos" style="display:none;">
             <div class="card">
-                <!-- BARRA GLOBAL DE PESQUISA -->
                 <div style="margin-bottom: 20px;">
                     <input type="search" id="inputPesquisa" placeholder="🔍 Pesquisar em todas as contas (Nome, Data, Valor ou Tag)..." oninput="render()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 1rem;">
                 </div>
@@ -173,8 +171,7 @@
         </div>
     </div>
 
-    <!-- ABA: AGENDA FINANCEIRA (Agora ativa por padrão no HTML) -->
-    <div id="aba-agenda" class="content-section active">
+    <div id="aba-agenda" class="content-section">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="margin: 0;">🗓️ Agenda Financeira (Fluxo Previsto)</h3>
@@ -332,22 +329,7 @@
                 </div>
             </div>
         </details>
-
-        <!-- SEÇÃO INCLUÍDA NA NUVEM -->
-        <details class="accordion">
-            <summary>📖 O que este sistema pode fazer por você?</summary>
-            <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
-                <p style="margin-top: 0;">O <b>Meu Controle Financeiro Pro</b> é uma ferramenta completa e de alta precisão para organizar sua vida financeira. Veja os principais recursos:</p>
-                <ul style="margin-left: 20px; padding-left: 10px; margin-bottom: 0;">
-                    <li style="margin-bottom: 8px;"><b>💳 Cartões e Conciliação:</b> Controle de faturas, datas de fechamento e agrupamento por Etiquetas (Tags) para facilitar a conferência cruzada com o seu extrato bancário.</li>
-                    <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
-                    <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
-                    <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas recorrentes no seu orçamento.</li>
-                    <li><b>☁️ Segurança BBB:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
-                </ul>
-            </div>
-        </details>
-
+        
         <details class="accordion">
             <summary>📖 Como Criar sua Nuvem Gratuita (Tutorial)</summary>
             <div>
@@ -363,17 +345,17 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v17.0.01</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v17.0.00</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 17.0.01
+     * @version 17.0.00
      * @changelog
-     * - [UX] Aba "Agenda Financeira" definida como a guia inicial (padrão) do sistema.
-     * - [UX] Lógica de Estado Vazio inteligente: se o banco de dados estiver vazio, o sistema redireciona automaticamente para a aba "Lançamentos" para exibir a mensagem de boas-vindas.
-     * - [UX] Adicionada a seção "O que este sistema pode fazer por você?" na aba Nuvem & Backup, antes do tutorial.
+     * - [FEATURE] Implementada a aba "Agenda Financeira": Painel inteligente de fluxo de caixa previsto que reúne apenas os lançamentos não confirmados de todas as contas não-cartão, incluindo a matemática precisa de projeção de saldo por conta origem.
+     * - [UX] A aba Agenda permanece oculta automaticamente se não houver contas configuradas, e exibe uma tela comemorativa de "Tudo em dia" caso o usuário não possua compromissos pendentes.
+     * - [FIX] Pesquisa Global unificada aprimorada, mantendo os mesmos botões de confirmação e edição contextuais.
      */
 
     let contas = [];
@@ -662,13 +644,11 @@
 
     function exportarCSV() {
         if (contas.length === 0) return alert("Nenhuma conta.");
-        let csv = "data:text/csv;charset=utf-8,Conta;Data;Descricao;Tipo;Valor;Status_Data;Status_Valor;Tag
-";
+        let csv = "data:text/csv;charset=utf-8,Conta;Data;Descricao;Tipo;Valor;Status_Data;Status_Valor;Tag\n";
         contas.forEach(c => {
             if(!c.lancamentos) return;
             c.lancamentos.forEach(l => {
-                csv += `${c.nome};${(l.data||"").split('-').reverse().join('/')};"${l.desc||''}";${l.tipo};${isFinite(l.valor) ? l.valor.toString().replace('.',',') : "0,00"};${l.dataOk?'CONF':'EST'};${l.valorOk?'CONF':'EST'};${l.tag||''}
-`;
+                csv += `${c.nome};${(l.data||"").split('-').reverse().join('/')};"${l.desc||''}";${l.tipo};${isFinite(l.valor) ? l.valor.toString().replace('.',',') : "0,00"};${l.dataOk?'CONF':'EST'};${l.valorOk?'CONF':'EST'};${l.tag||''}\n`;
             });
         });
         const a = document.createElement("a"); a.setAttribute("href", encodeURI(csv)); a.setAttribute("download", "financas.csv"); a.click();
@@ -997,12 +977,6 @@
         const btnAgenda = document.getElementById('btnAbaAgenda');
         
         if (contas.length === 0) { 
-            // UX: Auto-switch para Lançamentos para mostrar a tela de boas-vindas se o banco estiver zerado
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
-            document.getElementById('aba-lancamentos').classList.add('active');
-            document.querySelector('.tab-btn[onclick*="aba-lancamentos"]').classList.add('active');
-
             pP.style.display = 'none'; eV.style.display = 'block'; 
             if(btnAgenda) btnAgenda.style.display = 'none'; // Some se banco zerado
             const lc = document.getElementById('listaConfigContas'); if(lc) lc.innerHTML = ""; 
@@ -1198,9 +1172,7 @@
         let i = cO.lancamentos.findIndex(x => x.id === id); let l = cO.lancamentos[i]; if(!l) return;
         if (l.transferId) return alert("Não é possível mover transferências vinculadas.");
         let out = contas.filter(c => c.id !== contaAtiva); if(out.length === 0) return;
-        let sel = prompt("Para qual conta?
-" + out.map((c, i) => `${i + 1} - ${c.nome}`).join('
-'));
+        let sel = prompt("Para qual conta?\n" + out.map((c, i) => `${i + 1} - ${c.nome}`).join('\n'));
         let cD = out[parseInt(sel) - 1];
         if(cD && confirm(`Mover para ${cD.nome}?`)) { cO.lancamentos.splice(i, 1); l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; if(!cD.lancamentos) cD.lancamentos=[]; cD.lancamentos.push(l); salvarEAtualizar(); }
     }
