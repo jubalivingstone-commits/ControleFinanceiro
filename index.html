@@ -915,6 +915,12 @@
                 let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-negativa" : "");
                 
                 let th = ""; 
+                // --- INÍCIO DA CORREÇÃO VISUAL ---
+                let valorExibicao = l.valor || 0;
+                if (l.isFaturaCartao && !l.valorOk) {
+                    valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
+                }
+                // --- FIM DA CORREÇÃO VISUAL ---
                 if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; 
                 else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; 
                 else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
@@ -926,7 +932,7 @@
                     <td>${(l.data||"").split('-').reverse().join('/')}</td>
                     <td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td>
                     <td>${l.desc||''} ${th}</td>
-                    <td class="val-col" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor||0)}</td>
+                    <td class="val-col" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(valorExibicao)}</td>
                     <td class="val-col ${l.saldoProjetado < 0 ? 'texto-perigo' : ''}">${fmt(l.saldoProjetado)}</td>
                     <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaId}'; deletaL('${l.id}')">X</button></td>
                 </tr>`;
@@ -1088,6 +1094,13 @@
                     if (l.s < 0 && !mP) cl += " linha-negativa"; 
                     if (dR[i+1]) { if (!mP && modoConciliacao && c.tipoConta === 'cartao') { if ((l.tag||"").toLowerCase() !== (dR[i+1].tag||"").toLowerCase()) cl += " separador-dia"; } else if (dR[i+1].data !== l.data) cl += " separador-dia"; }
                     
+                    // --- INÍCIO DA CORREÇÃO VISUAL ---
+                    let valorExibicao = l.valor || 0;
+                    if (l.isFaturaCartao && !l.valorOk) {
+                        valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
+                    }
+                    // --- FIM DA CORREÇÃO VISUAL ---
+
                     let th = ""; if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
                     if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
                     
@@ -1099,7 +1112,7 @@
                     bd.innerHTML += `<tr class="${cl}" draggable="true" ondragstart="iniciarDrag(event, '${l.id}', '${l.data}')" ondragover="permitirDrop(event)" ondrop="soltarDrop(event, '${l.id}', '${l.data}')" ondragenter="entrarDrag(event)" ondragleave="sairDrag(event)" ondragend="finalizarDrag(event)" style="cursor: grab;">
                         <td class="${l.dataOk?'':'incerto'}">${(l.data||"").split('-').reverse().join('/')}${setOr}</td>
                         ${cCen}
-                        <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor||0)}</td>
+                        <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(valorExibicao)}</td>
                         ${cSal}
                         <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaOrigemId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-move" onclick="contaAtiva='${l.contaOrigemId}'; moverParaConta('${l.id}')">M</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaOrigemId}'; deletaL('${l.id}')">X</button></td></tr>`;
                 });
