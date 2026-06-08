@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v18.0.01</title>
+    <title>Meu Controle Financeiro Pro - v17.0.00</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -84,14 +84,14 @@
 <body>
 <div class="container" id="appContainer" style="display: none;">
     <div class="tabs">
-        <button class="tab-btn" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
-        <button id="btnAbaAgenda" class="tab-btn active" onclick="mudarAba('aba-agenda', this)">🗓️ Agenda</button>
+        <button class="tab-btn active" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
+        <button id="btnAbaAgenda" class="tab-btn" onclick="mudarAba('aba-agenda', this)" style="display:none;">🗓️ Agenda</button>
         <button class="tab-btn" onclick="mudarAba('aba-relatorios', this)">📑 Relatórios</button>
         <button class="tab-btn" onclick="mudarAba('aba-config', this)">⚙️ Contas</button>
         <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)">☁️ Nuvem & Backup</button>
     </div>
 
-    <div id="aba-lancamentos" class="content-section">
+    <div id="aba-lancamentos" class="content-section active">
         <div id="estadoVazio" style="display:none;">
             <div class="card">
                 <h2>Bem-vindo ao seu Controle Financeiro! 🎉</h2>
@@ -171,7 +171,7 @@
         </div>
     </div>
 
-    <div id="aba-agenda" class="content-section active">
+    <div id="aba-agenda" class="content-section">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="margin: 0;">🗓️ Agenda Financeira (Fluxo Previsto)</h3>
@@ -329,7 +329,7 @@
                 </div>
             </div>
         </details>
-
+        
         <details class="accordion">
             <summary>📖 O que este sistema pode fazer por você?</summary>
             <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
@@ -359,16 +359,17 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v18.0.01</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v17.0.00</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 18.0.01
+     * @version 17.0.00
      * @changelog
-     * - [FIX CRÍTICO] Matemática de Cartões: Corrigido o "Congelamento Cego" da fatura. Agora, ao confirmar a fatura (C), o sistema calcula matematicamente o saldo dinâmico daquele instante e o crava no banco de dados e na conta espelho, impedindo efeito bola de neve.
-     * - [FIX VISUAL] Tabelas de Lançamento e Agenda agora exibem em tempo real o valor projetado (R$) de faturas estimadas, substituindo a máscara vazia de "0,00".
+     * - [FEATURE] Implementada a aba "Agenda Financeira": Painel inteligente de fluxo de caixa previsto que reúne apenas os lançamentos não confirmados de todas as contas não-cartão, incluindo a matemática precisa de projeção de saldo por conta origem.
+     * - [UX] A aba Agenda permanece oculta automaticamente se não houver contas configuradas, e exibe uma tela comemorativa de "Tudo em dia" caso o usuário não possua compromissos pendentes.
+     * - [FIX] Pesquisa Global unificada aprimorada, mantendo os mesmos botões de confirmação e edição contextuais.
      */
 
     let contas = [];
@@ -657,13 +658,11 @@
 
     function exportarCSV() {
         if (contas.length === 0) return alert("Nenhuma conta.");
-        let csv = "data:text/csv;charset=utf-8,Conta;Data;Descricao;Tipo;Valor;Status_Data;Status_Valor;Tag
-";
+        let csv = "data:text/csv;charset=utf-8,Conta;Data;Descricao;Tipo;Valor;Status_Data;Status_Valor;Tag\n";
         contas.forEach(c => {
             if(!c.lancamentos) return;
             c.lancamentos.forEach(l => {
-                csv += `${c.nome};${(l.data||"").split('-').reverse().join('/')};"${l.desc||''}";${l.tipo};${isFinite(l.valor) ? l.valor.toString().replace('.',',') : "0,00"};${l.dataOk?'CONF':'EST'};${l.valorOk?'CONF':'EST'};${l.tag||''}
-`;
+                csv += `${c.nome};${(l.data||"").split('-').reverse().join('/')};"${l.desc||''}";${l.tipo};${isFinite(l.valor) ? l.valor.toString().replace('.',',') : "0,00"};${l.dataOk?'CONF':'EST'};${l.valorOk?'CONF':'EST'};${l.tag||''}\n`;
             });
         });
         const a = document.createElement("a"); a.setAttribute("href", encodeURI(csv)); a.setAttribute("download", "financas.csv"); a.click();
@@ -672,24 +671,13 @@
     function confirmarRapidoL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return;
         let l = c.lancamentos.find(x => x.id === id); if (!l) return;
-        const conf = (!l.dataOk || !l.valorOk); 
-        
-        // FIX CRÍTICO: Capturar o valor matemático da fatura ANTES de travar o cadeado
-        if (l.isFaturaCartao && !l.valorOk) {
-            l.valor = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-        }
-        
-        l.dataOk = true; l.valorOk = true;
+        const conf = (!l.dataOk || !l.valorOk); l.dataOk = true; l.valorOk = true;
 
         if (l.transferId) {
             contas.forEach(ct => {
                 if(!ct.lancamentos) return;
                 let i = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
-                if (i) { 
-                    i.dataOk = true; i.valorOk = true; 
-                    i.valor = l.valor; // Espelha o valor dinâmico capturado
-                    i.data = l.data; 
-                }
+                if (i) { i.dataOk = true; i.valorOk = true; i.valor = l.valor; i.data = l.data; }
             });
         }
         if (conf && (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) && !l.isFaturaCartao && !l.transferId) processarProximo(c, l);
@@ -876,6 +864,7 @@
         }
     }
 
+    // NOVA FUNÇÃO: Renderização da Agenda Financeira
     function renderAgenda() {
         const bdAgenda = document.getElementById('corpoTabelaAgenda');
         const agendaVazia = document.getElementById('agendaVazia');
@@ -894,19 +883,18 @@
                 return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0);
             });
             
-            let sT = 0; let mS = {}; let mVal = {};
+            let sT = 0; let mS = {};
             ordens.forEach(l => {
                 let v = l.valor||0; 
                 if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
                 sT += (l.tipo === 'credito' ? v : -v);
                 mS[l.id] = sT;
-                mVal[l.id] = v; // FIX VISUAL: Guarda o valor calculado para a Agenda
             });
             
             c.lancamentos.forEach(l => {
                 if (!l.dataOk || !l.valorOk) { 
                     if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
-                    agendaItems.push({ ...l, nomeConta: c.nome, contaId: c.id, saldoProjetado: mS[l.id], valorDin: mVal[l.id] });
+                    agendaItems.push({ ...l, nomeConta: c.nome, contaId: c.id, saldoProjetado: mS[l.id] });
                 }
             });
         });
@@ -938,7 +926,7 @@
                     <td>${(l.data||"").split('-').reverse().join('/')}</td>
                     <td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td>
                     <td>${l.desc||''} ${th}</td>
-                    <td class="val-col" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valorDin !== undefined ? l.valorDin : (l.valor||0))}</td>
+                    <td class="val-col" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor||0)}</td>
                     <td class="val-col ${l.saldoProjetado < 0 ? 'texto-perigo' : ''}">${fmt(l.saldoProjetado)}</td>
                     <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaId}'; deletaL('${l.id}')">X</button></td>
                 </tr>`;
@@ -1003,15 +991,8 @@
         const btnAgenda = document.getElementById('btnAbaAgenda');
         
         if (contas.length === 0) { 
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
-            const abaLanc = document.getElementById('aba-lancamentos');
-            if(abaLanc) abaLanc.classList.add('active');
-            const btnLanc = document.querySelector('.tab-btn[onclick*="aba-lancamentos"]');
-            if(btnLanc) btnLanc.classList.add('active');
-
             pP.style.display = 'none'; eV.style.display = 'block'; 
-            if(btnAgenda) btnAgenda.style.display = 'none'; 
+            if(btnAgenda) btnAgenda.style.display = 'none'; // Some se banco zerado
             const lc = document.getElementById('listaConfigContas'); if(lc) lc.innerHTML = ""; 
             gerarDadosRelatorio(); atualizarSaudeBanco(); return; 
         } else { 
@@ -1064,10 +1045,8 @@
                     contas.forEach(ct => {
                         if (ct.lancamentos) {
                             ct.lancamentos.forEach(l => {
-                                let v = l.valor||0;
-                                if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                                let strBusca = `${l.desc||''} ${l.tag||''} ${(l.data||"").split('-').reverse().join('/')} ${fmt(v)} ${ct.nome}`.toLowerCase();
-                                if (strBusca.includes(tP)) dR.push({ ...l, s: 0, valorDin: v, nomeConta: ct.nome, contaOrigemId: ct.id });
+                                let strBusca = `${l.desc||''} ${l.tag||''} ${(l.data||"").split('-').reverse().join('/')} ${fmt(l.valor||0)} ${ct.nome}`.toLowerCase();
+                                if (strBusca.includes(tP)) dR.push({ ...l, s: 0, nomeConta: ct.nome, contaOrigemId: ct.id });
                             });
                         }
                     });
@@ -1084,13 +1063,10 @@
                     });
                     
                     let mS = {}; let sI = 0; let sT = 0; let pD = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-01`;
-                    let mVal = {};
                     [...(c.lancamentos||[])].sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }).forEach(l => {
                         let v = l.valor||0; if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
                         if (l.data < pD) sI += (l.tipo === 'credito' ? v : -v);
-                        sT += (l.tipo === 'credito' ? v : -v); 
-                        mS[l.id] = sT;
-                        mVal[l.id] = v; // FIX VISUAL: Guarda o valor calculado
+                        sT += (l.tipo === 'credito' ? v : -v); mS[l.id] = sT;
                     });
 
                     const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial');
@@ -1099,7 +1075,7 @@
                     ord.forEach(l => {
                         let dL = new Date((l.data||"") + 'T12:00:00');
                         if (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()) {
-                            dR.push({ ...l, s: mS[l.id], valorDin: mVal[l.id], contaOrigemId: c.id });
+                            dR.push({ ...l, s: mS[l.id], contaOrigemId: c.id });
                         }
                     });
                 }
@@ -1123,7 +1099,7 @@
                     bd.innerHTML += `<tr class="${cl}" draggable="true" ondragstart="iniciarDrag(event, '${l.id}', '${l.data}')" ondragover="permitirDrop(event)" ondrop="soltarDrop(event, '${l.id}', '${l.data}')" ondragenter="entrarDrag(event)" ondragleave="sairDrag(event)" ondragend="finalizarDrag(event)" style="cursor: grab;">
                         <td class="${l.dataOk?'':'incerto'}">${(l.data||"").split('-').reverse().join('/')}${setOr}</td>
                         ${cCen}
-                        <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valorDin !== undefined ? l.valorDin : (l.valor||0))}</td>
+                        <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valor||0)}</td>
                         ${cSal}
                         <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaOrigemId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-move" onclick="contaAtiva='${l.contaOrigemId}'; moverParaConta('${l.id}')">M</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaOrigemId}'; deletaL('${l.id}')">X</button></td></tr>`;
                 });
@@ -1210,9 +1186,7 @@
         let i = cO.lancamentos.findIndex(x => x.id === id); let l = cO.lancamentos[i]; if(!l) return;
         if (l.transferId) return alert("Não é possível mover transferências vinculadas.");
         let out = contas.filter(c => c.id !== contaAtiva); if(out.length === 0) return;
-        let sel = prompt("Para qual conta?
-" + out.map((c, i) => `${i + 1} - ${c.nome}`).join('
-'));
+        let sel = prompt("Para qual conta?\n" + out.map((c, i) => `${i + 1} - ${c.nome}`).join('\n'));
         let cD = out[parseInt(sel) - 1];
         if(cD && confirm(`Mover para ${cD.nome}?`)) { cO.lancamentos.splice(i, 1); l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; if(!cD.lancamentos) cD.lancamentos=[]; cD.lancamentos.push(l); salvarEAtualizar(); }
     }
