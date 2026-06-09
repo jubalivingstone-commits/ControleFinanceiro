@@ -684,51 +684,6 @@
         salvarEAtualizar();
     }
 
-function ajustarRendimentoL(id, dataRefStr) {
-        let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return;
-        let l = c.lancamentos.find(x => x.id === id); if (!l) return;
-        
-        // Pede o saldo atual do banco para o usuário
-        let saldoInformadoStr = prompt(`Informe o SALDO ATUAL da conta ${c.nome} no banco:\n(Apenas números e vírgula. Ex: 1540,50)`);
-        if (!saldoInformadoStr) return; // Cancela se o usuário fechar a janela
-        
-        let saldoReal = parseFloat(saldoInformadoStr.replace(/\./g, '').replace(',', '.'));
-        if (isNaN(saldoReal)) return alert("Valor inválido. Use apenas números e vírgula.");
-
-        // Calcula qual era o saldo da conta ANTES deste rendimento
-        let saldoTeoricoAnterior = 0;
-        let pD = `${new Date(dataRefStr + 'T12:00:00').getFullYear()}-${String(new Date(dataRefStr + 'T12:00:00').getMonth() + 1).padStart(2, '0')}-01`;
-        
-        [...(c.lancamentos||[])].forEach(lx => {
-            // Soma todos os lançamentos até a data do rendimento, exceto o próprio rendimento e faturas não confirmadas
-            if (lx.data <= dataRefStr && lx.id !== id) {
-                let v = lx.valor || 0;
-                if (lx.isFaturaCartao && !lx.valorOk) v = Math.abs(obterSaldoCartao(lx.isFaturaCartao, lx.data));
-                saldoTeoricoAnterior += (lx.tipo === 'credito' ? v : -v);
-            }
-        });
-
-        // O Rendimento Real é a diferença entre o que você disse que tem e o que o sistema calculou antes
-        let rendimentoCalculado = saldoReal - saldoTeoricoAnterior;
-
-        // Se o resultado for muito estranho (negativo ou absurdamente alto), avisa o usuário
-        if (rendimentoCalculado < 0) {
-            if (!confirm(`O saldo informado gerou um rendimento NEGATIVO de R$ ${rendimentoCalculado.toFixed(2)}.\nIsso geralmente indica que você esqueceu de lançar alguma despesa antes de ajustar.\nDeseja salvar assim mesmo?`)) return;
-        }
-
-        // Aplica o valor, tranca o cadeado e avança pro próximo dia!
-        l.valor = parseFloat(rendimentoCalculado.toFixed(2));
-        l.dataOk = true; 
-        l.valorOk = true;
-        
-        // Mantém o ciclo vivo (gera o rendimento pro dia seguinte)
-        if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) {
-            processarProximo(c, l);
-        }
-        
-        salvarEAtualizar();
-    }
-
     function salvarL() {
         calcularValor();
         const d = document.getElementById('f_data').value;
@@ -1149,17 +1104,7 @@ function ajustarRendimentoL(id, dataRefStr) {
                     let th = ""; if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
                     if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
                     
-                    let bC = '';
-                    if (!l.dataOk || !l.valorOk) {
-                        if ((l.desc || "").toLowerCase() === "rendimento diário" && l.tipo === "credito") {
-                            // Se for rendimento, mostra o C verde e o A laranja
-                            bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')" title="Confirmar projeção">C</button>
-                            <button class="mini-btn" style="background:#f39c12; color:white; margin-left:2px;" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')" title="Informar Saldo do Banco">A</button>`;
-                } else {
-                // Padrão normal para as outras contas
-                bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>`;
-            }
-        }
+                    let bC = (!l.dataOk || !l.valorOk) ? `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>` : '';
                     let cCen = mP ? `<td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td><td>${l.desc||''} ${th}</td>` : `<td>${l.desc||''} ${th}</td>`;
                     let cSal = mP ? "" : `<td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td>`;
                     let setOr = mP ? "" : `<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div>`;
