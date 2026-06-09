@@ -1169,7 +1169,9 @@ function ajustarRendimentoL(id, dataRefStr) {
                         ${cCen}
                         <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(valorExibicao)}</td>
                         ${cSal}
-                        <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaOrigemId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-move" onclick="contaAtiva='${l.contaOrigemId}'; moverParaConta('${l.id}')">M</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaOrigemId}'; deletaL('${l.id}')">X</button></td></tr>`;
+                        <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaOrigemId}'; editarL('${l.id}')">E</button>// O "A" fica Amarelo (#f1c40f) e o "M" continua Laranja (#f39c12)
+<button class="mini-btn" style="background:#f1c40f; color:#1e293b; margin-left:2px;" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')" title="Informar Saldo do Banco">A</button>
+<button class="mini-btn btn-move" onclick="contaAtiva='${l.contaOrigemId}'; moverParaConta('${l.id}')">M</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaOrigemId}'; deletaL('${l.id}')">X</button></td></tr>`;
                 });
             }
         }
