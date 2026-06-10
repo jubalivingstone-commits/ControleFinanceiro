@@ -365,7 +365,7 @@
     let incluirParceladosRelatorio = false; 
     let dataFiltro = new Date(); dataFiltro.setDate(1);
     let ordemDesc = true; 
-    let ultimaDataUsada = new Date().toISOString().split('T')[0];
+    let dAtual = new Date(); let ultimaDataUsada = `${dAtual.getFullYear()}-${String(dAtual.getMonth() + 1).padStart(2, '0')}-${String(dAtual.getDate()).padStart(2, '0')}`;
     let relatorioAtivo = null;
     let modoConciliacao = false;
 
@@ -540,7 +540,7 @@
     }
 
     function verificarRendimentosDiarios() {
-        const hj = new Date().toISOString().split('T')[0];
+        const dLocal = new Date(); const hj = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
         contas.forEach(c => {
             if (c.remun && c.lancamentos) {
                 if (!c.lancamentos.some(l => (l.desc || "").toLowerCase() === "rendimento diário" && l.data === hj)) {
@@ -792,7 +792,9 @@
         } else fDesc.placeholder = "Ex: IPVA";
     }
 
-    function processarProximo(conta, l) {
+function processarProximo(conta, l) {
+        // --- TRAVA CONTRA DUPLICAÇÃO DE RENDIMENTO ---
+        if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
         if (l.pTotal > 0 && l.pAtual >= l.pTotal) return;
         let dA = new Date(l.data + 'T12:00:00');
         if (l.freq === 'anual') dA.setFullYear(dA.getFullYear() + 1); else if (l.freq === 'diario') dA.setDate(dA.getDate() + 1); else dA.setMonth(dA.getMonth() + 1);
