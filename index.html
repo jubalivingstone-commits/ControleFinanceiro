@@ -989,7 +989,17 @@
         
         if (iO !== -1 && iD !== -1) {
             let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b);
-            ld.splice(iD, 0, ld.splice(iO, 1)[0]);
+            
+            // --- INÍCIO DA CORREÇÃO DE ARRASTO ---
+            let itemArrastado = ld[iO];
+            ld.splice(iO, 1); // Tira o item da posição original
+            
+            // Se eu arrastei de cima pra baixo, desconto 1 posição pois a fila escorregou
+            let indiceAlvoCorrigido = (iO < iD) ? iD - 1 : iD; 
+            
+            ld.splice(indiceAlvoCorrigido, 0, itemArrastado); // Insere no lugar exato!
+            // --- FIM DA CORREÇÃO DE ARRASTO ---
+            
             if (ordemDesc) oA.reverse();
             ld.forEach((l, i) => l.ordem = oA[i]); 
             salvarEAtualizar();
