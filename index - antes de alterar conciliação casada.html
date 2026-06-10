@@ -667,6 +667,7 @@
                 if(!ct.lancamentos) return;
                 let i = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
                 if (i) { 
+                    i.dataOk = true; i.valorOk = true; 
                     i.valor = l.valor; 
                     i.data = l.data; 
                 }
@@ -747,7 +748,7 @@
                     contas.forEach(ct => {
                         if(!ct.lancamentos) return;
                         let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
-                        if (irma) { Object.assign(irma, { data: d, valor: v, eRecurrente, freq, pTotal, pAtual, tag }); }
+                        if (irma) { Object.assign(irma, { data: d, valor: v, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, tag }); }
                     });
                 } else Object.assign(l, { data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, cartaoId, tag });
                 
