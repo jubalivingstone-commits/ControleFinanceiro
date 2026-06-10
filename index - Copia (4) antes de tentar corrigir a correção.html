@@ -706,8 +706,9 @@
         l.dataOk = true; 
         l.valorOk = true;
         
-        // Removemos o processarProximo daqui. 
-        // O motor verificarRendimentosDiarios() cuidará do dia de amanhã naturalmente.
+        if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) {
+            processarProximo(c, l);
+        }
         
         salvarEAtualizar();
     }
