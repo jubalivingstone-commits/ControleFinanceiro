@@ -541,11 +541,14 @@
         return parseFloat((s * taxaDiaria).toFixed(2));
     }
 
-    function verificarRendimentosDiarios() {
+function verificarRendimentosDiarios() {
         const dLocal = new Date(); const hj = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
         contas.forEach(c => {
             if (c.remun && c.lancamentos) {
-                if (!c.lancamentos.some(l => (l.desc || "").toLowerCase() === "rendimento diário" && l.data === hj)) {
+                let rendimentos = c.lancamentos.filter(l => (l.desc || "").toLowerCase() === "rendimento diário");
+                
+                // 1. O Esqueleto Imortal: Garante que exista um rendimento se estivermos "no escuro"
+                if (!rendimentos.some(l => l.data >= hj)) {
                     c.lancamentos.push({ 
                         id: Date.now().toString() + "_REND" + Math.floor(Math.random()*1000), 
                         data: hj, valor: calcularRendimento(c, hj), desc: "Rendimento Diário", tipo: "credito", 
@@ -553,10 +556,22 @@
                         eRecurrente: true, freq: "diario", pTotal: 0, pAtual: 1 
                     });
                 }
+
+                // 2. O Motor de Auto-Cura: Atualiza a lista e checa se o último gerado já foi fechado
+                rendimentos = c.lancamentos.filter(l => (l.desc || "").toLowerCase() === "rendimento diário");
+                if (rendimentos.length > 0) {
+                    rendimentos.sort((a,b) => new Date(b.data||0) - new Date(a.data||0));
+                    let ultimo = rendimentos[0]; // Pega o lançamento mais no futuro
+                    
+                    // Se o último rendimento da conta já estiver com os cadeados fechados, força a criação de amanhã
+                    if (ultimo.dataOk && ultimo.valorOk) {
+                        processarProximo(c, ultimo);
+                    }
+                }
             }
         });
     }
-
+    
     function gerarParFatura(cO, cC, dBase, vDia) {
         if (!cO.lancamentos || !cC.lancamentos) return;
         let dFat = `${dBase.getFullYear()}-${String(dBase.getMonth() + 1).padStart(2, '0')}-${String(vDia).padStart(2, '0')}`;
