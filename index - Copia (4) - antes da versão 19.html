@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v19.0.00</title>
+    <title>Meu Controle Financeiro Pro - v18.0.03</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -84,41 +84,11 @@
 <body>
 <div class="container" id="appContainer" style="display: none;">
     <div class="tabs">
+        <button class="tab-btn" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
         <button id="btnAbaAgenda" class="tab-btn active" onclick="mudarAba('aba-agenda', this)">🗓️ Agenda</button>
-        <button id="btnAbaLancamentos" class="tab-btn" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
         <button class="tab-btn" onclick="mudarAba('aba-relatorios', this)">📑 Relatórios</button>
         <button class="tab-btn" onclick="mudarAba('aba-config', this)">⚙️ Contas</button>
         <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)">☁️ Nuvem & Backup</button>
-    </div>
-
-    <div id="aba-agenda" class="content-section active">
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap: wrap; gap: 10px;">
-                <h3 style="margin: 0;">🗓️ Agenda Financeira (Fluxo Previsto)</h3>
-            </div>
-            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0px; margin-bottom: 20px;">Visão cronológica de todos os lançamentos não confirmados.</p>
-            
-            <div id="agendaVazia" style="display:none; text-align: center; padding: 40px 20px;">
-                <span style="font-size: 3rem;">🎉</span>
-                <h3 style="color: var(--success); margin-top: 10px;">Tudo em dia!</h3>
-                <p style="color: #64748b; font-size: 1.1rem;">Você não possui nenhum compromisso pendente no sistema.</p>
-            </div>
-            
-            <div id="agendaTabelaContainer" class="table-container" style="max-height: 70vh;">
-                <table style="min-width: 100%;">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Conta Base</th>
-                            <th>Descrição</th>
-                            <th style="text-align:right">Valor (R$)</th>
-                            <th style="text-align:center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpoTabelaAgenda"></tbody>
-                </table>
-            </div>
-        </div>
     </div>
 
     <div id="aba-lancamentos" class="content-section">
@@ -127,22 +97,6 @@
                 <h2>Bem-vindo ao seu Controle Financeiro! 🎉</h2>
                 <p>Parece que você ainda não tem nenhuma conta configurada. Crie sua primeira conta corrente, poupança ou cartão.</p>
                 <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[3].click()">Criar Minha Primeira Conta ➡️</button>
-                
-                <div style="margin-top: 35px; text-align: left;">
-                    <details class="accordion" style="box-shadow: none; border: 1px dashed #cbd5e1;">
-                        <summary style="font-size: 0.95rem; color: var(--primary); text-align: center; justify-content: center; gap: 8px;">📖 O que este sistema pode fazer por você?</summary>
-                        <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
-                            <p style="margin-top: 0;">O <b>Meu Controle Financeiro Pro</b> é uma ferramenta completa e de alta precisão para organizar sua vida financeira. Veja os principais recursos:</p>
-                            <ul style="margin-left: 20px; padding-left: 10px; margin-bottom: 0;">
-                                <li style="margin-bottom: 8px;"><b>💳 Cartões e Conciliação:</b> Controle de faturas, datas de fechamento e agrupamento por Etiquetas (Tags) para facilitar a conferência cruzada com o seu extrato bancário.</li>
-                                <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
-                                <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
-                                <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas recorrentes no seu orçamento.</li>
-                                <li><b>☁️ Segurança BBB:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
-                            </ul>
-                        </div>
-                    </details>
-                </div>
             </div>
         </div>
 
@@ -197,6 +151,37 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="aba-agenda" class="content-section active">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0;">🗓️ Agenda Financeira (Fluxo Previsto)</h3>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0px; margin-bottom: 20px;">Visão cronológica de todos os lançamentos não confirmados.</p>
+            
+            <div id="agendaVazia" style="display:none; text-align: center; padding: 40px 20px;">
+                <span style="font-size: 3rem;">🎉</span>
+                <h3 style="color: var(--success); margin-top: 10px;">Tudo em dia!</h3>
+                <p style="color: #64748b; font-size: 1.1rem;">Você não possui nenhum compromisso pendente no sistema.</p>
+            </div>
+            
+            <div id="agendaTabelaContainer" class="table-container" style="max-height: 70vh;">
+                <table style="min-width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Conta Base</th>
+                            <th>Descrição</th>
+                            <th style="text-align:right">Valor (R$)</th>
+                            <th style="text-align:right" title="Qual será o saldo da conta base após esta operação">Caixa Previsto (R$)</th>
+                            <th style="text-align:center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabelaAgenda"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -358,19 +343,16 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v19.0.00</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v18.0.03</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 19.0.00
+     * @version 18.0.03
      * @changelog
-     * - [FEATURE] Botão de Auditoria ("A" Amarelo) isolado para calcular Rendimentos.
-     * - [UX] Agenda redefinida como aba principal e limpa (Filtro 30 dias, sem coluna de saldo projetado, linha vermelha em alertas).
-     * - [FIX] Desvinculação das confirmações de transferência (Botões C e E operam individualmente).
-     * - [FIX] Resolução do offset de posições no Drag & Drop de linhas da tabela.
-     * - [FIX] Proteção do motor de recorrência e datas contra timezone local vs UTC.
+     * - [FEATURE] Implementado Botão de Auditoria de Rendimentos ("A" Amarelo): Agora o usuário pode informar o saldo real do banco e o sistema calcula a diferença e substitui o rendimento estimado.
+     * - [FIX] Correção dos botões de ação duplicados: Padronização do botão "A" em amarelo (#f1c40f) e "M" em laranja, sem duplicações na tabela.
      */
 
     let contas = [];
@@ -383,7 +365,6 @@
     let incluirParceladosRelatorio = false; 
     let dataFiltro = new Date(); dataFiltro.setDate(1);
     let ordemDesc = true; 
-    
     let dAtual = new Date(); let ultimaDataUsada = `${dAtual.getFullYear()}-${String(dAtual.getMonth() + 1).padStart(2, '0')}-${String(dAtual.getDate()).padStart(2, '0')}`;
     let relatorioAtivo = null;
     let modoConciliacao = false;
@@ -725,6 +706,9 @@
         l.dataOk = true; 
         l.valorOk = true;
         
+        // Removemos o processarProximo daqui. 
+        // O motor verificarRendimentosDiarios() cuidará do dia de amanhã naturalmente.
+        
         salvarEAtualizar();
     }
 
@@ -808,9 +792,9 @@
         } else fDesc.placeholder = "Ex: IPVA";
     }
 
-    function processarProximo(conta, l) {
+function processarProximo(conta, l) {
+        // --- TRAVA CONTRA DUPLICAÇÃO DE RENDIMENTO ---
         if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
-        
         if (l.pTotal > 0 && l.pAtual >= l.pTotal) return;
         let dA = new Date(l.data + 'T12:00:00');
         if (l.freq === 'anual') dA.setFullYear(dA.getFullYear() + 1); else if (l.freq === 'diario') dA.setDate(dA.getDate() + 1); else dA.setMonth(dA.getMonth() + 1);
@@ -941,13 +925,14 @@
                 if (!l.dataOk || !l.valorOk) { 
                     if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
                     
+                    // --- TRAVA DE SEGURANÇA: HORIZONTE DE 30 DIAS ---
                     let dL = new Date((l.data||"") + 'T12:00:00');
                     let limiteFuturo = new Date();
-                    limiteFuturo.setDate(limiteFuturo.getDate() + 30);
-                    if (dL > limiteFuturo) return;
-
-                    if (l.transferId && l.tipo === 'credito') return;
-
+                    limiteFuturo.setDate(limiteFuturo.getDate() + 30); // Define o teto para 30 dias à frente
+                    
+                    if (dL > limiteFuturo) return; // Ignora e pula se o lançamento estiver muito longe no futuro
+                    // ------------------------------------------------
+                    
                     agendaItems.push({ ...l, nomeConta: c.nome, contaId: c.id, saldoProjetado: mS[l.id], valorDin: mVal[l.id] });
                 }
             });
@@ -968,16 +953,7 @@
                 let dL = new Date((l.data||"") + 'T00:00:00'); 
                 let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-negativa" : "");
                 
-                if (l.saldoProjetado < 0) {
-                    cl += " linha-negativa"; 
-                }
-                
                 let th = ""; 
-                let valorExibicao = l.valorDin !== undefined ? l.valorDin : (l.valor||0);
-                if (l.isFaturaCartao && !l.valorOk) {
-                    valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                }
-                
                 if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; 
                 else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; 
                 else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
@@ -989,7 +965,8 @@
                     <td>${(l.data||"").split('-').reverse().join('/')}</td>
                     <td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td>
                     <td>${l.desc||''} ${th}</td>
-                    <td class="val-col" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(valorExibicao)}</td>
+                    <td class="val-col" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valorDin !== undefined ? l.valorDin : (l.valor||0))}</td>
+                    <td class="val-col ${l.saldoProjetado < 0 ? 'texto-perigo' : ''}">${fmt(l.saldoProjetado)}</td>
                     <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaId}'; deletaL('${l.id}')">X</button></td>
                 </tr>`;
             });
@@ -1022,10 +999,17 @@
         
         if (iO !== -1 && iD !== -1) {
             let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b);
+            
+            // --- INÍCIO DA CORREÇÃO DE ARRASTO ---
             let itemArrastado = ld[iO];
-            ld.splice(iO, 1); 
+            ld.splice(iO, 1); // Tira o item da posição original
+            
+            // Se eu arrastei de cima pra baixo, desconto 1 posição pois a fila escorregou
             let indiceAlvoCorrigido = (iO < iD) ? iD - 1 : iD; 
-            ld.splice(indiceAlvoCorrigido, 0, itemArrastado); 
+            
+            ld.splice(indiceAlvoCorrigido, 0, itemArrastado); // Insere no lugar exato!
+            // --- FIM DA CORREÇÃO DE ARRASTO ---
+            
             if (ordemDesc) oA.reverse();
             ld.forEach((l, i) => l.ordem = oA[i]); 
             salvarEAtualizar();
@@ -1057,7 +1041,7 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
             const abaLanc = document.getElementById('aba-lancamentos');
             if(abaLanc) abaLanc.classList.add('active');
-            const btnLanc = document.getElementById('btnAbaLancamentos');
+            const btnLanc = document.querySelector('.tab-btn[onclick*="aba-lancamentos"]');
             if(btnLanc) btnLanc.classList.add('active');
 
             pP.style.display = 'none'; eV.style.display = 'block'; 
@@ -1162,11 +1146,6 @@
                     if (l.s < 0 && !mP) cl += " linha-negativa"; 
                     if (dR[i+1]) { if (!mP && modoConciliacao && c.tipoConta === 'cartao') { if ((l.tag||"").toLowerCase() !== (dR[i+1].tag||"").toLowerCase()) cl += " separador-dia"; } else if (dR[i+1].data !== l.data) cl += " separador-dia"; }
                     
-                    let valorExibicao = l.valorDin !== undefined ? l.valorDin : (l.valor||0);
-                    if (l.isFaturaCartao && !l.valorOk) {
-                        valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                    }
-
                     let th = ""; if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
                     if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
                     
@@ -1187,7 +1166,7 @@
                     bd.innerHTML += `<tr class="${cl}" draggable="true" ondragstart="iniciarDrag(event, '${l.id}', '${l.data}')" ondragover="permitirDrop(event)" ondrop="soltarDrop(event, '${l.id}', '${l.data}')" ondragenter="entrarDrag(event)" ondragleave="sairDrag(event)" ondragend="finalizarDrag(event)" style="cursor: grab;">
                         <td class="${l.dataOk?'':'incerto'}">${(l.data||"").split('-').reverse().join('/')}${setOr}</td>
                         ${cCen}
-                        <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(valorExibicao)}</td>
+                        <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(l.valorDin !== undefined ? l.valorDin : (l.valor||0))}</td>
                         ${cSal}
                         <td class="actions">${bC}<button class="mini-btn btn-primary" onclick="contaAtiva='${l.contaOrigemId}'; editarL('${l.id}')">E</button><button class="mini-btn btn-move" onclick="contaAtiva='${l.contaOrigemId}'; moverParaConta('${l.id}')">M</button><button class="mini-btn btn-danger" onclick="contaAtiva='${l.contaOrigemId}'; deletaL('${l.id}')">X</button></td></tr>`;
                 });
@@ -1288,9 +1267,7 @@
             valorParaEdicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
         }
         
-        let btnLanc = document.getElementById('btnAbaLancamentos');
-        if(btnLanc) btnLanc.click();
-        
+        document.querySelectorAll('.tab-btn')[0].click();
         document.getElementById('id_editando_l').value = l.id; document.getElementById('f_data').value = l.data||""; document.getElementById('f_desc').value = (l.desc||"").replace(/ \(Parc\. \d+\/\d+\)$/, ""); document.getElementById('f_valor').value = isFinite(valorParaEdicao) ? valorParaEdicao.toFixed(2).replace('.', ',') : "0,00";
         document.getElementById('f_tipo').value = l.tipo||"debito"; document.getElementById('f_freq').value = l.freq || "mensal"; document.getElementById('f_parc_total').value = l.pTotal || 0; document.getElementById('f_parc_atual').value = l.pAtual || 1; document.getElementById('f_tag').value = l.tag || ""; 
         
