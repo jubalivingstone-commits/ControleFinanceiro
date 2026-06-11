@@ -924,6 +924,15 @@ function processarProximo(conta, l) {
             c.lancamentos.forEach(l => {
                 if (!l.dataOk || !l.valorOk) { 
                     if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
+                    
+                    // --- TRAVA DE SEGURANÇA: HORIZONTE DE 30 DIAS ---
+                    let dL = new Date((l.data||"") + 'T12:00:00');
+                    let limiteFuturo = new Date();
+                    limiteFuturo.setDate(limiteFuturo.getDate() + 30); // Define o teto para 30 dias à frente
+                    
+                    if (dL > limiteFuturo) return; // Ignora e pula se o lançamento estiver muito longe no futuro
+                    // ------------------------------------------------
+                    
                     agendaItems.push({ ...l, nomeConta: c.nome, contaId: c.id, saldoProjetado: mS[l.id], valorDin: mVal[l.id] });
                 }
             });
