@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v19.0.00</title>
+    <title>Meu Controle Financeiro Pro - v19.0.01</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -127,22 +127,6 @@
                 <h2>Bem-vindo ao seu Controle Financeiro! 🎉</h2>
                 <p>Parece que você ainda não tem nenhuma conta configurada. Crie sua primeira conta corrente, poupança ou cartão.</p>
                 <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[3].click()">Criar Minha Primeira Conta ➡️</button>
-                
-                <div style="margin-top: 35px; text-align: left;">
-                    <details class="accordion" style="box-shadow: none; border: 1px dashed #cbd5e1;">
-                        <summary style="font-size: 0.95rem; color: var(--primary); text-align: center; justify-content: center; gap: 8px;">📖 O que este sistema pode fazer por você?</summary>
-                        <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
-                            <p style="margin-top: 0;">O <b>Meu Controle Financeiro Pro</b> é uma ferramenta completa e de alta precisão para organizar sua vida financeira. Veja os principais recursos:</p>
-                            <ul style="margin-left: 20px; padding-left: 10px; margin-bottom: 0;">
-                                <li style="margin-bottom: 8px;"><b>💳 Cartões e Conciliação:</b> Controle de faturas, datas de fechamento e agrupamento por Etiquetas (Tags) para facilitar a conferência cruzada com o seu extrato bancário.</li>
-                                <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
-                                <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
-                                <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas recorrentes no seu orçamento.</li>
-                                <li><b>☁️ Segurança BBB:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
-                            </ul>
-                        </div>
-                    </details>
-                </div>
             </div>
         </div>
 
@@ -191,7 +175,7 @@
 
                     <div class="table-container">
                         <table>
-                            <thead><tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">▼</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr></thead>
+                            <thead id="theadLancamentos"><tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">▼</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr></thead>
                             <tbody id="corpoTabela"></tbody>
                             <tfoot id="rodapeTabela" style="display: none;"><tr><td colspan="3" style="text-align: right; font-weight: bold; color: #475569; font-size: 0.9rem;">Saldo Inicial do Mês:</td><td id="celulaSaldoInicial" class="val-col" style="font-weight: bold; font-size: 0.95rem;">0,00</td><td></td></tr></tfoot>
                         </table>
@@ -358,19 +342,18 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v19.0.00</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v19.0.01</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 19.0.00
+     * @version 19.0.01
      * @changelog
-     * - [FEATURE] Botão de Auditoria ("A" Amarelo) isolado para calcular Rendimentos.
-     * - [UX] Agenda redefinida como aba principal e limpa (Filtro 30 dias, sem coluna de saldo projetado, linha vermelha em alertas).
-     * - [FIX] Desvinculação das confirmações de transferência (Botões C e E operam individualmente).
-     * - [FIX] Resolução do offset de posições no Drag & Drop de linhas da tabela.
-     * - [FIX] Proteção do motor de recorrência e datas contra timezone local vs UTC.
+     * - [FIX CRÍTICO] Cabeçalho da Agenda: Adicionado o ID "theadLancamentos" para impedir que a aba Lançamentos sobrescreva as colunas da Agenda após reordenarmos as abas.
+     * - [UX] Cores dos Botões: O botão "A" (Auditoria) agora usa um Amarelo Ouro (#ffc107) com texto preto para se diferenciar claramente do "M" Laranja.
+     * - [UX] Agenda Redefinida: Tornou-se a aba principal. Oculta créditos de transferências, trava visual em 30 dias futuros e destaca linhas negativas em vermelho.
+     * - [FIX] Autonomia de Transferências: Botões C e E operam individualmente as pernas das transferências.
      */
 
     let contas = [];
@@ -725,6 +708,10 @@
         l.dataOk = true; 
         l.valorOk = true;
         
+        if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) {
+            processarProximo(c, l);
+        }
+
         salvarEAtualizar();
     }
 
@@ -809,7 +796,6 @@
     }
 
     function processarProximo(conta, l) {
-        if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
         
         if (l.pTotal > 0 && l.pAtual >= l.pTotal) return;
         let dA = new Date(l.data + 'T12:00:00');
@@ -1100,7 +1086,7 @@
                     }
                 } else { document.getElementById('groupTag').style.display = 'none'; document.getElementById('boxFaturaParcial').style.display = 'none'; modoConciliacao = false; }
 
-                const thead = document.querySelector('.table-container table thead');
+                const thead = document.getElementById('theadLancamentos');
                 if (mP) {
                     thead.innerHTML = `<tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">${ordemDesc ? '▼' : '▲'}</span></th><th>Conta</th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:center">Ações</th></tr>`;
                 } else {
@@ -1140,7 +1126,7 @@
                         if (l.data < pD) sI += (l.tipo === 'credito' ? v : -v);
                         sT += (l.tipo === 'credito' ? v : -v); 
                         mS[l.id] = sT;
-                        mVal[l.id] = v;
+                        mVal[l.id] = v; // FIX VISUAL: Guarda o valor calculado
                     });
 
                     const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial');
@@ -1174,7 +1160,7 @@
                     if (!l.dataOk || !l.valorOk) {
                         if ((l.desc || "").toLowerCase() === "rendimento diário" && l.tipo === "credito") {
                             bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')" title="Confirmar projeção">C</button>
-                                  <button class="mini-btn" style="background:#f1c40f; color:#1e293b; margin-left:2px;" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')" title="Informar Saldo do Banco">A</button>`;
+                                  <button class="mini-btn" style="background:#ffc107; color:#000; margin-left:2px;" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')" title="Informar Saldo do Banco">A</button>`;
                         } else {
                             bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>`;
                         }
