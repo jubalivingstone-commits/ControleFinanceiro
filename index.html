@@ -1086,7 +1086,13 @@
         contas.forEach(c => {
             const p = document.createElement('div'); p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
             p.innerText = c.nome; if (c.tipoConta === 'cartao') p.innerText += ' 💳'; else if (c.remun) { const s = document.createElement('span'); s.className = 'badge badge-mensal'; s.innerText = '📈 REMUN'; p.appendChild(s); }
-            p.onclick = () => { contaAtiva = c.id; render(); }; cp.appendChild(p);
+            p.onclick = () => { 
+                contaAtiva = c.id; 
+                render(); 
+                // Diz ao navegador para rolar a tela suavemente até a div painelOperacional
+                setTimeout(() => document.getElementById('painelOperacional').scrollIntoView({behavior: 'smooth', block: 'start'}), 200); 
+            }; 
+            cp.appendChild(p);
         });
 
         if(contaAtiva) {
@@ -1270,7 +1276,19 @@
         if(i !== -1 && cr[aI] && cr[i].data === cr[aI].data) { const t = cr[i].ordem || 0; cr[i].ordem = cr[aI].ordem || 0; cr[aI].ordem = t; if(cr[i].ordem === cr[aI].ordem) cr[i].ordem = t + (rD === 'sobe' ? -1 : 1); salvarEAtualizar(); } 
     }
     
-    function mudarAba(id, b) { document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(id).classList.add('active'); b.classList.add('active'); render(); }
+    function mudarAba(id, b) { 
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        b.classList.add('active'); 
+        render(); 
+        // Se a aba clicada for a de lançamentos, rola a tela para esconder o cabeçalho
+        if(id === 'aba-lancamentos') {
+            setTimeout(() => document.getElementById('painelOperacional').scrollIntoView({behavior: 'smooth', block: 'start'}), 200);
+        }
+    }
+    
+
     function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); }
     function proximaConta() { if (contas.length === 0) return; const i = contas.findIndex(c => c.id === contaAtiva); contaAtiva = contas[(i + 1) % contas.length].id; render(); }
