@@ -165,11 +165,6 @@
                     <button class="btn-nav" onclick="alterarMes(1)">Próximo ▶</button>
                 </div>
                 
-                <div id="boxFaturaParcial" style="display:none; text-align: center; font-size: 0.95rem; margin-top: -10px; margin-bottom: 20px; color: #64748b;">
-                    Total da Fatura (Confirmada): <span id="valFaturaParcial" style="font-weight: bold; color: var(--danger); font-size: 1.1rem; margin-right: 15px;">R$ 0,00</span>
-                    <button id="btnModoConciliacao" class="toggle-btn" onclick="toggleConciliacao()">🗂️ Agrupar</button>
-                </div>
-
                 <div id="painelOperacional" style="display:block;">
                     <div class="painel-insercao">
                         <div id="tituloAreaLancamento" class="painel-insercao-title">✏️ Área de Lançamento</div>
@@ -187,6 +182,11 @@
                             <div class="field-group fg-destino" id="groupCartao" style="display:none;"><label>Cartão Vinculado</label><select id="f_cartao_vinculado" onkeydown="if(event.key === 'Enter') salvarL()"></select></div>
                             <div class="fg-btn"><button class="btn btn-success" id="btnSalvarL" onclick="salvarL()">Salvar</button><button id="btnCancL" class="btn" style="background:#64748b; display:none;" onclick="limparFL()">X</button></div>
                         </div>
+                    </div>
+
+                    <div id="boxFaturaParcial" style="display:none; text-align: center; font-size: 0.95rem; margin-top: -10px; margin-bottom: 20px; color: #64748b;">
+                        Total da Fatura (Confirmada): <span id="valFaturaParcial" style="font-weight: bold; color: var(--danger); font-size: 1.1rem; margin-right: 15px;">R$ 0,00</span>
+                        <button id="btnModoConciliacao" class="toggle-btn" onclick="toggleConciliacao()">🗂️ Agrupar</button>
                     </div>
 
                     <div class="table-container">
