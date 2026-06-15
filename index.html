@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v20.0.00</title>
+    <title>Meu Controle Financeiro Pro - v20.0.02</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -53,6 +53,7 @@
         .btn { padding: 0 18px; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; }
         .btn-success { background: var(--success); } .btn-primary { background: var(--primary); }
         .btn-danger { background: var(--danger); } .btn-move { background: #f39c12; } .btn-sync { background: #6366f1; }
+        .btn-audit { background-color: #ffc107 !important; color: #000 !important; margin-left: 2px; }
         .mes-navegador { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; }
         .mes-atual-label { font-size: 1.2rem; font-weight: bold; color: var(--primary); min-width: 200px; text-align: center; }
         .btn-nav { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
@@ -164,7 +165,7 @@
                     <button class="btn-nav" onclick="irParaHoje()">Hoje</button>
                     <button class="btn-nav" onclick="alterarMes(1)">Próximo ▶</button>
                 </div>
-                
+
                 <div id="painelOperacional" style="display:block; scroll-margin-top: 40px;">
                     <div class="painel-insercao">
                         <div id="tituloAreaLancamento" class="painel-insercao-title">✏️ Área de Lançamento</div>
@@ -184,7 +185,7 @@
                         </div>
                     </div>
 
-                    <div id="boxFaturaParcial" style="display:none; text-align: center; font-size: 0.95rem; margin-top: -10px; margin-bottom: 20px; color: #64748b;">
+                    <div id="boxFaturaParcial" style="display:none; text-align: center; font-size: 0.95rem; margin-top: -15px; margin-bottom: 20px; color: #64748b;">
                         Total da Fatura (Confirmada): <span id="valFaturaParcial" style="font-weight: bold; color: var(--danger); font-size: 1.1rem; margin-right: 15px;">R$ 0,00</span>
                         <button id="btnModoConciliacao" class="toggle-btn" onclick="toggleConciliacao()">🗂️ Agrupar</button>
                     </div>
@@ -216,7 +217,7 @@
                     <table style="min-width: 100%;">
                         <thead><tr><th>Conta / Cartão</th><th style="text-align:right">Saldo Atualizado (R$)</th></tr></thead>
                         <tbody id="corpoTabelaResumo"></tbody>
-                        tfoot><tr><td style="text-align:right; font-weight:bold; padding-top: 15px;">Saldo Líquido Estimado:</td><td id="totalResumoLiquido" class="val-col" style="font-size: 1.1rem; padding-top: 15px;">0,00</td></tr></tfoot>
+                        <tfoot><tr><td style="text-align:right; font-weight:bold; padding-top: 15px;">Saldo Líquido Estimado:</td><td id="totalResumoLiquido" class="val-col" style="font-size: 1.1rem; padding-top: 15px;">0,00</td></tr></tfoot>
                     </table>
                 </div>
             </div>
@@ -358,20 +359,18 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v20.0.00</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v20.0.02</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 20.0.00
+     * @version 20.0.02
      * @changelog
-     * - [UX] Título do Painel: A área de lançamento agora exibe o nome da conta selecionada para facilitar a navegação em telas longas.
-     * - [UX] Agenda Redefinida: Tornou-se a aba principal. Oculta créditos de transferências, trava visual em 30 dias futuros e destaca linhas negativas em vermelho.
-     * - [FEATURE] Botão de Auditoria ("A" Amarelo) isolado para calcular Rendimentos Reais e motor Auto-Curável para o dia seguinte.
-     * - [FIX] Desvinculação das confirmações de transferência (Botões C e E operam individualmente).
-     * - [FIX] Resolução do offset de posições no Drag & Drop de linhas da tabela.
-     * - [FIX] Proteção do motor de recorrência e datas contra timezone local vs UTC.
+     * - [FIX CRÍTICO] Remoção do loop da aba Lançamentos no primeiro uso, permitindo acesso à Nuvem para restauração de backup.
+     * - [FIX] Cabeçalho da Agenda não é mais sobrescrito.
+     * - [UX] Cores do botão "A" forçadas via CSS (.btn-audit com !important).
+     * - [UX] Título do Painel de Lançamentos dinâmico e scroll ajustado.
      */
 
     let contas = [];
@@ -506,6 +505,16 @@
         const anoFiltro = data.getFullYear();
         if (anoFiltro !== new Date().getFullYear()) return `${nomeMes}/${anoFiltro.toString().slice(-2)}`;
         return nomeMes;
+    }
+
+    function rolarParaPainel() {
+        setTimeout(() => {
+            const el = document.getElementById('painelOperacional');
+            if (el) {
+                const y = el.getBoundingClientRect().top + window.scrollY - 50; 
+                window.scrollTo({top: y, behavior: 'smooth'});
+            }
+        }, 200);
     }
 
     function toggleOrdem() { ordemDesc = !ordemDesc; document.getElementById('iconeOrdem').innerText = ordemDesc ? "▼" : "▲"; render(); }
@@ -1060,39 +1069,42 @@
     }
 
     function render() {
-        document.getElementById('labelMesAno').innerText = formatarMesInteligente(dataFiltro);
-        const pP = document.getElementById('painelPrincipalLancamentos'); const eV = document.getElementById('estadoVazio');
-        const btnAgenda = document.getElementById('btnAbaAgenda');
-        
         if (contas.length === 0) { 
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
-            const abaLanc = document.getElementById('aba-lancamentos');
-            if(abaLanc) abaLanc.classList.add('active');
-            const btnLanc = document.getElementById('btnAbaLancamentos');
-            if(btnLanc) btnLanc.classList.add('active');
+            const abaNuvemAtiva = document.getElementById('aba-nuvem').classList.contains('active');
+            const abaConfigAtiva = document.getElementById('aba-config').classList.contains('active');
+            
+            if (!abaNuvemAtiva && !abaConfigAtiva) {
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
+                const abaLanc = document.getElementById('aba-lancamentos');
+                if(abaLanc) abaLanc.classList.add('active');
+                const btnLanc = document.getElementById('btnAbaLancamentos');
+                if(btnLanc) btnLanc.classList.add('active');
+            }
 
-            pP.style.display = 'none'; eV.style.display = 'block'; 
+            document.getElementById('painelPrincipalLancamentos').style.display = 'none'; 
+            document.getElementById('estadoVazio').style.display = 'block'; 
+            
+            const btnAgenda = document.getElementById('btnAbaAgenda');
             if(btnAgenda) btnAgenda.style.display = 'none'; 
+            
             const lc = document.getElementById('listaConfigContas'); if(lc) lc.innerHTML = ""; 
             gerarDadosRelatorio(); atualizarSaudeBanco(); return; 
         } else { 
-            pP.style.display = 'block'; eV.style.display = 'none'; 
+            document.getElementById('painelPrincipalLancamentos').style.display = 'block'; 
+            document.getElementById('estadoVazio').style.display = 'none'; 
+            const btnAgenda = document.getElementById('btnAbaAgenda');
             if(btnAgenda) btnAgenda.style.display = 'inline-block';
         }
+
+        document.getElementById('labelMesAno').innerText = formatarMesInteligente(dataFiltro);
 
         const pend = verificarPendencias();
         const cp = document.getElementById('containerPills'); cp.innerHTML = "";
         contas.forEach(c => {
             const p = document.createElement('div'); p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
             p.innerText = c.nome; if (c.tipoConta === 'cartao') p.innerText += ' 💳'; else if (c.remun) { const s = document.createElement('span'); s.className = 'badge badge-mensal'; s.innerText = '📈 REMUN'; p.appendChild(s); }
-            p.onclick = () => { 
-                contaAtiva = c.id; 
-                render(); 
-                // Diz ao navegador para rolar a tela suavemente até a div painelOperacional
-                setTimeout(() => document.getElementById('painelOperacional').scrollIntoView({behavior: 'smooth', block: 'start'}), 200); 
-            }; 
-            cp.appendChild(p);
+            p.onclick = () => { contaAtiva = c.id; render(); rolarParaPainel(); }; cp.appendChild(p);
         });
 
         if(contaAtiva) {
@@ -1100,8 +1112,6 @@
             let c = contas.find(x => x.id === contaAtiva);
             if (c) {
                 document.getElementById('tituloConta').innerText = c.nome;
-                
-                // INJEÇÃO DA MELHORIA DO TÍTULO COM O NOME DA CONTA NA ÁREA DE LANÇAMENTO
                 document.getElementById('tituloAreaLancamento').innerText = "✏️ Área de Lançamento - " + c.nome;
 
                 const inP = document.getElementById('inputPesquisa'); const tP = inP ? inP.value.trim().toLowerCase() : ""; const mP = tP !== "";
@@ -1196,7 +1206,7 @@
                     if (!l.dataOk || !l.valorOk) {
                         if ((l.desc || "").toLowerCase() === "rendimento diário" && l.tipo === "credito") {
                             bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')" title="Confirmar projeção">C</button>
-                                  <button class="mini-btn" style="background:#ffc107; color:#000; margin-left:2px;" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')" title="Informar Saldo do Banco">A</button>`;
+                                  <button class="mini-btn btn-audit" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')" title="Informar Saldo do Banco">A</button>`;
                         } else {
                             bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>`;
                         }
@@ -1269,29 +1279,20 @@
         dataOk = true; toggleStatus('Data'); valorOk = true; toggleStatus('Valor'); eRecurrente = true; toggleStatus('Mensal');
     }
     
-    function mover(id, dir) { 
-        let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return;
-        const cr = [...c.lancamentos].sort((a,b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }); 
-        const i = cr.findIndex(l => l.id === id); let rD = ordemDesc ? (dir === 'sobe' ? 'desce' : 'sobe') : dir; const aI = rD === 'sobe' ? i - 1 : i + 1; 
-        if(i !== -1 && cr[aI] && cr[i].data === cr[aI].data) { const t = cr[i].ordem || 0; cr[i].ordem = cr[aI].ordem || 0; cr[aI].ordem = t; if(cr[i].ordem === cr[aI].ordem) cr[i].ordem = t + (rD === 'sobe' ? -1 : 1); salvarEAtualizar(); } 
-    }
-    
     function mudarAba(id, b) { 
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
         document.getElementById(id).classList.add('active'); 
         b.classList.add('active'); 
         render(); 
-        // Se a aba clicada for a de lançamentos, rola a tela para esconder o cabeçalho
         if(id === 'aba-lancamentos') {
-            setTimeout(() => document.getElementById('painelOperacional').scrollIntoView({behavior: 'smooth', block: 'start'}), 200);
+            rolarParaPainel();
         }
     }
     
-
     function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); }
-    function proximaConta() { if (contas.length === 0) return; const i = contas.findIndex(c => c.id === contaAtiva); contaAtiva = contas[(i + 1) % contas.length].id; render(); }
+    function proximaConta() { if (contas.length === 0) return; const i = contas.findIndex(c => c.id === contaAtiva); contaAtiva = contas[(i + 1) % contas.length].id; render(); rolarParaPainel(); }
 
     function deletaL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return;
@@ -1346,7 +1347,6 @@
         dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
-        document.querySelector('.painel-insercao').scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(() => { document.getElementById('f_valor').focus(); }, 300);
     }
 
