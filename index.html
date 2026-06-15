@@ -533,15 +533,38 @@
     }
 
     function getDataFechamentoParaFatura(contaCard, dataReferenciaStr) {
-        if (!dataReferenciaStr) return new Date().toISOString().split('T')[0];
-        let dRef = new Date(dataReferenciaStr + 'T12:00:00');
+        // Proteção 1: Se não tiver data, pega a data local exata do usuário
+        if (!dataReferenciaStr) {
+            let dLocal = new Date();
+            dataReferenciaStr = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
+        }
+        
+        let dRef = new Date(dataReferenciaStr + 'T12:00:00'); // O T12:00:00 âncora a data no meio do dia
         let vDia = parseInt(contaCard.vencimento) || 10;
         let fDia = parseInt(contaCard.fechamento);
+        
         if (!fDia) { fDia = vDia - 7; if (fDia <= 0) fDia += 30; }
-        let dFechamento = new Date(dRef.getFullYear(), dRef.getMonth(), 1);
-        if (fDia >= vDia) dFechamento.setMonth(dFechamento.getMonth() - 1);
-        dFechamento.setDate(Math.min(fDia, new Date(dFechamento.getFullYear(), dFechamento.getMonth() + 1, 0).getDate()));
-        return dFechamento.toISOString().split('T')[0];
+        
+        // A MÁGICA DA REGRA DE NEGÓCIO: O último dia de compras é o dia ANTERIOR ao fechamento
+        let diaCorte = fDia - 1; 
+
+        // Cria a data base do mês
+        let dFechamento = new Date(dRef.getFullYear(), dRef.getMonth(), 1, 12, 0, 0);
+        
+        if (fDia >= vDia) {
+            dFechamento.setMonth(dFechamento.getMonth() - 1);
+        }
+        
+        // Se o fechamento for dia 1, a conta (1 - 1) dá 0. 
+        // O JavaScript é esperto e entende que "dia 0" significa o último dia do mês anterior!
+        dFechamento.setDate(diaCorte);
+        
+        // A MÁGICA CONTRA O FUSO HORÁRIO: Formatação manual sem usar toISOString (sem exportar pra Londres)
+        const ano = dFechamento.getFullYear();
+        const mes = String(dFechamento.getMonth() + 1).padStart(2, '0');
+        const dia = String(dFechamento.getDate()).padStart(2, '0');
+        
+        return `${ano}-${mes}-${dia}`;
     }
 
     function obterSaldoCartao(contaCardId, dataRefFatura) {
