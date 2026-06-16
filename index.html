@@ -605,7 +605,7 @@ function verificarRendimentosDiarios() {
                         id: Date.now().toString() + "_REND" + Math.floor(Math.random()*1000), 
                         data: hj, valor: calcularRendimento(c, hj), desc: "Rendimento Diário", tipo: "credito", 
                         dataOk: false, valorOk: false, ordem: (c.lancamentos.length > 0 ? Math.max(...c.lancamentos.map(lx => lx.ordem || 0)) : 0) + 1, 
-                        eRecurrente: true, freq: "diario", pTotal: 0, pAtual: 1 
+                        eRecurrente: true, freq: "diario", pTotal: 0, pAtual: 0
                     });
                 }
 
@@ -891,9 +891,12 @@ function processarProximo(conta, l) {
                 }
             }
         } else {
-            if (!conta.lancamentos.find(x => x.data === nD && x.desc === l.desc && x.pAtual === proxP)) {
+        
+            let isRend = (l.desc || "").toLowerCase() === "rendimento diário";
+            if (!conta.lancamentos.find(x => x.data === nD && (isRend ? (x.desc || "").toLowerCase() === "rendimento diário" : (x.desc === l.desc && x.pAtual === proxP)))) {
                 conta.lancamentos.push({ id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, cartaoId: l.cartaoId, tag: l.tag });
-            }
+        }
+
         }
     }
 
