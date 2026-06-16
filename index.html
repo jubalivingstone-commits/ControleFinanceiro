@@ -591,13 +591,16 @@
         return parseFloat((s * taxaDiaria).toFixed(2));
     }
 
-    function verificarRendimentosDiarios() {
-        const dLocal = new Date(); const hj = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
+function verificarRendimentosDiarios() {
+        const dLocal = new Date(); 
+        const hj = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
+        const isFds = (dLocal.getDay() === 0 || dLocal.getDay() === 6); // Detecta se hoje é fds
         contas.forEach(c => {
             if (c.remun && c.lancamentos) {
                 let rendimentos = c.lancamentos.filter(l => (l.desc || "").toLowerCase() === "rendimento diário");
                 
-                if (!rendimentos.some(l => l.data >= hj)) {
+                // 1. O Esqueleto Imortal: Garante que exista um rendimento se estivermos "no escuro"
+                if (!isFds && !rendimentos.some(l => l.data >= hj)) { // Só cria se NÃO for fds
                     c.lancamentos.push({ 
                         id: Date.now().toString() + "_REND" + Math.floor(Math.random()*1000), 
                         data: hj, valor: calcularRendimento(c, hj), desc: "Rendimento Diário", tipo: "credito", 
@@ -769,6 +772,11 @@
         l.dataOk = true; 
         l.valorOk = true;
         
+        // MÁGICA DE VOLTA: Aciona o dia seguinte após você auditar!
+        if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) {
+            processarProximo(c, l);
+        }
+        
         salvarEAtualizar();
     }
 
@@ -852,12 +860,23 @@
         } else fDesc.placeholder = "Ex: IPVA";
     }
 
-    function processarProximo(conta, l) {
-        if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
-        
+function processarProximo(conta, l) {
         if (l.pTotal > 0 && l.pAtual >= l.pTotal) return;
         let dA = new Date(l.data + 'T12:00:00');
-        if (l.freq === 'anual') dA.setFullYear(dA.getFullYear() + 1); else if (l.freq === 'diario') dA.setDate(dA.getDate() + 1); else dA.setMonth(dA.getMonth() + 1);
+
+        if (l.freq === 'anual') {
+            dA.setFullYear(dA.getFullYear() + 1);
+        } else if (l.freq === 'diario') {
+            dA.setDate(dA.getDate() + 1);
+            // TRAVA DE DIA ÚTIL: Se for rendimento diário e cair no fds, empurra pra segunda
+            if ((l.desc || "").toLowerCase() === "rendimento diário") {
+                if (dA.getDay() === 6) dA.setDate(dA.getDate() + 2); // Sábado vira Segunda
+                else if (dA.getDay() === 0) dA.setDate(dA.getDate() + 1); // Domingo vira Segunda
+            }
+        } else {
+            dA.setMonth(dA.getMonth() + 1);
+        }
+
         const nD = dA.toISOString().split('T')[0]; const proxP = l.pTotal > 0 ? l.pAtual + 1 : 0;
         let nValor = l.valor; if (l.freq === 'diario' && (l.desc||'').toLowerCase() === "rendimento diário") nValor = calcularRendimento(conta, nD);
         
