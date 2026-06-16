@@ -742,7 +742,7 @@ function verificarRendimentosDiarios() {
         salvarEAtualizar();
     }
 
-    function ajustarRendimentoL(id, dataRefStr) {
+function ajustarRendimentoL(id, dataRefStr) {
         let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return;
         let l = c.lancamentos.find(x => x.id === id); if (!l) return;
         
@@ -772,14 +772,14 @@ function verificarRendimentosDiarios() {
         l.dataOk = true; 
         l.valorOk = true;
         
-        // MÁGICA DE VOLTA: Aciona o dia seguinte após você auditar!
+        // Agora o botão Amarelo aciona o amanhã de forma idêntica ao botão Verde
         if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) {
             processarProximo(c, l);
         }
         
         salvarEAtualizar();
     }
-
+    
     function salvarL() {
         calcularValor();
         const d = document.getElementById('f_data').value;
@@ -880,23 +880,24 @@ function processarProximo(conta, l) {
         const nD = dA.toISOString().split('T')[0]; const proxP = l.pTotal > 0 ? l.pAtual + 1 : 0;
         let nValor = l.valor; if (l.freq === 'diario' && (l.desc||'').toLowerCase() === "rendimento diário") nValor = calcularRendimento(conta, nD);
         
+        let isRend = (l.desc || "").toLowerCase() === "rendimento diário";
+
         if (l.transferId) {
             if (!conta.lancamentos.find(x => x.data === nD && x.transferId && x.pAtual === proxP && x.desc === l.desc)) {
                 let ctO = contas.find(cx => cx.id !== conta.id && cx.lancamentos.some(lx => lx.transferId === l.transferId));
                 if (ctO) {
                     let lO = ctO.lancamentos.find(lx => lx.transferId === l.transferId);
                     let nTId = Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000);
-                    conta.lancamentos.push({ id: nTId+"A", transferId: nTId, data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: l.tag });
-                    ctO.lancamentos.push({ id: nTId+"B", transferId: nTId, data: nD, valor: nValor, desc: lO.desc, tipo: lO.tipo, dataOk: false, valorOk: false, ordem: Math.max(...ctO.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: lO.tag });
+                    // HIGIENIZAÇÃO AQUI (|| null e || "")
+                    conta.lancamentos.push({ id: nTId+"A", transferId: nTId, data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: l.tag || "", cartaoId: l.cartaoId || null });
+                    ctO.lancamentos.push({ id: nTId+"B", transferId: nTId, data: nD, valor: nValor, desc: lO.desc, tipo: lO.tipo, dataOk: false, valorOk: false, ordem: Math.max(...ctO.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: lO.tag || "", cartaoId: lO.cartaoId || null });
                 }
             }
         } else {
-        
-            let isRend = (l.desc || "").toLowerCase() === "rendimento diário";
+            // HIGIENIZAÇÃO E PROTEÇÃO CONTRA DUPLICATAS AQUI
             if (!conta.lancamentos.find(x => x.data === nD && (isRend ? (x.desc || "").toLowerCase() === "rendimento diário" : (x.desc === l.desc && x.pAtual === proxP)))) {
-                conta.lancamentos.push({ id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, cartaoId: l.cartaoId, tag: l.tag });
-        }
-
+                conta.lancamentos.push({ id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, cartaoId: l.cartaoId || null, tag: l.tag || "" });
+            }
         }
     }
 
