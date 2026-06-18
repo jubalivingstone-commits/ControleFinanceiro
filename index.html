@@ -1240,12 +1240,31 @@ function processarProximo(conta, l) {
                     const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial');
                     if(rT && cSI) { rT.style.display = 'table-footer-group'; cSI.innerText = fmt(sI); cSI.style.color = sI < 0 ? 'var(--danger)' : 'var(--text)'; }
 
+                    // --- INÍCIO: FILTRO DA FATURA REAL ---
+                    let dFA_atual = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
+                    let dCA_atual = getDataFechamentoParaFatura(c, dFA_atual);
+                    
+                    let dF_ant_obj = new Date(dataFiltro.getFullYear(), dataFiltro.getMonth() - 1, 1);
+                    let dFA_ant = `${dF_ant_obj.getFullYear()}-${String(dF_ant_obj.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
+                    let dCA_ant = getDataFechamentoParaFatura(c, dFA_ant);
+
                     ord.forEach(l => {
                         let dL = new Date((l.data||"") + 'T12:00:00');
-                        if (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()) {
+                        let deveExibir = false;
+
+                        if (modoConciliacao && c.tipoConta === 'cartao') {
+                            // MODO FATURA: Exibe apenas o que caiu no ciclo atual do cartão
+                            deveExibir = (l.data > dCA_ant && l.data <= dCA_atual);
+                        } else {
+                            // MODO NORMAL: Exibe rigorosamente pelo mês do calendário
+                            deveExibir = (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear());
+                        }
+
+                        if (deveExibir) {
                             dR.push({ ...l, s: mS[l.id], valorDin: mVal[l.id], contaOrigemId: c.id });
                         }
                     });
+                    // --- FIM: FILTRO DA FATURA REAL ---
                 }
 
                 const rT = document.getElementById('rodapeTabela'); 
