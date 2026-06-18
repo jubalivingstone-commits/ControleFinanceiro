@@ -1205,28 +1205,12 @@ function processarProximo(conta, l) {
                     });
                 } else {
                     document.getElementById('tituloConta').innerText = c.nome;
-
-                const ord = [...(c.lancamentos||[])].map(l => {
-                        let dataOriginalVis = l.data;
-                        // MÁGICA 1: Se estiver agrupando cartão parcelado, calcula a data do passado
-                        if (modoConciliacao && c.tipoConta === 'cartao' && l.pTotal > 0) {
-                            let dCalc = new Date(l.data + 'T12:00:00');
-                            dCalc.setMonth(dCalc.getMonth() - (l.pAtual - 1));
-                            dataOriginalVis = dCalc.toISOString().split('T')[0];
-                        }
-                        return { ...l, dataOriginalVis };
-                    }).sort((a, b) => {
-                        if (modoConciliacao && c.tipoConta === 'cartao') { 
-                            let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); 
-                            if (tA !== tB) return tA.localeCompare(tB); 
-                            // MÁGICA 2: Ordena usando a data original calculada
-                            let dA = new Date(a.dataOriginalVis||0).getTime(); let dB = new Date(b.dataOriginalVis||0).getTime();
-                            return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
-                        }
+                    const ord = [...(c.lancamentos||[])].sort((a, b) => {
+                        if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); }
                         let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
                         return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
-                    });    
-
+                    });
+                    
                     let mS = {}; let sI = 0; let sT = 0; let pD = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-01`;
                     let mVal = {};
                     [...(c.lancamentos||[])].sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }).forEach(l => {
@@ -1278,14 +1262,8 @@ function processarProximo(conta, l) {
                     let cSal = mP ? "" : `<td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td>`;
                     let setOr = mP ? "" : `<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div>`;
 
-                    // MÁGICA 3: Disfarça a data na tela se for uma parcela de cartão agrupada
-                    let strDataExibicao = (l.data||"").split('-').reverse().join('/');
-                    if (modoConciliacao && c.tipoConta === 'cartao' && l.pTotal > 0) {
-                        strDataExibicao = `<span style="color:#64748b" title="Data original da compra">🛒 ${(l.dataOriginalVis||"").split('-').reverse().join('/')}</span>`;
-                    }
-
                     bd.innerHTML += `<tr class="${cl}" draggable="true" ondragstart="iniciarDrag(event, '${l.id}', '${l.data}')" ondragover="permitirDrop(event)" ondrop="soltarDrop(event, '${l.id}', '${l.data}')" ondragenter="entrarDrag(event)" ondragleave="sairDrag(event)" ondragend="finalizarDrag(event)" style="cursor: grab;">
-                        <td class="${l.dataOk?'':'incerto'}">${strDataExibicao}${setOr}</td>
+                        <td class="${l.dataOk?'':'incerto'}">${(l.data||"").split('-').reverse().join('/')}${setOr}</td>
                         ${cCen}
                         <td class="val-col ${l.valorOk?'':'incerto'}" style="color:${l.tipo==='credito'?'var(--success)':'var(--danger)'}">${fmt(valorExibicao)}</td>
                         ${cSal}
