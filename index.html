@@ -634,15 +634,32 @@ function verificarRendimentosDiarios() {
         if (contas.length === 0) return;
         contas.forEach(c => {
             if (c.tipoConta === 'cartao' && c.lancamentos) {
-                let cO = contas.find(b => b.id !== c.id); if (!cO || !cO.lancamentos) return;
+                // Elege a Conta Principal (primeira conta corrente/poupança) como berço das novas faturas
+                let cO = contas.find(b => b.id !== c.id && b.tipoConta !== 'cartao'); 
+                if (!cO || !cO.lancamentos) return;
+                
                 const vDia = c.vencimento || 10;
-                let fats = cO.lancamentos.filter(l => l.isFaturaCartao === c.id);
-                if (fats.length === 0) gerarParFatura(cO, c, new Date(), vDia);
-                else {
-                    fats.sort((a,b) => new Date(b.data || 0) - new Date(a.data || 0));
-                    if (fats[0].valorOk && fats[0].dataOk) {
-                        let dUlt = new Date((fats[0].data || new Date().toISOString().split('T')[0]) + 'T12:00:00');
-                        dUlt.setMonth(dUlt.getMonth() + 1); gerarParFatura(cO, c, dUlt, vDia);
+                
+                // NOVIDADE: Varre TODAS as contas procurando faturas em aberto ou pagas desse cartão
+                let todasFaturas = [];
+                contas.forEach(ct => {
+                    if (ct.id !== c.id && ct.lancamentos) {
+                        todasFaturas = todasFaturas.concat(ct.lancamentos.filter(l => l.isFaturaCartao === c.id));
+                    }
+                });
+                
+                if (todasFaturas.length === 0) {
+                    gerarParFatura(cO, c, new Date(), vDia);
+                } else {
+                    // Pega a fatura mais recente do sistema inteiro, não importa em qual conta esteja
+                    todasFaturas.sort((a,b) => new Date(b.data || 0) - new Date(a.data || 0));
+                    let ultimaFatura = todasFaturas[0];
+                    
+                    // Se a fatura mais recente já estiver paga, gera a do próximo mês na Conta Principal
+                    if (ultimaFatura.valorOk && ultimaFatura.dataOk) {
+                        let dUlt = new Date((ultimaFatura.data || new Date().toISOString().split('T')[0]) + 'T12:00:00');
+                        dUlt.setMonth(dUlt.getMonth() + 1); 
+                        gerarParFatura(cO, c, dUlt, vDia);
                     }
                 }
             }
