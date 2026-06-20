@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v20.0.03</title>
+    <title>Meu Controle Financeiro Pro - v20.0.02</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -359,7 +359,7 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v20.0.03</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v20.0.02</div>
 </div>
 
 <script>
@@ -1394,42 +1394,11 @@ function processarProximo(conta, l) {
     function moverParaConta(id) {
         let cO = contas.find(x => x.id === contaAtiva); if(!cO||!cO.lancamentos) return;
         let i = cO.lancamentos.findIndex(x => x.id === id); let l = cO.lancamentos[i]; if(!l) return;
-        
-        // TRAVA INTELIGENTE: Permite mover APENAS se for o débito de uma fatura de cartão
-        if (l.transferId) {
-            if (!(l.isFaturaCartao && l.tipo === 'debito')) {
-                return alert("Não é possível mover transferências vinculadas comuns ou o crédito da fatura.");
-            }
-        }
-        
-        let out = contas.filter(c => c.id !== contaAtiva);
-        // Regra de Ouro: Fatura não pode ser paga usando a conta de outro cartão
-        if (l.isFaturaCartao) out = out.filter(c => c.tipoConta !== 'cartao'); 
-        
-        if(out.length === 0) return alert("Nenhuma conta destino válida disponível.");
-        
-        let sel = prompt("Para qual conta deseja mover este pagamento?\n" + out.map((c, idx) => `${idx + 1} - ${c.nome}`).join('\n'));
-        if(!sel) return; // Sai silenciosamente se o usuário cancelar o prompt
-        
+        if (l.transferId) return alert("Não é possível mover transferências vinculadas.");
+        let out = contas.filter(c => c.id !== contaAtiva); if(out.length === 0) return;
+        let sel = prompt("Para qual conta?\n" + out.map((c, i) => `${i + 1} - ${c.nome}`).join('\n'));
         let cD = out[parseInt(sel) - 1];
-        if(cD && confirm(`Confirmar a mudança do pagamento para a conta: ${cD.nome}?`)) {
-            // Remove da conta origem e injeta na conta destino
-            cO.lancamentos.splice(i, 1); 
-            l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; 
-            if(!cD.lancamentos) cD.lancamentos=[]; 
-            cD.lancamentos.push(l);
-            
-            // BÔNUS: Atualiza o texto descritivo na outra "metade" (dentro do cartão)
-            if (l.isFaturaCartao) {
-                contas.forEach(ct => {
-                    if (ct.lancamentos) {
-                        let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
-                        if (irma) irma.desc = `Transf. de ${cD.nome} (Pagamento)`;
-                    }
-                });
-            }
-            salvarEAtualizar(); 
-        }
+        if(cD && confirm(`Mover para ${cD.nome}?`)) { cO.lancamentos.splice(i, 1); l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; if(!cD.lancamentos) cD.lancamentos=[]; cD.lancamentos.push(l); salvarEAtualizar(); }
     }
     
     function editarL(id) {
