@@ -826,7 +826,23 @@ function ajustarRendimentoL(id, dataRefStr) {
             if(idEdit) {
                 let l = c.lancamentos.find(x => x.id === idEdit); if (!l) return;
                 
+                // --- INÍCIO DA MÁGICA: A ONDA DE CHOQUE (Propagação) ---
+                if (eRecurrente || l.pTotal > 0) {
+                    c.lancamentos.forEach(fut => {
+                        let ehIrmao = fut.desc === l.desc && fut.pTotal === l.pTotal && fut.id !== l.id;
+                        let ehFuturo = l.pTotal > 0 ? fut.pAtual > l.pAtual : fut.data >= l.data;
+                        if (ehIrmao && ehFuturo && (!fut.dataOk || !fut.valorOk) && !fut.transferId) {
+                            fut.desc = descFinal;
+                            fut.valor = v;
+                            fut.tag = tag;
+                            fut.cartaoId = cartaoId;
+                        }
+                    });
+                }
+                // --- FIM DA MÁGICA ---
+                
                 if (l.transferId) {
+
                     l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk; l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual; l.tag = tag;
                     contas.forEach(ct => {
                         if(!ct.lancamentos) return;
@@ -910,9 +926,16 @@ function processarProximo(conta, l) {
                     ctO.lancamentos.push({ id: nTId+"B", transferId: nTId, data: nD, valor: nValor, desc: lO.desc, tipo: lO.tipo, dataOk: false, valorOk: false, ordem: Math.max(...ctO.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: lO.tag || "", cartaoId: lO.cartaoId || null });
                 }
             }
-        } else {
-            // HIGIENIZAÇÃO E PROTEÇÃO CONTRA DUPLICATAS AQUI
-            if (!conta.lancamentos.find(x => x.data === nD && (isRend ? (x.desc || "").toLowerCase() === "rendimento diário" : (x.desc === l.desc && x.pAtual === proxP)))) {
+ 
+            } else {
+            // RADAR FLEXÍVEL: Para parcelas, busca pelo número (pAtual), ignorando desvios de data
+            let jaExiste = conta.lancamentos.find(x => {
+                if (isRend) return x.data === nD && (x.desc || "").toLowerCase() === "rendimento diário";
+                if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP; // Busca imune a data
+                return x.data === nD && x.desc === l.desc; // Busca normal
+            });
+
+            if (!jaExiste) {
                 conta.lancamentos.push({ id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, cartaoId: l.cartaoId || null, tag: l.tag || "" });
             }
         }
