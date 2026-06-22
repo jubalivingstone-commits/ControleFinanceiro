@@ -90,6 +90,9 @@
         <button class="tab-btn" onclick="mudarAba('aba-relatorios', this)">📑 Relatórios</button>
         <button class="tab-btn" onclick="mudarAba('aba-config', this)">⚙️ Contas</button>
         <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)">☁️ Nuvem & Backup</button>
+        <button id="btnTesteIA" class="btn btn-primary" style="margin-bottom: 15px; background-color: #8e44ad;" onclick="testarPilotoIA()">
+        🤖 Testar Piloto IA
+        </button>
     </div>
 
     <div id="aba-agenda" class="content-section active">
@@ -1560,6 +1563,74 @@ function processarProximo(conta, l) {
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
         setTimeout(() => { document.getElementById('f_valor').focus(); }, 300);
+    }
+
+// ==========================================
+    // PROJETO PILOTO: ASSISTENTE DE LANÇAMENTOS
+    // ==========================================
+    async function testarPilotoIA() {
+        // 1. Gerencia a Chave da API
+        let apiKey = localStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+            apiKey = prompt("Bem-vindo ao Piloto!\nCole sua API Key do Google Gemini aqui:\n(Ficará salva apenas no seu navegador)");
+            if (!apiKey) return; // Cancela se o usuário não preencher
+            localStorage.setItem('gemini_api_key', apiKey);
+        }
+
+        // 2. Pede a frase (Simulando o ditado por voz)
+        let fraseUsuario = prompt("O que você gastou?\nEx: 'Gastei 150 e 30 centavos no mercado hoje'");
+        if (!fraseUsuario) return;
+
+        // 3. A Instrução Oculta (O Cérebro da IA)
+        const instrucaoMestra = `Você é um assistente financeiro focado em extração de dados.
+        Analise a frase do usuário e devolva EXATAMENTE E APENAS um objeto JSON válido, sem formatação markdown (não use \`\`\`json).
+        
+        REGRAS DE OURO:
+        - Se o usuário não especificar a conta ou o cartão, assuma SEMPRE que o cartão é o "CEFGold".
+        - O campo "Valor" deve ser apenas numérico (ex: 150.30).
+        - O campo "Tipo" deve ser "debito" para gastos ou "credito" para receitas.
+        
+        Modelo esperado de saída:
+        { "Descricao": "...", "Valor": 0.00, "Cartao_Conta": "...", "Tipo": "..." }
+        
+        Frase do usuário: "${fraseUsuario}"`;
+
+        const pacoteDados = {
+            contents: [{ parts: [{ text: instrucaoMestra }] }]
+        };
+
+        // Feedback visual de carregamento
+        const btn = document.getElementById('btnTesteIA');
+        const textoOriginalBtn = btn.innerText;
+        btn.innerText = "⏳ Decifrando comando...";
+        btn.disabled = true;
+
+        // 4. A Conexão com o Google
+        try {
+            const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pacoteDados)
+            });
+
+            const resultado = await resposta.json();
+            
+            // Tratamento de Erros da API (ex: Chave inválida)
+            if (resultado.error) {
+                alert("Erro na IA: " + resultado.error.message);
+                localStorage.removeItem('gemini_api_key'); // Apaga a chave errada
+            } else {
+                // Sucesso! Mostra o JSON que a IA cuspiu
+                const respostaIA = resultado.candidates[0].content.parts[0].text;
+                alert("🎯 A IA entendeu perfeitamente. Veja os dados prontos para o sistema:\n\n" + respostaIA);
+            }
+        } catch (erro) {
+            alert("Falha de conexão. Verifique sua internet ou a chave gerada.");
+        } finally {
+            // Devolve o botão ao normal
+            btn.innerText = textoOriginalBtn;
+            btn.disabled = false;
+        }
     }
 
     window.onload = () => { carregarDados(); };
