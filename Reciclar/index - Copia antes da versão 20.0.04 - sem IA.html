@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v21.0.00</title>
+    <title>Meu Controle Financeiro Pro - v20.0.03</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -87,19 +87,12 @@
     <div class="tabs">
         <button id="btnAbaAgenda" class="tab-btn active" onclick="mudarAba('aba-agenda', this)">🗓️ Agenda</button>
         <button id="btnAbaLancamentos" class="tab-btn" onclick="mudarAba('aba-lancamentos', this)">📊 Lançamentos</button>
-        <button id="btnAbaAssistente" class="tab-btn" onclick="mudarAba('aba-assistente', this)">🤖 Assistente</button>
         <button class="tab-btn" onclick="mudarAba('aba-relatorios', this)">📑 Relatórios</button>
         <button class="tab-btn" onclick="mudarAba('aba-config', this)">⚙️ Contas</button>
-        <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)">⚙️ Avançado & IA</button>
-    </div>
-
-    <div id="aba-assistente" class="content-section">
-        <div class="card" style="text-align: center; max-width: 600px; margin: 0 auto;">
-            <h3 style="margin-top: 0; color: var(--primary);">🎙️ Assistente Inteligente</h3>
-            <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 20px;">Dite ou digite o seu gasto. A IA fará o preenchimento para você.</p>
-            <textarea id="txtComandoIA" style="width: 100%; height: 120px; border-radius: 12px; padding: 15px; border: 2px solid var(--primary); font-size: 1.1rem; resize: none; margin-bottom: 15px;" placeholder="Ex: Gastei 120 e 50 centavos no mercado usando o cartão físico..."></textarea>
-            <button id="btnProcessarIA" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 1.1rem;" onclick="processarComandoIA()">✨ Processar Comando</button>
-        </div>
+        <button class="tab-btn" onclick="mudarAba('aba-nuvem', this)">☁️ Nuvem & Backup</button>
+        <button id="btnTesteIA" class="btn btn-primary" style="margin-bottom: 15px; background-color: #8e44ad;" onclick="testarPilotoIA()">
+        🤖 Testar Piloto IA
+        </button>
     </div>
 
     <div id="aba-agenda" class="content-section active">
@@ -137,7 +130,7 @@
             <div class="card">
                 <h2>Bem-vindo ao seu Controle Financeiro! 🎉</h2>
                 <p>Parece que você ainda não tem nenhuma conta configurada. Crie sua primeira conta corrente, poupança ou cartão.</p>
-                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[4].click()">Criar Minha Primeira Conta ➡️</button>
+                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[3].click()">Criar Minha Primeira Conta ➡️</button>
                 
                 <div style="margin-top: 35px; text-align: left;">
                     <details class="accordion" style="box-shadow: none; border: 1px dashed #cbd5e1;">
@@ -149,7 +142,7 @@
                                 <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
                                 <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
                                 <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas recorrentes no seu orçamento.</li>
-                                <li style="margin-bottom: 8px;"><b>☁️ Segurança BBB:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
+                                <li><b>☁️ Segurança BBB:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
                             </ul>
                         </div>
                     </details>
@@ -267,7 +260,7 @@
                 <div class="mes-navegador"><button class="btn-nav" onclick="alterarMes(-1)">◀ Anterior</button><div class="mes-atual-label" id="labelMesAnoAuditoria">CARREGANDO...</div><button class="btn-nav" onclick="irParaHoje()">Hoje</button><button class="btn-nav" onclick="alterarMes(1)">Próximo ▶</button></div>
                 <div class="table-container" style="max-height: 500px;">
                     <table style="min-width: 100%;">
-                        <thead><tr><th>Data</th><th style="text-align:right">Saldo Base</th><th style="text-align:right">Rend. Real</th><th style="text-align:right">Rend. Esperado</th><th style="text-align:right">% CDI</th><th style="text-align:right">Dif. (%)</th></tr></thead>
+                        <thead><tr><th>Data</th><th style="text-align:right">Saldo Base</th><th style="text-align:right">Rend. Real</th><th style="text-align:right">Rend. Esperado</th><th style="text-align:right">% CDI</th><th style="text-align:right">Dif.</th></tr></thead>
                         <tbody id="corpoTabelaAuditoria"></tbody>
                     </table>
                 </div>
@@ -323,19 +316,6 @@
         </details>
 
         <details class="accordion" open>
-            <summary>🤖 Inteligência Artificial (Gemini)</summary>
-            <div>
-                <p style="font-size: 0.9rem; color: #64748b; margin-top: 0;">Cole sua chave da API do Google Gemini para habilitar o Assistente de Lançamento por voz/texto. Suas chaves ficam guardadas localmente.</p>
-                <div class="form-grid-config">
-                    <div class="field-group" style="flex: 1 1 100%;"><label>Google Gemini API Key</label>
-                        <input type="password" id="config_gemini_key" placeholder="Cole sua chave gerada no Google AI Studio aqui...">
-                    </div>
-                    <button class="btn btn-primary" onclick="salvarConfigDb()">💾 Salvar Chave IA</button>
-                </div>
-            </div>
-        </details>
-
-        <details class="accordion">
             <summary>📦 Backups e Exportação Local</summary>
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -352,25 +332,52 @@
                 </div>
             </div>
         </details>
+
+        <details class="accordion">
+            <summary>📖 O que este sistema pode fazer por você?</summary>
+            <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
+                <p style="margin-top: 0;">O <b>Meu Controle Financeiro Pro</b> é uma ferramenta completa e de alta precisão para organizar sua vida financeira. Veja os principais recursos:</p>
+                <ul style="margin-left: 20px; padding-left: 10px; margin-bottom: 0;">
+                    <li style="margin-bottom: 8px;"><b>💳 Cartões e Conciliação:</b> Controle de faturas, datas de fechamento e agrupamento por Etiquetas (Tags) para facilitar a conferência cruzada com o seu extrato bancário.</li>
+                    <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
+                    <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
+                    <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas recorrentes no seu orçamento.</li>
+                    <li><b>☁️ Segurança:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
+                </ul>
+            </div>
+        </details>
+
+        <details class="accordion">
+            <summary>📖 Como Criar sua Nuvem Gratuita (Tutorial)</summary>
+            <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
+                <ol class="tutorial-steps" style="margin-top: 0; margin-bottom: 0; color: inherit; font-size: inherit;">
+                    <li style="margin-bottom: 8px;">Acesse <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--primary);">Firebase Console</a> e faça login.</li>
+                    <li style="margin-bottom: 8px;">Clique em <b>Adicionar projeto</b>.</li>
+                    <li style="margin-bottom: 8px;">Vá em <b>Criação > Firestore Database</b> e clique em <b>Criar banco de dados</b>.</li>
+                    <li style="margin-bottom: 8px;">Na aba <b>Regras (Rules)</b>, mude para: <code>allow read, write: if true;</code> e <b>Publicar</b>.</li>
+                    <li style="margin-bottom: 8px;">Nas Configurações do projeto (⚙️), clique em <b>&lt;/&gt; (Web)</b> para registrar o app.</li>
+                    <li>Copie o código gerado de <code>apiKey</code> até <code>appId</code> e cole nas chaves do sistema.</li>
+                </ol>
+            </div>
+        </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.00</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v20.0.03</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 21.0.00
+     * @version 20.0.02
      * @changelog
-     * - [NOVO] Aba "Assistente" com IA generativa (Gemini 2.5) para lançamentos via NLP.
-     * - [NOVO] Lógica de Tela Responsiva: Abre Assistente no celular e Agenda no Desktop.
-     * - [FIX] Extinção da função de scroll automático, garantindo total controle visual ao usuário.
-     * - [MELHORIA] Relatório de Auditoria agora mostra a diferença exata do IR em base percentual e cabeçalhos sumarizados.
-     * - [MELHORIA] Robô de Faturas foi reescrito para utilizar a "Regra de Presença", garantindo planejamento antecipado.
+     * - [FIX CRÍTICO] Remoção do loop da aba Lançamentos no primeiro uso, permitindo acesso à Nuvem para restauração de backup.
+     * - [FIX] Cabeçalho da Agenda não é mais sobrescrito.
+     * - [UX] Cores do botão "A" forçadas via CSS (.btn-audit com !important).
+     * - [UX] Título do Painel de Lançamentos dinâmico e scroll ajustado.
      */
 
     let contas = [];
-    let dbConfig = JSON.parse(localStorage.getItem('financas_db_setup')) || { mode: 'local', keys: '', deviceName: 'Meu Dispositivo', geminiKey: '' };
+    let dbConfig = JSON.parse(localStorage.getItem('financas_db_setup')) || { mode: 'local', keys: '', deviceName: 'Meu Dispositivo' };
     let db = null;
     const FIREBASE_DOC_ID = "banco_jubal";
     
@@ -453,13 +460,6 @@
         const appContainer = document.getElementById('appContainer');
         if (appContainer) appContainer.style.display = 'block';
         verificarPendencias(); limparFL(); salvarEAtualizar();
-
-        // 🧠 INTELIGÊNCIA RESPONSIVA (Mobile abre no Assistente, Desktop na Agenda)
-        if (window.innerWidth < 768) {
-            document.getElementById('btnAbaAssistente').click();
-        } else {
-            document.getElementById('btnAbaAgenda').click();
-        }
     }
 
     async function subirParaNuvem() {
@@ -488,7 +488,6 @@
             document.getElementById('config_db_mode').value = dbConfig.mode || 'local';
             document.getElementById('config_fb_keys').value = dbConfig.keys || '';
             document.getElementById('config_db_device').value = dbConfig.deviceName || '';
-            document.getElementById('config_gemini_key').value = dbConfig.geminiKey || '';
             toggleDbMode();
             if (dbConfig.mode === 'nuvem') document.getElementById('accMotor').setAttribute('open', true);
         }
@@ -498,7 +497,6 @@
     function salvarConfigDb() {
         dbConfig.mode = document.getElementById('config_db_mode').value;
         dbConfig.keys = document.getElementById('config_fb_keys').value;
-        dbConfig.geminiKey = document.getElementById('config_gemini_key').value;
         dbConfig.deviceName = document.getElementById('config_db_device').value || 'Meu Dispositivo';
         localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
         alert("Configuração salva!"); location.reload(); 
@@ -510,6 +508,16 @@
         const anoFiltro = data.getFullYear();
         if (anoFiltro !== new Date().getFullYear()) return `${nomeMes}/${anoFiltro.toString().slice(-2)}`;
         return nomeMes;
+    }
+
+    function rolarParaPainel() {
+        setTimeout(() => {
+            const el = document.getElementById('painelOperacional');
+            if (el) {
+                const y = el.getBoundingClientRect().top + window.scrollY - 50; 
+                window.scrollTo({top: y, behavior: 'smooth'});
+            }
+        }, 200);
     }
 
     function toggleOrdem() { ordemDesc = !ordemDesc; document.getElementById('iconeOrdem').innerText = ordemDesc ? "▼" : "▲"; render(); }
@@ -528,23 +536,33 @@
     }
 
     function getDataFechamentoParaFatura(contaCard, dataReferenciaStr) {
+        // Proteção 1: Se não tiver data, pega a data local exata do usuário
         if (!dataReferenciaStr) {
             let dLocal = new Date();
             dataReferenciaStr = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
         }
         
-        let dRef = new Date(dataReferenciaStr + 'T12:00:00');
+        let dRef = new Date(dataReferenciaStr + 'T12:00:00'); // O T12:00:00 âncora a data no meio do dia
         let vDia = parseInt(contaCard.vencimento) || 10;
         let fDia = parseInt(contaCard.fechamento);
         
         if (!fDia) { fDia = vDia - 7; if (fDia <= 0) fDia += 30; }
+        
+        // A MÁGICA DA REGRA DE NEGÓCIO: O último dia de compras é o dia ANTERIOR ao fechamento
         let diaCorte = fDia - 1; 
 
+        // Cria a data base do mês
         let dFechamento = new Date(dRef.getFullYear(), dRef.getMonth(), 1, 12, 0, 0);
         
-        if (fDia >= vDia) { dFechamento.setMonth(dFechamento.getMonth() - 1); }
+        if (fDia >= vDia) {
+            dFechamento.setMonth(dFechamento.getMonth() - 1);
+        }
+        
+        // Se o fechamento for dia 1, a conta (1 - 1) dá 0. 
+        // O JavaScript é esperto e entende que "dia 0" significa o último dia do mês anterior!
         dFechamento.setDate(diaCorte);
         
+        // A MÁGICA CONTRA O FUSO HORÁRIO: Formatação manual sem usar toISOString (sem exportar pra Londres)
         const ano = dFechamento.getFullYear();
         const mes = String(dFechamento.getMonth() + 1).padStart(2, '0');
         const dia = String(dFechamento.getDate()).padStart(2, '0');
@@ -579,11 +597,13 @@
 function verificarRendimentosDiarios() {
         const dLocal = new Date(); 
         const hj = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
-        const isFds = (dLocal.getDay() === 0 || dLocal.getDay() === 6);
+        const isFds = (dLocal.getDay() === 0 || dLocal.getDay() === 6); // Detecta se hoje é fds
         contas.forEach(c => {
             if (c.remun && c.lancamentos) {
                 let rendimentos = c.lancamentos.filter(l => (l.desc || "").toLowerCase() === "rendimento diário");
-                if (!isFds && !rendimentos.some(l => l.data >= hj)) {
+                
+                // 1. O Esqueleto Imortal: Garante que exista um rendimento se estivermos "no escuro"
+                if (!isFds && !rendimentos.some(l => l.data >= hj)) { // Só cria se NÃO for fds
                     c.lancamentos.push({ 
                         id: Date.now().toString() + "_REND" + Math.floor(Math.random()*1000), 
                         data: hj, valor: calcularRendimento(c, hj), desc: "Rendimento Diário", tipo: "credito", 
@@ -591,11 +611,14 @@ function verificarRendimentosDiarios() {
                         eRecurrente: true, freq: "diario", pTotal: 0, pAtual: 0
                     });
                 }
+
                 rendimentos = c.lancamentos.filter(l => (l.desc || "").toLowerCase() === "rendimento diário");
                 if (rendimentos.length > 0) {
                     rendimentos.sort((a,b) => new Date(b.data||0) - new Date(a.data||0));
                     let ultimo = rendimentos[0]; 
-                    if (ultimo.dataOk && ultimo.valorOk) { processarProximo(c, ultimo); }
+                    if (ultimo.dataOk && ultimo.valorOk) {
+                        processarProximo(c, ultimo);
+                    }
                 }
             }
         });
@@ -614,6 +637,7 @@ function verificarRendimentosDiarios() {
         if (contas.length === 0) return;
         contas.forEach(c => {
             if (c.tipoConta === 'cartao' && c.lancamentos) {
+                // Elege a Conta Principal como berço das novas faturas
                 let cO = contas.find(b => b.id !== c.id && b.tipoConta !== 'cartao'); 
                 if (!cO || !cO.lancamentos) return;
                 
@@ -631,22 +655,28 @@ function verificarRendimentosDiarios() {
                 } else {
                     todasFaturas.sort((a,b) => new Date(b.data || 0) - new Date(a.data || 0));
                     let ultimaFatura = todasFaturas[0];
-                    let travasDeSeguranca = 0; 
+                    let travasDeSeguranca = 0; // Evita ciclos infinitos
                     
+                    // A NOVA REGRA DE PRESENÇA
                     while (travasDeSeguranca < 12) {
+                        // 1. Descobre a data de corte da última fatura gerada
                         let dataFechamentoUltima = getDataFechamentoParaFatura(c, ultimaFatura.data);
+                        
+                        // 2. Procura se existe QUALQUER despesa no cartão que caia no próximo ciclo
                         let temLancamentoNovo = c.lancamentos.some(l => !l.isFaturaCartao && l.data > dataFechamentoUltima);
                         
+                        // 3. Se encontrar despesa nova, gera a próxima fatura imediatamente
                         if (temLancamentoNovo) {
                             let dUlt = new Date((ultimaFatura.data) + 'T12:00:00');
                             dUlt.setMonth(dUlt.getMonth() + 1); 
                             gerarParFatura(cO, c, dUlt, vDia);
                             
+                            // Atualiza a referência para continuar a procurar se for preciso
                             let novaDataFat = `${dUlt.getFullYear()}-${String(dUlt.getMonth() + 1).padStart(2, '0')}-${String(vDia).padStart(2, '0')}`;
                             ultimaFatura = { data: novaDataFat };
                             travasDeSeguranca++;
                         } else {
-                            break; 
+                            break; // Se não tem despesa para o próximo ciclo, o robô descansa.
                         }
                     }
                 }
@@ -727,7 +757,9 @@ function verificarRendimentosDiarios() {
         let l = c.lancamentos.find(x => x.id === id); if (!l) return;
         const conf = (!l.dataOk || !l.valorOk); 
         
-        if (l.isFaturaCartao && !l.valorOk) { l.valor = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
+        if (l.isFaturaCartao && !l.valorOk) {
+            l.valor = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
+        }
         
         l.dataOk = true; l.valorOk = true;
 
@@ -735,7 +767,10 @@ function verificarRendimentosDiarios() {
             contas.forEach(ct => {
                 if(!ct.lancamentos) return;
                 let i = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
-                if (i) { i.valor = l.valor; i.data = l.data; }
+                if (i) { 
+                    i.valor = l.valor; 
+                    i.data = l.data; 
+                }
             });
         }
         if (conf && (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) && !l.isFaturaCartao && !l.transferId) processarProximo(c, l);
@@ -769,8 +804,14 @@ function ajustarRendimentoL(id, dataRefStr) {
         }
 
         l.valor = parseFloat(rendimentoCalculado.toFixed(2));
-        l.dataOk = true; l.valorOk = true;
-        if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) { processarProximo(c, l); }
+        l.dataOk = true; 
+        l.valorOk = true;
+        
+        // Agora o botão Amarelo aciona o amanhã de forma idêntica ao botão Verde
+        if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) {
+            processarProximo(c, l);
+        }
+        
         salvarEAtualizar();
     }
     
@@ -803,18 +844,23 @@ function ajustarRendimentoL(id, dataRefStr) {
             if(idEdit) {
                 let l = c.lancamentos.find(x => x.id === idEdit); if (!l) return;
                 
-                // ONDA DE CHOQUE
+                // --- INÍCIO DA MÁGICA: A ONDA DE CHOQUE (Propagação) ---
                 if (eRecurrente || l.pTotal > 0) {
                     c.lancamentos.forEach(fut => {
                         let ehIrmao = fut.desc === l.desc && fut.pTotal === l.pTotal && fut.id !== l.id;
                         let ehFuturo = l.pTotal > 0 ? fut.pAtual > l.pAtual : fut.data >= l.data;
                         if (ehIrmao && ehFuturo && (!fut.dataOk || !fut.valorOk) && !fut.transferId) {
-                            fut.desc = descFinal; fut.valor = v; fut.tag = tag; fut.cartaoId = cartaoId;
+                            fut.desc = descFinal;
+                            fut.valor = v;
+                            fut.tag = tag;
+                            fut.cartaoId = cartaoId;
                         }
                     });
                 }
+                // --- FIM DA MÁGICA ---
                 
                 if (l.transferId) {
+
                     l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk; l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual; l.tag = tag;
                     contas.forEach(ct => {
                         if(!ct.lancamentos) return;
@@ -873,9 +919,10 @@ function processarProximo(conta, l) {
             dA.setFullYear(dA.getFullYear() + 1);
         } else if (l.freq === 'diario') {
             dA.setDate(dA.getDate() + 1);
+            // TRAVA DE DIA ÚTIL: Se for rendimento diário e cair no fds, empurra pra segunda
             if ((l.desc || "").toLowerCase() === "rendimento diário") {
-                if (dA.getDay() === 6) dA.setDate(dA.getDate() + 2); 
-                else if (dA.getDay() === 0) dA.setDate(dA.getDate() + 1); 
+                if (dA.getDay() === 6) dA.setDate(dA.getDate() + 2); // Sábado vira Segunda
+                else if (dA.getDay() === 0) dA.setDate(dA.getDate() + 1); // Domingo vira Segunda
             }
         } else {
             dA.setMonth(dA.getMonth() + 1);
@@ -892,15 +939,18 @@ function processarProximo(conta, l) {
                 if (ctO) {
                     let lO = ctO.lancamentos.find(lx => lx.transferId === l.transferId);
                     let nTId = Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000);
+                    // HIGIENIZAÇÃO AQUI (|| null e || "")
                     conta.lancamentos.push({ id: nTId+"A", transferId: nTId, data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: l.tag || "", cartaoId: l.cartaoId || null });
                     ctO.lancamentos.push({ id: nTId+"B", transferId: nTId, data: nD, valor: nValor, desc: lO.desc, tipo: lO.tipo, dataOk: false, valorOk: false, ordem: Math.max(...ctO.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: lO.tag || "", cartaoId: lO.cartaoId || null });
                 }
             }
-        } else {
+ 
+            } else {
+            // RADAR FLEXÍVEL: Para parcelas, busca pelo número (pAtual), ignorando desvios de data
             let jaExiste = conta.lancamentos.find(x => {
                 if (isRend) return x.data === nD && (x.desc || "").toLowerCase() === "rendimento diário";
-                if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP; // RADAR FLEXÍVEL
-                return x.data === nD && x.desc === l.desc; 
+                if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP; // Busca imune a data
+                return x.data === nD && x.desc === l.desc; // Busca normal
             });
 
             if (!jaExiste) {
@@ -969,6 +1019,7 @@ function processarProximo(conta, l) {
             document.getElementById('labelMesAnoAuditoria').innerText = formatarMesInteligente(dataFiltro);
             let tb = document.getElementById('corpoTabelaAuditoria'); tb.innerHTML = ""; let tD = false;
             
+            // ATUALIZA O CABEÇALHO HTML PARA MOSTRAR "Dif. (%)" AUTOMATICAMENTE
             if(tb.previousElementSibling) {
                 tb.previousElementSibling.innerHTML = `<tr><th>Data</th><th style="text-align:right">Saldo Base</th><th style="text-align:right">Rend. Real</th><th style="text-align:right">Rend. Esperado</th><th style="text-align:right">% CDI</th><th style="text-align:right">Dif. (%)</th></tr>`;
             }
@@ -987,13 +1038,13 @@ function processarProximo(conta, l) {
                     tD = true; 
                     
                     let somaRendReal = 0; let somaRendEsperado = 0; let somaCDIEfetivo = 0; let diasValidos = 0;
-                    let linhasHTML = ""; 
+                    let linhasHTML = ""; // Guarda os dias para injetar na tela somente APÓS o cabeçalho calculador
                     
                     rm.forEach(r => { 
                         let dO = new Date((r.data||"") + 'T12:00:00'); if (dO.getDay() === 0 || dO.getDay() === 6) return; 
                         let sB = gSB(r.data); let rR = r.valor||0; let rE = parseFloat((sB * txD).toFixed(2)); 
                         let cE = (sB > 0 && txD100 > 0) ? ((rR/sB)/txD100)*100 : 0;
-                        let dfPerc = cE - cdiConf; 
+                        let dfPerc = cE - cdiConf; // Novo cálculo: Diferença direta no percentual
                         
                         somaRendReal += rR; somaRendEsperado += rE; somaCDIEfetivo += cE; diasValidos++;
                         
@@ -1004,6 +1055,7 @@ function processarProximo(conta, l) {
                         let mediaCDI = somaCDIEfetivo / diasValidos;
                         let mediaDf = mediaCDI - cdiConf;
                         
+                        // IMPRIME O MINIPAINEL COM OS TOTAIS NA LINHA DO CABEÇALHO
                         tb.innerHTML += `<tr style="background:#f8fafc; border-bottom: 2px solid #cbd5e1;">
                             <td colspan="2" style="font-weight:bold; color:var(--primary); padding-top: 15px; padding-bottom: 15px;">🏦 ${c.nome} <span style="font-size:0.8rem; font-weight:normal; color:#64748b; margin-left: 5px;">(Conf: ${cdiConf}%)</span></td>
                             <td class="val-col" style="color:var(--success); font-weight:bold; padding-top: 15px; padding-bottom: 15px;">${fmt(somaRendReal)}</td>
@@ -1012,12 +1064,14 @@ function processarProximo(conta, l) {
                             <td class="val-col" style="color:${mediaDf < -0.5 ? 'var(--danger)' : (mediaDf > 0.5 ? 'var(--success)' : '#64748b')}; font-weight:bold; padding-top: 15px; padding-bottom: 15px;">${mediaDf > 0 ? '+' : ''}${mediaDf.toFixed(2)}%</td>
                         </tr>`;
                         
+                        // IMPRIME OS DIAS DETALHADOS LOGO ABAIXO
                         tb.innerHTML += linhasHTML;
                     }
                 }
             });
             if (!tD) tb.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #64748b;">Nenhuma auditoria.</td></tr>`;
         }
+        
     }
 
     function renderAgenda() {
@@ -1193,7 +1247,7 @@ function processarProximo(conta, l) {
         contas.forEach(c => {
             const p = document.createElement('div'); p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
             p.innerText = c.nome; if (c.tipoConta === 'cartao') p.innerText += ' 💳'; else if (c.remun) { const s = document.createElement('span'); s.className = 'badge badge-mensal'; s.innerText = '📈 REMUN'; p.appendChild(s); }
-            p.onclick = () => { contaAtiva = c.id; render(); }; cp.appendChild(p);
+            p.onclick = () => { contaAtiva = c.id; render(); rolarParaPainel(); }; cp.appendChild(p);
         });
 
         if(contaAtiva) {
@@ -1251,6 +1305,7 @@ function processarProximo(conta, l) {
 
                 const ord = [...(c.lancamentos||[])].map(l => {
                         let dataOriginalVis = l.data;
+                        // MÁGICA 1: Se estiver agrupando cartão parcelado, calcula a data do passado
                         if (modoConciliacao && c.tipoConta === 'cartao' && l.pTotal > 0) {
                             let dCalc = new Date(l.data + 'T12:00:00');
                             dCalc.setMonth(dCalc.getMonth() - (l.pAtual - 1));
@@ -1261,6 +1316,7 @@ function processarProximo(conta, l) {
                         if (modoConciliacao && c.tipoConta === 'cartao') { 
                             let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); 
                             if (tA !== tB) return tA.localeCompare(tB); 
+                            // MÁGICA 2: Ordena usando a data original calculada
                             let dA = new Date(a.dataOriginalVis||0).getTime(); let dB = new Date(b.dataOriginalVis||0).getTime();
                             return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
                         }
@@ -1281,6 +1337,7 @@ function processarProximo(conta, l) {
                     const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial');
                     if(rT && cSI) { rT.style.display = 'table-footer-group'; cSI.innerText = fmt(sI); cSI.style.color = sI < 0 ? 'var(--danger)' : 'var(--text)'; }
 
+                    // --- INÍCIO: FILTRO DA FATURA REAL ---
                     let dFA_atual = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
                     let dCA_atual = getDataFechamentoParaFatura(c, dFA_atual);
                     
@@ -1293,8 +1350,10 @@ function processarProximo(conta, l) {
                         let deveExibir = false;
 
                         if (modoConciliacao && c.tipoConta === 'cartao') {
+                            // MODO FATURA: Exibe apenas o que caiu no ciclo atual do cartão
                             deveExibir = (l.data > dCA_ant && l.data <= dCA_atual);
                         } else {
+                            // MODO NORMAL: Exibe rigorosamente pelo mês do calendário
                             deveExibir = (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear());
                         }
 
@@ -1302,6 +1361,7 @@ function processarProximo(conta, l) {
                             dR.push({ ...l, s: mS[l.id], valorDin: mVal[l.id], contaOrigemId: c.id });
                         }
                     });
+                    // --- FIM: FILTRO DA FATURA REAL ---
                 }
 
                 const rT = document.getElementById('rodapeTabela'); 
@@ -1334,6 +1394,7 @@ function processarProximo(conta, l) {
                     let cSal = mP ? "" : `<td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td>`;
                     let setOr = mP ? "" : `<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div>`;
 
+                    // MÁGICA 3: Disfarça a data na tela se for uma parcela de cartão agrupada
                     let strDataExibicao = (l.data||"").split('-').reverse().join('/');
                     if (modoConciliacao && c.tipoConta === 'cartao' && l.pTotal > 0) {
                         strDataExibicao = `<span style="color:#64748b" title="Data original da compra">🛒 ${(l.dataOriginalVis||"").split('-').reverse().join('/')}</span>`;
@@ -1408,11 +1469,14 @@ function processarProximo(conta, l) {
         document.getElementById(id).classList.add('active'); 
         b.classList.add('active'); 
         render(); 
+        if(id === 'aba-lancamentos') {
+            rolarParaPainel();
+        }
     }
     
     function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); }
-    function proximaConta() { if (contas.length === 0) return; const i = contas.findIndex(c => c.id === contaAtiva); contaAtiva = contas[(i + 1) % contas.length].id; render(); }
+    function proximaConta() { if (contas.length === 0) return; const i = contas.findIndex(c => c.id === contaAtiva); contaAtiva = contas[(i + 1) % contas.length].id; render(); rolarParaPainel(); }
 
     function deletaL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return;
@@ -1428,6 +1492,7 @@ function processarProximo(conta, l) {
         let cO = contas.find(x => x.id === contaAtiva); if(!cO||!cO.lancamentos) return;
         let i = cO.lancamentos.findIndex(x => x.id === id); let l = cO.lancamentos[i]; if(!l) return;
         
+        // TRAVA INTELIGENTE: Permite mover APENAS se for o débito de uma fatura de cartão
         if (l.transferId) {
             if (!(l.isFaturaCartao && l.tipo === 'debito')) {
                 return alert("Não é possível mover transferências vinculadas comuns ou o crédito da fatura.");
@@ -1435,20 +1500,23 @@ function processarProximo(conta, l) {
         }
         
         let out = contas.filter(c => c.id !== contaAtiva);
+        // Regra de Ouro: Fatura não pode ser paga usando a conta de outro cartão
         if (l.isFaturaCartao) out = out.filter(c => c.tipoConta !== 'cartao'); 
         
         if(out.length === 0) return alert("Nenhuma conta destino válida disponível.");
         
         let sel = prompt("Para qual conta deseja mover este pagamento?\n" + out.map((c, idx) => `${idx + 1} - ${c.nome}`).join('\n'));
-        if(!sel) return; 
+        if(!sel) return; // Sai silenciosamente se o usuário cancelar o prompt
         
         let cD = out[parseInt(sel) - 1];
         if(cD && confirm(`Confirmar a mudança do pagamento para a conta: ${cD.nome}?`)) {
+            // Remove da conta origem e injeta na conta destino
             cO.lancamentos.splice(i, 1); 
             l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; 
             if(!cD.lancamentos) cD.lancamentos=[]; 
             cD.lancamentos.push(l);
             
+            // BÔNUS: Atualiza o texto descritivo na outra "metade" (dentro do cartão)
             if (l.isFaturaCartao) {
                 contas.forEach(ct => {
                     if (ct.lancamentos) {
@@ -1466,7 +1534,9 @@ function processarProximo(conta, l) {
         let l = c.lancamentos.find(x => x.id === id); if(!l) return;
         
         let valorParaEdicao = l.valor || 0;
-        if (l.isFaturaCartao) { valorParaEdicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
+        if (l.isFaturaCartao) {
+            valorParaEdicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
+        }
         
         let btnLanc = document.getElementById('btnAbaLancamentos');
         if(btnLanc) btnLanc.click();
@@ -1495,88 +1565,70 @@ function processarProximo(conta, l) {
         setTimeout(() => { document.getElementById('f_valor').focus(); }, 300);
     }
 
+// ==========================================
+    // PROJETO PILOTO: ASSISTENTE DE LANÇAMENTOS
     // ==========================================
-    // CÉREBRO: ASSISTENTE DE LANÇAMENTOS COM IA
-    // ==========================================
-    async function processarComandoIA() {
-        let apiKey = dbConfig.geminiKey || localStorage.getItem('gemini_api_key');
+    async function testarPilotoIA() {
+        // 1. Gerencia a Chave da API
+        let apiKey = localStorage.getItem('gemini_api_key');
         if (!apiKey) {
-            apiKey = prompt("Para usar o assistente, cole sua API Key do Google Gemini:");
-            if (!apiKey) return;
-            dbConfig.geminiKey = apiKey;
-            localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
+            apiKey = prompt("Bem-vindo ao Piloto!\nCole sua API Key do Google Gemini aqui:\n(Ficará salva apenas no seu navegador)");
+            if (!apiKey) return; // Cancela se o usuário não preencher
+            localStorage.setItem('gemini_api_key', apiKey);
         }
 
-        const texto = document.getElementById('txtComandoIA').value.trim();
-        if (!texto) return alert("Por favor, digite ou dite um comando financeiro primeiro.");
+        // 2. Pede a frase (Simulando o ditado por voz)
+        let fraseUsuario = prompt("O que você gastou?\nEx: 'Gastei 150 e 30 centavos no mercado hoje'");
+        if (!fraseUsuario) return;
 
-        const btn = document.getElementById('btnProcessarIA');
-        const originalText = btn.innerText;
-        btn.innerText = "⏳ A IA está decifrando o comando...";
-        btn.disabled = true;
-
-        // A instrução mestre já instrui o Gemini a usar o CEFGold como padrão, conforme a regra da arquitetura
-        const instrucaoMestra = `Você é um assistente financeiro de extração de dados.
-        Analise a frase do usuário e devolva EXATAMENTE E APENAS um objeto JSON válido, sem qualquer formatação markdown (sem \`\`\`json).
+        // 3. A Instrução Oculta (O Cérebro da IA)
+        const instrucaoMestra = `Você é um assistente financeiro focado em extração de dados.
+        Analise a frase do usuário e devolva EXATAMENTE E APENAS um objeto JSON válido, sem formatação markdown (não use \`\`\`json).
         
         REGRAS DE OURO:
-        - Se o usuário falar de gastos no cartão, mas não especificar o nome do cartão ou da conta, assuma OBRIGATORIAMENTE que o valor para "Cartao_Conta" é "CEFGold".
-        - O campo "Valor" deve ser exclusivamente numérico (ex: 150.30).
-        - O campo "Tipo" deve ser estritamente "debito" para gastos ou "credito" para receitas/rendimentos.
+        - Se o usuário não especificar a conta ou o cartão, assuma SEMPRE que o cartão é o "CEFGold".
+        - O campo "Valor" deve ser apenas numérico (ex: 150.30).
+        - O campo "Tipo" deve ser "debito" para gastos ou "credito" para receitas.
         
         Modelo esperado de saída:
-        { "Descricao": "...", "Valor": 0.00, "Cartao_Conta": "...", "Tipo": "debito" }
+        { "Descricao": "...", "Valor": 0.00, "Cartao_Conta": "...", "Tipo": "..." }
         
-        Frase a analisar: "${texto}"`;
+        Frase do usuário: "${fraseUsuario}"`;
 
+        const pacoteDados = {
+            contents: [{ parts: [{ text: instrucaoMestra }] }]
+        };
+
+        // Feedback visual de carregamento
+        const btn = document.getElementById('btnTesteIA');
+        const textoOriginalBtn = btn.innerText;
+        btn.innerText = "⏳ Decifrando comando...";
+        btn.disabled = true;
+
+        // 4. A Conexão com o Google
         try {
             const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: instrucaoMestra }] }] })
+                body: JSON.stringify(pacoteDados)
             });
 
-            const resJson = await resposta.json();
+            const resultado = await resposta.json();
             
-            if (resJson.error) {
-                alert("Erro na IA: " + resJson.error.message);
-                dbConfig.geminiKey = ""; localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
+            // Tratamento de Erros da API (ex: Chave inválida)
+            if (resultado.error) {
+                alert("Erro na IA: " + resultado.error.message);
+                localStorage.removeItem('gemini_api_key'); // Apaga a chave errada
             } else {
-                let txtData = resJson.candidates[0].content.parts[0].text;
-                txtData = txtData.replace(/```json/g, '').replace(/```/g, '').trim();
-                let dados = JSON.parse(txtData);
-
-                // 1. Identifica a conta alvo
-                let alvoStr = (dados.Cartao_Conta || "CEFGold").toLowerCase();
-                let contaEncontrada = contas.find(c => c.nome.toLowerCase().includes(alvoStr));
-                
-                if (contaEncontrada) {
-                    contaAtiva = contaEncontrada.id;
-                } else if (contas.length > 0) {
-                    contaAtiva = contas[0].id; // Fallback de segurança
-                }
-
-                // 2. Navega suavemente para a Área de Lançamento
-                document.getElementById('btnAbaLancamentos').click();
-                
-                // 3. Preenche a tela magicamente (sem salvar sozinho)
-                setTimeout(() => {
-                    document.getElementById('f_desc').value = dados.Descricao;
-                    document.getElementById('f_valor').value = dados.Valor.toFixed(2).replace('.', ',');
-                    
-                    let selectTipo = document.getElementById('f_tipo');
-                    selectTipo.value = dados.Tipo === "credito" ? "credito" : "debito"; 
-                    
-                    checkTransf(); // Atualiza a exibição de tags ou campos de transferência
-                    
-                    document.getElementById('txtComandoIA').value = ""; // Limpa a barra
-                    document.getElementById('f_valor').focus(); // Foca no valor para revisão
-                }, 100);
+                // Sucesso! Mostra o JSON que a IA cuspiu
+                const respostaIA = resultado.candidates[0].content.parts[0].text;
+                alert("🎯 A IA entendeu perfeitamente. Veja os dados prontos para o sistema:\n\n" + respostaIA);
             }
-        } catch (err) {
-            alert("Erro de comunicação com o assistente IA. Verifique a conexão ou a chave.");
+        } catch (erro) {
+            alert("Falha de conexão. Verifique sua internet ou a chave gerada.");
         } finally {
-            btn.innerText = originalText;
+            // Devolve o botão ao normal
+            btn.innerText = textoOriginalBtn;
             btn.disabled = false;
         }
     }
