@@ -286,7 +286,7 @@
                     <div class="field-group cartao-fields" style="flex: 0 0 120px; display:none;"><label>Vencimento (Dia)</label><input type="number" id="c_vencimento" min="1" max="31" value="10"></div>
                     <div class="field-group cartao-fields" style="flex: 0 0 120px; display:none;"><label>Fechamento (Dia)</label><input type="number" id="c_fechamento" min="1" max="31" placeholder="Ex: 3"></div>
                     <div class="field-group remun-toggle-field" style="flex: 0 0 90px;"><label>Conta Rende?</label><select id="c_remun" onchange="toggleRemunInput()"><option value="n">Não</option><option value="s">Sim</option></select></div>
-                    <div class="field-group remun-fields" style="flex: 0 0 90px; display:none;"><label>Selic (%)</label><input type="number" id="c_selic" value="14.5" step="0.1"></div>
+                    
                     <div class="field-group remun-fields" style="flex: 0 0 90px; display:none;"><label>CDI (%)</label><input type="number" id="c_cdi" value="120"></div>
                     <div class="field-group remun-fields" style="flex: 0 0 100px; display:none;"><label>Base CDI (Dias)</label><input type="number" id="c_base_dias" value="252"></div>
                     <div class="field-group" style="flex: 0 0 180px;"><label>Nível de Alertas</label><select id="c_alerta_nivel"><option value="1">Todos os Alertas</option><option value="2">Ignorar Rendimentos</option><option value="3">Conta Silenciada</option></select></div>
@@ -306,6 +306,7 @@
                 <div class="form-grid-config" style="margin-bottom: 10px;">
                     <div class="field-group" style="flex: 1 1 200px;"><label>Armazenamento Atual</label><select id="config_db_mode" onchange="toggleDbMode()" style="font-weight: bold; background: #f8fafc;"><option value="local">Local (Offline)</option><option value="nuvem">Nuvem (Sincronizado)</option></select></div>
                     <div class="field-group" style="flex: 1 1 200px;"><label>Nome deste Dispositivo</label><input type="text" id="config_db_device" placeholder="Ex: Notebook"></div>
+                    <div class="field-group" style="flex: 0 0 120px;"><label>Taxa Selic (%)</label><input type="number" id="config_selic" step="0.01" placeholder="10.50" style="font-weight: bold; color: var(--primary);"></div>
                 </div>
                 <div id="boxFirebase" style="display:none; margin-top: 15px;">
                     <details class="acc-interno" style="border: 1px solid var(--divider); padding: 10px 15px; border-radius: 8px;">
@@ -489,6 +490,7 @@
             document.getElementById('config_fb_keys').value = dbConfig.keys || '';
             document.getElementById('config_db_device').value = dbConfig.deviceName || '';
             document.getElementById('config_gemini_key').value = dbConfig.geminiKey || '';
+            document.getElementById('config_selic').value = dbConfig.selic || 0.0;
             toggleDbMode();
             if (dbConfig.mode === 'nuvem') document.getElementById('accMotor').setAttribute('open', true);
         }
@@ -500,6 +502,7 @@
         dbConfig.keys = document.getElementById('config_fb_keys').value;
         dbConfig.geminiKey = document.getElementById('config_gemini_key').value;
         dbConfig.deviceName = document.getElementById('config_db_device').value || 'Meu Dispositivo';
+        dbConfig.selic = parseFloat(document.getElementById('config_selic').value) || 0.0;
         localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
         alert("Configuração salva!"); location.reload(); 
     }
@@ -572,7 +575,7 @@
         let s = 0;
         c.lancamentos.forEach(l => { if (l.data < dRef) s += (l.tipo === 'credito' ? (l.valor || 0) : -(l.valor || 0)); });
         if (s <= 0) return 0;
-        const taxaDiaria = Math.pow(1 + (((parseFloat(c.selic) || 14.5) - 0.1) / 100) * ((parseFloat(c.cdi) || 120) / 100), 1 / (parseInt(c.baseDias) || 252)) - 1;
+        const taxaDiaria = Math.pow(1 + (((parseFloat(dbConfig.selic) || 0.0) - 0.1) / 100) * ((parseFloat(c.cdi) || 120) / 100), 1 / (parseInt(c.baseDias) || 252)) - 1;
         return parseFloat((s * taxaDiaria).toFixed(2));
     }
 
@@ -978,8 +981,8 @@ function processarProximo(conta, l) {
                 const gSB = (dA) => { let s = 0; for (let l of cl) { if (l.data < dA) { let v = l.valor||0; if ((l.tipo === 'cartao' && l.cartaoId && !l.valorOk) || (l.isFaturaCartao && !l.valorOk)) v = Math.abs(obterSaldoCartao(l.cartaoId || l.isFaturaCartao, l.data)); s += (l.tipo === 'credito' ? v : -v); } else break; } return s; };
                 
                 let cdiConf = parseFloat(c.cdi) || 120;
-                const txD = Math.pow(1 + (((parseFloat(c.selic)||14.5) - 0.1)/100) * (cdiConf/100), 1/(parseInt(c.baseDias)||252)) - 1;
-                const txD100 = Math.pow(1 + (((parseFloat(c.selic)||14.5) - 0.1)/100), 1/(parseInt(c.baseDias)||252)) - 1;
+                const txD = Math.pow(1 + (((parseFloat(dbConfig.selic)||0.0 - 0.1)/100) * (cdiConf/100), 1/(parseInt(c.baseDias)||252)) - 1;
+                const txD100 = Math.pow(1 + (((parseFloat(dbConfig.selic)||0.0 - 0.1)/100), 1/(parseInt(c.baseDias)||252)) - 1;
                 
                 let rm = cl.filter(l => { let dL = new Date((l.data||"") + 'T12:00:00'); return dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear() && (l.desc||"").toLowerCase() === "rendimento diário" && l.tipo === 'credito'; });
                 
@@ -1374,7 +1377,7 @@ function processarProximo(conta, l) {
 
     function salvarC() {
         const iE = document.getElementById('c_id_editando').value; const n = document.getElementById('c_nome').value; if(!n) return;
-        const d = { nome: n, tipoConta: document.getElementById('c_tipo').value, vencimento: parseInt(document.getElementById('c_vencimento').value) || 10, fechamento: parseInt(document.getElementById('c_fechamento').value) || '', remun: document.getElementById('c_remun').value === 's', selic: parseFloat(document.getElementById('c_selic').value) || 0, cdi: parseFloat(document.getElementById('c_cdi').value) || 0, baseDias: parseInt(document.getElementById('c_base_dias').value) || 252, alertaNivel: document.getElementById('c_alerta_nivel').value || '1', obs: document.getElementById('c_obs').value };
+        const d = { nome: n, tipoConta: document.getElementById('c_tipo').value, vencimento: parseInt(document.getElementById('c_vencimento').value) || 10, fechamento: parseInt(document.getElementById('c_fechamento').value) || '', remun: document.getElementById('c_remun').value === 's', cdi: parseFloat(document.getElementById('c_cdi').value) || 0, baseDias: parseInt(document.getElementById('c_base_dias').value) || 252, alertaNivel: document.getElementById('c_alerta_nivel').value || '1', obs: document.getElementById('c_obs').value };
         if(iE) { const i = contas.findIndex(x => x.id === iE); contas[i] = { ...contas[i], ...d }; } else { let nI = Date.now().toString(); contas.push({ id: nI, ...d, padrao: contas.length === 0, lancamentos: [] }); if (contas.length === 1) contaAtiva = nI; }
         salvarEAtualizar(); limparFC();
     }
