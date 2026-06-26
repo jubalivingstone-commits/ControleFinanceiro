@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v21.0.01</title>
+    <title>Meu Controle Financeiro Pro - v21.0.00</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -286,6 +286,7 @@
                     <div class="field-group cartao-fields" style="flex: 0 0 120px; display:none;"><label>Vencimento (Dia)</label><input type="number" id="c_vencimento" min="1" max="31" value="10"></div>
                     <div class="field-group cartao-fields" style="flex: 0 0 120px; display:none;"><label>Fechamento (Dia)</label><input type="number" id="c_fechamento" min="1" max="31" placeholder="Ex: 3"></div>
                     <div class="field-group remun-toggle-field" style="flex: 0 0 90px;"><label>Conta Rende?</label><select id="c_remun" onchange="toggleRemunInput()"><option value="n">Não</option><option value="s">Sim</option></select></div>
+                    <div class="field-group remun-fields" style="flex: 0 0 90px; display:none;"><label>Selic (%)</label><input type="number" id="c_selic" value="14.5" step="0.1"></div>
                     <div class="field-group remun-fields" style="flex: 0 0 90px; display:none;"><label>CDI (%)</label><input type="number" id="c_cdi" value="120"></div>
                     <div class="field-group remun-fields" style="flex: 0 0 100px; display:none;"><label>Base CDI (Dias)</label><input type="number" id="c_base_dias" value="252"></div>
                     <div class="field-group" style="flex: 0 0 180px;"><label>Nível de Alertas</label><select id="c_alerta_nivel"><option value="1">Todos os Alertas</option><option value="2">Ignorar Rendimentos</option><option value="3">Conta Silenciada</option></select></div>
@@ -305,7 +306,6 @@
                 <div class="form-grid-config" style="margin-bottom: 10px;">
                     <div class="field-group" style="flex: 1 1 200px;"><label>Armazenamento Atual</label><select id="config_db_mode" onchange="toggleDbMode()" style="font-weight: bold; background: #f8fafc;"><option value="local">Local (Offline)</option><option value="nuvem">Nuvem (Sincronizado)</option></select></div>
                     <div class="field-group" style="flex: 1 1 200px;"><label>Nome deste Dispositivo</label><input type="text" id="config_db_device" placeholder="Ex: Notebook"></div>
-                    <div class="field-group" style="flex: 0 0 120px;"><label>Taxa Selic (%)</label><input type="number" id="config_selic" step="0.01" placeholder="10.50" style="font-weight: bold; color: var(--primary);"></div>
                 </div>
                 <div id="boxFirebase" style="display:none; margin-top: 15px;">
                     <details class="acc-interno" style="border: 1px solid var(--divider); padding: 10px 15px; border-radius: 8px;">
@@ -354,21 +354,23 @@
         </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.01</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.00</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 21.0.01
+     * @version 21.0.00
      * @changelog
-     * - [NOVO] Variável Global: Taxa Selic migrada para aba Avançada, regendo os cálculos de auditoria globalmente.
-     * - [FIX] Estética da aba Avançada refinada: Input do Gemini em estilo terminal e área do Firebase redimensionada.
-     * - [FIX] Limpeza completa de todos os Auto-Scrolls da interface. Mantido APENAS a rolagem estratégica no botão Editar.
+     * - [NOVO] Aba "Assistente" com IA generativa (Gemini 2.5) para lançamentos via NLP.
+     * - [NOVO] Lógica de Tela Responsiva: Abre Assistente no celular e Agenda no Desktop.
+     * - [FIX] Extinção da função de scroll automático, garantindo total controle visual ao usuário.
+     * - [MELHORIA] Relatório de Auditoria agora mostra a diferença exata do IR em base percentual e cabeçalhos sumarizados.
+     * - [MELHORIA] Robô de Faturas foi reescrito para utilizar a "Regra de Presença", garantindo planejamento antecipado.
      */
 
     let contas = [];
-    let dbConfig = JSON.parse(localStorage.getItem('financas_db_setup')) || { mode: 'local', keys: '', deviceName: 'Meu Dispositivo', geminiKey: '', selic: 10.50 };
+    let dbConfig = JSON.parse(localStorage.getItem('financas_db_setup')) || { mode: 'local', keys: '', deviceName: 'Meu Dispositivo', geminiKey: '' };
     let db = null;
     const FIREBASE_DOC_ID = "banco_jubal";
     
@@ -452,6 +454,7 @@
         if (appContainer) appContainer.style.display = 'block';
         verificarPendencias(); limparFL(); salvarEAtualizar();
 
+        // 🧠 INTELIGÊNCIA RESPONSIVA (Mobile abre no Assistente, Desktop na Agenda)
         if (window.innerWidth < 768) {
             document.getElementById('btnAbaAssistente').click();
         } else {
@@ -486,7 +489,6 @@
             document.getElementById('config_fb_keys').value = dbConfig.keys || '';
             document.getElementById('config_db_device').value = dbConfig.deviceName || '';
             document.getElementById('config_gemini_key').value = dbConfig.geminiKey || '';
-            document.getElementById('config_selic').value = dbConfig.selic || 10.50;
             toggleDbMode();
             if (dbConfig.mode === 'nuvem') document.getElementById('accMotor').setAttribute('open', true);
         }
@@ -498,7 +500,6 @@
         dbConfig.keys = document.getElementById('config_fb_keys').value;
         dbConfig.geminiKey = document.getElementById('config_gemini_key').value;
         dbConfig.deviceName = document.getElementById('config_db_device').value || 'Meu Dispositivo';
-        dbConfig.selic = parseFloat(document.getElementById('config_selic').value) || 10.50;
         localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
         alert("Configuração salva!"); location.reload(); 
     }
@@ -531,15 +532,24 @@
             let dLocal = new Date();
             dataReferenciaStr = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
         }
+        
         let dRef = new Date(dataReferenciaStr + 'T12:00:00');
         let vDia = parseInt(contaCard.vencimento) || 10;
         let fDia = parseInt(contaCard.fechamento);
+        
         if (!fDia) { fDia = vDia - 7; if (fDia <= 0) fDia += 30; }
         let diaCorte = fDia - 1; 
+
         let dFechamento = new Date(dRef.getFullYear(), dRef.getMonth(), 1, 12, 0, 0);
+        
         if (fDia >= vDia) { dFechamento.setMonth(dFechamento.getMonth() - 1); }
         dFechamento.setDate(diaCorte);
-        return `${dFechamento.getFullYear()}-${String(dFechamento.getMonth() + 1).padStart(2, '0')}-${String(dFechamento.getDate()).padStart(2, '0')}`;
+        
+        const ano = dFechamento.getFullYear();
+        const mes = String(dFechamento.getMonth() + 1).padStart(2, '0');
+        const dia = String(dFechamento.getDate()).padStart(2, '0');
+        
+        return `${ano}-${mes}-${dia}`;
     }
 
     function obterSaldoCartao(contaCardId, dataRefFatura) {
@@ -562,7 +572,7 @@
         let s = 0;
         c.lancamentos.forEach(l => { if (l.data < dRef) s += (l.tipo === 'credito' ? (l.valor || 0) : -(l.valor || 0)); });
         if (s <= 0) return 0;
-        const taxaDiaria = Math.pow(1 + (((parseFloat(dbConfig.selic) || 10.50) - 0.1) / 100) * ((parseFloat(c.cdi) || 120) / 100), 1 / (parseInt(c.baseDias) || 252)) - 1;
+        const taxaDiaria = Math.pow(1 + (((parseFloat(c.selic) || 14.5) - 0.1) / 100) * ((parseFloat(c.cdi) || 120) / 100), 1 / (parseInt(c.baseDias) || 252)) - 1;
         return parseFloat((s * taxaDiaria).toFixed(2));
     }
 
@@ -793,6 +803,7 @@ function ajustarRendimentoL(id, dataRefStr) {
             if(idEdit) {
                 let l = c.lancamentos.find(x => x.id === idEdit); if (!l) return;
                 
+                // ONDA DE CHOQUE
                 if (eRecurrente || l.pTotal > 0) {
                     c.lancamentos.forEach(fut => {
                         let ehIrmao = fut.desc === l.desc && fut.pTotal === l.pTotal && fut.id !== l.id;
@@ -888,7 +899,7 @@ function processarProximo(conta, l) {
         } else {
             let jaExiste = conta.lancamentos.find(x => {
                 if (isRend) return x.data === nD && (x.desc || "").toLowerCase() === "rendimento diário";
-                if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP;
+                if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP; // RADAR FLEXÍVEL
                 return x.data === nD && x.desc === l.desc; 
             });
 
@@ -967,8 +978,8 @@ function processarProximo(conta, l) {
                 const gSB = (dA) => { let s = 0; for (let l of cl) { if (l.data < dA) { let v = l.valor||0; if ((l.tipo === 'cartao' && l.cartaoId && !l.valorOk) || (l.isFaturaCartao && !l.valorOk)) v = Math.abs(obterSaldoCartao(l.cartaoId || l.isFaturaCartao, l.data)); s += (l.tipo === 'credito' ? v : -v); } else break; } return s; };
                 
                 let cdiConf = parseFloat(c.cdi) || 120;
-                const txD = Math.pow(1 + (((parseFloat(dbConfig.selic)||10.50) - 0.1)/100) * (cdiConf/100), 1/(parseInt(c.baseDias)||252)) - 1;
-                const txD100 = Math.pow(1 + (((parseFloat(dbConfig.selic)||10.50) - 0.1)/100), 1/(parseInt(c.baseDias)||252)) - 1;
+                const txD = Math.pow(1 + (((parseFloat(c.selic)||14.5) - 0.1)/100) * (cdiConf/100), 1/(parseInt(c.baseDias)||252)) - 1;
+                const txD100 = Math.pow(1 + (((parseFloat(c.selic)||14.5) - 0.1)/100), 1/(parseInt(c.baseDias)||252)) - 1;
                 
                 let rm = cl.filter(l => { let dL = new Date((l.data||"") + 'T12:00:00'); return dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear() && (l.desc||"").toLowerCase() === "rendimento diário" && l.tipo === 'credito'; });
                 
@@ -1129,6 +1140,21 @@ function processarProximo(conta, l) {
             ld.forEach((l, i) => l.ordem = oA[i]); 
             salvarEAtualizar();
         }
+    }
+
+    function focarDataRelevante() {
+        if (modoConciliacao) return;
+        const inP = document.getElementById('inputPesquisa'); if (inP && inP.value.trim() !== "") return;
+        const tb = document.getElementById('corpoTabela'); if (!tb || tb.innerHTML === "") return;
+        const ls = tb.getElementsByTagName('tr'); if (ls.length === 0) return;
+        const hj = new Date(); const aA = hj.getFullYear(); const mA = hj.getMonth();
+        const aF = dataFiltro.getFullYear(); const mF = dataFiltro.getMonth();
+
+        if (aF === aA && mF === mA) {
+            let a = document.querySelector('.linha-hoje') || document.querySelector('.linha-passada') || ls[ls.length - 1];
+            if(a) a.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (aF < aA || (aF === aA && mF < mA)) ls[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        else ls[ls.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
 
     function render() {
@@ -1332,7 +1358,7 @@ function processarProximo(conta, l) {
                 lc.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px; margin-bottom:10px; flex-wrap: wrap; gap: 10px;"><div><b>${c.nome}</b><span style="font-size:0.8rem; color:#64748b;">${tn}</span>${ib}<div class="order-controls" style="display:inline-flex; margin-left: 10px;"><button class="btn-ord" onclick="moverConta('${c.id}','sobe')">▲</button><button class="btn-ord" onclick="moverConta('${c.id}','desce')">▼</button></div></div><div class="actions"><button class="mini-btn btn-primary" onclick="editarC('${c.id}')">E</button><button class="mini-btn btn-danger" onclick="if(confirm('Apagar a conta e todo o histórico?')) {contas=contas.filter(x=>x.id!=='${c.id}'); salvarEAtualizar();}">X</button></div></div>`;
             });
         }
-        gerarDadosRelatorio(); atualizarSaudeBanco(); renderAgenda();
+        gerarDadosRelatorio(); atualizarSaudeBanco(); renderAgenda(); setTimeout(focarDataRelevante, 150);
     }
 
     function verificarPendencias() {
@@ -1348,16 +1374,16 @@ function processarProximo(conta, l) {
 
     function salvarC() {
         const iE = document.getElementById('c_id_editando').value; const n = document.getElementById('c_nome').value; if(!n) return;
-        const d = { nome: n, tipoConta: document.getElementById('c_tipo').value, vencimento: parseInt(document.getElementById('c_vencimento').value) || 10, fechamento: parseInt(document.getElementById('c_fechamento').value) || '', remun: document.getElementById('c_remun').value === 's', cdi: parseFloat(document.getElementById('c_cdi').value) || 0, baseDias: parseInt(document.getElementById('c_base_dias').value) || 252, alertaNivel: document.getElementById('c_alerta_nivel').value || '1', obs: document.getElementById('c_obs').value };
+        const d = { nome: n, tipoConta: document.getElementById('c_tipo').value, vencimento: parseInt(document.getElementById('c_vencimento').value) || 10, fechamento: parseInt(document.getElementById('c_fechamento').value) || '', remun: document.getElementById('c_remun').value === 's', selic: parseFloat(document.getElementById('c_selic').value) || 0, cdi: parseFloat(document.getElementById('c_cdi').value) || 0, baseDias: parseInt(document.getElementById('c_base_dias').value) || 252, alertaNivel: document.getElementById('c_alerta_nivel').value || '1', obs: document.getElementById('c_obs').value };
         if(iE) { const i = contas.findIndex(x => x.id === iE); contas[i] = { ...contas[i], ...d }; } else { let nI = Date.now().toString(); contas.push({ id: nI, ...d, padrao: contas.length === 0, lancamentos: [] }); if (contas.length === 1) contaAtiva = nI; }
         salvarEAtualizar(); limparFC();
     }
 
     function editarC(id) {
         const c = contas.find(x => x.id === id); if(!c) return;
-        document.getElementById('c_id_editando').value = c.id; document.getElementById('c_nome').value = c.nome; document.getElementById('c_tipo').value = c.tipoConta || "normal"; document.getElementById('c_vencimento').value = c.vencimento || 10; document.getElementById('c_fechamento').value = c.fechamento || (c.vencimento ? (c.vencimento - 7 <= 0 ? c.vencimento + 23 : c.vencimento - 7) : 3); document.getElementById('c_remun').value = c.remun ? 's' : 'n'; document.getElementById('c_cdi').value = c.cdi || 120; document.getElementById('c_base_dias').value = c.baseDias || 252; document.getElementById('c_alerta_nivel').value = c.alertaNivel || '1'; document.getElementById('c_obs').value = c.obs || "";
+        document.getElementById('c_id_editando').value = c.id; document.getElementById('c_nome').value = c.nome; document.getElementById('c_tipo').value = c.tipoConta || "normal"; document.getElementById('c_vencimento').value = c.vencimento || 10; document.getElementById('c_fechamento').value = c.fechamento || (c.vencimento ? (c.vencimento - 7 <= 0 ? c.vencimento + 23 : c.vencimento - 7) : 3); document.getElementById('c_remun').value = c.remun ? 's' : 'n'; document.getElementById('c_selic').value = c.selic || 14.5; document.getElementById('c_cdi').value = c.cdi || 120; document.getElementById('c_base_dias').value = c.baseDias || 252; document.getElementById('c_alerta_nivel').value = c.alertaNivel || '1'; document.getElementById('c_obs').value = c.obs || "";
         document.getElementById('tituloConfigSummary').innerText = "✏️ Editando: " + c.nome; document.getElementById('btnSalvarC').innerText = "Atualizar Conta"; document.getElementById('btnCancC').style.display = "block";
-        toggleRemunInput(); toggleTipoContaInput(); document.getElementById('accFormConta').setAttribute('open', true);
+        toggleRemunInput(); toggleTipoContaInput(); document.getElementById('accFormConta').setAttribute('open', true); document.getElementById('accFormConta').scrollIntoView({ behavior: 'smooth' });
     }
 
     function limparFC() { 
@@ -1466,11 +1492,7 @@ function processarProximo(conta, l) {
         dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
-        setTimeout(() => { 
-            // O ÚNICO SCROLL ATIVO: Rola direto para a área de lançamento ao clicar em "E"
-            document.getElementById('painelOperacional').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.getElementById('f_valor').focus(); 
-        }, 150);
+        setTimeout(() => { document.getElementById('f_valor').focus(); }, 300);
     }
 
     // ==========================================
@@ -1493,6 +1515,7 @@ function processarProximo(conta, l) {
         btn.innerText = "⏳ A IA está decifrando o comando...";
         btn.disabled = true;
 
+        // A instrução mestre já instrui o Gemini a usar o CEFGold como padrão, conforme a regra da arquitetura
         const instrucaoMestra = `Você é um assistente financeiro de extração de dados.
         Analise a frase do usuário e devolva EXATAMENTE E APENAS um objeto JSON válido, sem qualquer formatação markdown (sem \`\`\`json).
         
@@ -1523,17 +1546,20 @@ function processarProximo(conta, l) {
                 txtData = txtData.replace(/```json/g, '').replace(/```/g, '').trim();
                 let dados = JSON.parse(txtData);
 
+                // 1. Identifica a conta alvo
                 let alvoStr = (dados.Cartao_Conta || "CEFGold").toLowerCase();
                 let contaEncontrada = contas.find(c => c.nome.toLowerCase().includes(alvoStr));
                 
                 if (contaEncontrada) {
                     contaAtiva = contaEncontrada.id;
                 } else if (contas.length > 0) {
-                    contaAtiva = contas[0].id; 
+                    contaAtiva = contas[0].id; // Fallback de segurança
                 }
 
+                // 2. Navega suavemente para a Área de Lançamento
                 document.getElementById('btnAbaLancamentos').click();
                 
+                // 3. Preenche a tela magicamente (sem salvar sozinho)
                 setTimeout(() => {
                     document.getElementById('f_desc').value = dados.Descricao;
                     document.getElementById('f_valor').value = dados.Valor.toFixed(2).replace('.', ',');
@@ -1541,10 +1567,10 @@ function processarProximo(conta, l) {
                     let selectTipo = document.getElementById('f_tipo');
                     selectTipo.value = dados.Tipo === "credito" ? "credito" : "debito"; 
                     
-                    checkTransf(); 
+                    checkTransf(); // Atualiza a exibição de tags ou campos de transferência
                     
-                    document.getElementById('txtComandoIA').value = ""; 
-                    document.getElementById('f_valor').focus(); 
+                    document.getElementById('txtComandoIA').value = ""; // Limpa a barra
+                    document.getElementById('f_valor').focus(); // Foca no valor para revisão
                 }, 100);
             }
         } catch (err) {
