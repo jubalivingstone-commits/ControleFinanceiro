@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v21.0.01</title>
+    <title>Meu Controle Financeiro Pro - v21.0.02</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -148,12 +148,13 @@
                                 <li style="margin-bottom: 8px;"><b>💳 Cartões e Conciliação:</b> Controle de faturas, datas de fechamento e agrupamento por Etiquetas (Tags) para facilitar a conferência cruzada com o seu extrato bancário.</li>
                                 <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
                                 <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
-                                <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas recorrentes no seu orçamento.</li>
-                                <li style="margin-bottom: 8px;"><b>☁️ Segurança BBB:</b> Uma ferramenta boa, bonita, gratuita e segura. Você pode guardar os dados 100% offline no navegador ou sincronizar com sua própria nuvem privada no Google (Firebase), com backups em JSON e Excel (CSV) a qualquer momento.</li>
+                                <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas reuniões no seu orçamento.</li>
                             </ul>
                         </div>
                     </details>
                 </div>
+
+                <div id="painelOnboardingIA" class="card" style="margin-top: 20px; border: 1px solid var(--divider); background: #f8fafc; padding: 20px; border-radius: 12px; text-align: left;"></div>
             </div>
         </div>
 
@@ -298,43 +299,6 @@
     </div>
 
     <div id="aba-nuvem" class="content-section">
-        <details class="accordion" id="accMotor">
-            <summary><div style="display: flex; align-items: center; gap: 10px;">💽 Sincronização e Acesso Online <span id="badgeConexao" class="badge badge-diario" style="font-weight: normal;">Verificando...</span></div></summary>
-            <div>
-                <div id="boxMetaNuvem" class="box-metadados" style="display:none;"><span style="font-size: 1.5rem; line-height: 1;">🕒</span><div id="txtMetaInfo" style="flex:1;">Carregando...</div></div>
-                <div class="form-grid-config" style="margin-bottom: 10px;">
-                    <div class="field-group" style="flex: 1 1 200px;"><label>Armazenamento Atual</label><select id="config_db_mode" onchange="toggleDbMode()" style="font-weight: bold; background: #f8fafc;"><option value="local">Local (Offline)</option><option value="nuvem">Nuvem (Sincronizado)</option></select></div>
-                    <div class="field-group" style="flex: 1 1 200px;"><label>Nome deste Dispositivo</label><input type="text" id="config_db_device" placeholder="Ex: Notebook"></div>
-                    <div class="field-group" style="flex: 0 0 120px;"><label>Taxa Selic (%)</label><input type="number" id="config_selic" step="0.01" placeholder="10.50" style="font-weight: bold; color: var(--primary);"></div>
-                </div>
-                <div id="boxFirebase" style="display:none; margin-top: 15px;">
-                    <details class="acc-interno" style="border: 1px solid var(--divider); padding: 10px 15px; border-radius: 8px;">
-                        <summary style="font-weight: bold; font-size: 0.9rem; color: var(--primary);">⚙️ Editar Chaves de API do Firebase</summary>
-                        <div style="margin-top: 15px;">
-                            <textarea id="config_fb_keys" style="width:100%; height:140px; font-family: monospace; font-size: 0.8rem; background: #1e293b; color: #e2e8f0; border: 1px solid var(--divider); padding: 15px; border-radius: 8px;" placeholder="apiKey: '...'"></textarea>
-                            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-                                <button class="btn btn-primary" onclick="salvarConfigDb()">💾 Salvar Chaves</button>
-                                <button class="btn btn-danger" onclick="subirParaNuvem()">📤 Forçar Subida Local</button>
-                            </div>
-                        </div>
-                    </details>
-                </div>
-            </div>
-        </details>
-
-        <details class="accordion">
-            <summary>🤖 Inteligência Artificial (Gemini)</summary>
-            <div>
-                <p style="font-size: 0.9rem; color: #64748b; margin-top: 0;">Cole sua chave da API do Google Gemini para habilitar o Assistente de Lançamento por voz/texto. Suas chaves ficam guardadas localmente.</p>
-                <div class="form-grid-config">
-                    <div class="field-group" style="flex: 1 1 100%;"><label>Google Gemini API Key</label>
-                        <input type="text" id="config_gemini_key" style="font-family: monospace; font-size: 0.8rem; background: #1e293b; color: #e2e8f0; border: 1px solid var(--divider); padding: 10px 15px; border-radius: 8px; width: 100%; box-sizing: border-box;" placeholder="Cole sua chave gerada no Google AI Studio aqui...">
-                    </div>
-                    <button class="btn btn-primary" onclick="salvarConfigDb()">💾 Salvar Chave IA</button>
-                </div>
-            </div>
-        </details>
-
         <details class="accordion">
             <summary>📦 Backups e Exportação Local</summary>
             <div>
@@ -352,19 +316,56 @@
                 </div>
             </div>
         </details>
+
+        <details class="accordion" id="accGeminiIA">
+            <summary><div style="display: flex; align-items: center; gap: 10px;">🤖 Inteligência Artificial (Gemini) <span id="badgeGeminiStatus" class="badge">Verificando...</span></div></summary>
+            <div>
+                <p id="txtGeminiInstrucao" style="font-size: 0.9rem; color: #64748b; margin-top: 0;">Cole sua chave da API do Google Gemini para habilitar o Assistente de Lançamento por voz/texto. Suas chaves ficam guardadas localmente.</p>
+                <div class="form-grid-config">
+                    <div class="field-group" style="flex: 1 1 100%;"><label>Google Gemini API Key <a href="https://aistudio.google.com/" target="_blank" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-weight: normal; margin-left: 5px;" title="1. Acesse o Google AI Studio com sua conta Google; 2. Clique em 'Get API Key'; 3. Crie a chave e cole aqui.">ℹ️ Como obter?</a></label>
+                        <input type="text" id="config_gemini_key" style="font-family: monospace; font-size: 0.8rem; background: #1e293b; color: #e2e8f0; border: 1px solid var(--divider); padding: 10px 15px; border-radius: 8px; width: 100%; box-sizing: border-box;" placeholder="Cole sua chave gerada no Google AI Studio aqui...">
+                    </div>
+                    <button class="btn btn-primary" onclick="salvarConfigDb()">💾 Salvar Chave IA</button>
+                </div>
+            </div>
+        </details>
+
+        <details class="accordion" id="accMotor">
+            <summary><div style="display: flex; align-items: center; gap: 10px;">💽 Sincronização e Acesso Online <span id="badgeConexao" class="badge badge-diario" style="font-weight: normal;">Verificando...</span></div></summary>
+            <div>
+                <div id="boxMetaNuvem" class="box-metadados" style="display:none;"><span style="font-size: 1.5rem; line-height: 1;">🕒</span><div id="txtMetaInfo" style="flex:1;">Carregando...</div></div>
+                <div class="form-grid-config" style="margin-bottom: 10px;">
+                    <div class="field-group" style="flex: 1 1 200px;"><label>Armazenamento Atual</label><select id="config_db_mode" onchange="toggleDbMode()" style="font-weight: bold; background: #f8fafc;"><option value="local">Local (Offline)</option><option value="nuvem">Nuvem (Sincronizado)</option></select></div>
+                    <div class="field-group" style="flex: 1 1 200px;"><label>Nome deste Dispositivo</label><input type="text" id="config_db_device" placeholder="Ex: Notebook"></div>
+                    <div class="field-group" style="flex: 0 0 120px;"><label>Taxa Selic (%)</label><input type="number" id="config_selic" step="0.01" placeholder="10.50" style="font-weight: bold; color: var(--primary);"></div>
+                </div>
+                <div id="boxFirebase" style="display:none; margin-top: 15px;">
+                    <details class="acc-interno" style="border: 1px solid var(--divider); padding: 10px 15px; border-radius: 8px;">
+                        <summary style="font-weight: bold; font-size: 0.9rem; color: var(--primary);">⚙️ Editar Chaves de API do Firebase <a href="https://console.firebase.google.com/" target="_blank" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-weight: normal; margin-left: 5px;" title="1. Acesse o Console do Firebase; 2. Crie ou selecione seu projeto; 3. Vá em 'Configurações do Projeto' > 'Geral'; 4. Role até 'Seus Aplicativos', selecione a plataforma Web (&lt;/&gt;) e copie o bloco de código de inicialização.">ℹ️ Passo a Passo</a></summary>
+                        <div style="margin-top: 15px;">
+                            <textarea id="config_fb_keys" style="width:100%; height:140px; font-family: monospace; font-size: 0.8rem; background: #1e293b; color: #e2e8f0; border: 1px solid var(--divider); padding: 15px; border-radius: 8px;" placeholder="apiKey: '...'"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="salvarConfigDb()">💾 Salvar Chaves</button>
+                                <button class="btn btn-danger" onclick="subirParaNuvem()">📤 Forçar Subida Local</button>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </details>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.01</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.02</div>
 </div>
 
 <script>
     /**
      * @file Controle Financeiro Pro
-     * @version 21.0.01
+     * @version 21.0.02
      * @changelog
-     * - [NOVO] Variável Global: Taxa Selic migrada para aba Avançada, regendo os cálculos de auditoria globalmente.
-     * - [FIX] Estética da aba Avançada refinada: Input do Gemini em estilo terminal e área do Firebase redimensionada.
-     * - [FIX] Limpeza completa de todos os Auto-Scrolls da interface. Mantido APENAS a rolagem estratégica no botão Editar.
+     * - [MELHORIA] Tela de Boas-Vindas limpa de termos informais e acoplada com painel intuitivo de Onboarding de IA.
+     * - [MELHORIA] Subguias Avançadas reordenadas e equipadas com Badges de status síncronos e links explicativos integrados (Help text).
+     * - [MELHORIA] Tabela de Auditoria de Rendimentos operando com agrupamento expansível e triângulos dinâmicos de abertura.
      */
 
     let contas = [];
@@ -488,6 +489,24 @@
             document.getElementById('config_gemini_key').value = dbConfig.geminiKey || '';
             document.getElementById('config_selic').value = dbConfig.selic || 10.50;
             toggleDbMode();
+            
+            // Sincronização e Badge do Gemini
+            const badgeGemini = document.getElementById('badgeGeminiStatus');
+            const txtGemini = document.getElementById('txtGeminiInstrucao');
+            if (badgeGemini) {
+                if (dbConfig.geminiKey) {
+                    badgeGemini.innerText = "Ativo (Local)";
+                    badgeGemini.className = "badge badge-diario";
+                    if (txtGemini) txtGemini.innerHTML = "Sua API Key do Gemini está configurada e protegida localmente neste dispositivo. O Assistente por voz/texto está pronto para operar. Se precisar substituir a chave, utilize o campo abaixo.";
+                } else {
+                    badgeGemini.innerText = "Não Configurado";
+                    badgeGemini.className = "badge";
+                    badgeGemini.style.background = "#cbd5e1";
+                    badgeGemini.style.color = "#475569";
+                    if (txtGemini) txtGemini.innerHTML = "Cole sua chave da API do Google Gemini para habilitar o Assistente de Lançamento por voz/texto. Suas chaves ficam guardadas localmente.";
+                }
+            }
+
             if (dbConfig.mode === 'nuvem') document.getElementById('accMotor').setAttribute('open', true);
         }
     }
@@ -566,7 +585,7 @@
         return parseFloat((s * taxaDiaria).toFixed(2));
     }
 
-function verificarRendimentosDiarios() {
+    function verificarRendimentosDiarios() {
         const dLocal = new Date(); 
         const hj = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
         const isFds = (dLocal.getDay() === 0 || dLocal.getDay() === 6);
@@ -606,15 +625,9 @@ function verificarRendimentosDiarios() {
             if (c.tipoConta === 'cartao' && c.lancamentos) {
                 let cO = contas.find(b => b.id !== c.id && b.tipoConta !== 'cartao'); 
                 if (!cO || !cO.lancamentos) return;
-                
                 const vDia = c.vencimento || 10;
-                
                 let todasFaturas = [];
-                contas.forEach(ct => {
-                    if (ct.id !== c.id && ct.lancamentos) {
-                        todasFaturas = todasFaturas.concat(ct.lancamentos.filter(l => l.isFaturaCartao === c.id));
-                    }
-                });
+                contas.forEach(ct => { if (ct.id !== c.id && ct.lancamentos) { todasFaturas = todasFaturas.concat(ct.lancamentos.filter(l => l.isFaturaCartao === c.id)); } });
                 
                 if (todasFaturas.length === 0) {
                     gerarParFatura(cO, c, new Date(), vDia);
@@ -626,18 +639,12 @@ function verificarRendimentosDiarios() {
                     while (travasDeSeguranca < 12) {
                         let dataFechamentoUltima = getDataFechamentoParaFatura(c, ultimaFatura.data);
                         let temLancamentoNovo = c.lancamentos.some(l => !l.isFaturaCartao && l.data > dataFechamentoUltima);
-                        
                         if (temLancamentoNovo) {
-                            let dUlt = new Date((ultimaFatura.data) + 'T12:00:00');
-                            dUlt.setMonth(dUlt.getMonth() + 1); 
+                            let dUlt = new Date((ultimaFatura.data) + 'T12:00:00'); dUlt.setMonth(dUlt.getMonth() + 1); 
                             gerarParFatura(cO, c, dUlt, vDia);
-                            
                             let novaDataFat = `${dUlt.getFullYear()}-${String(dUlt.getMonth() + 1).padStart(2, '0')}-${String(vDia).padStart(2, '0')}`;
-                            ultimaFatura = { data: novaDataFat };
-                            travasDeSeguranca++;
-                        } else {
-                            break; 
-                        }
+                            ultimaFatura = { data: novaDataFat }; travasDeSeguranca++;
+                        } else { break; }
                     }
                 }
             }
@@ -651,8 +658,7 @@ function verificarRendimentosDiarios() {
                 try {
                     let metaLocal = JSON.parse(localStorage.getItem('financas_meta')) || { historico: [] };
                     let novoRegistro = { dataHora: new Date().toISOString(), dispositivo: dbConfig.deviceName || 'Meu Dispositivo' };
-                    let historicoAtual = metaLocal.historico || [];
-                    historicoAtual.unshift(novoRegistro); if (historicoAtual.length > 5) historicoAtual = historicoAtual.slice(0, 5);
+                    let historicoAtual = metaLocal.historico || []; historicoAtual.unshift(novoRegistro); if (historicoAtual.length > 5) historicoAtual = historicoAtual.slice(0, 5);
                     let metaInfo = { historico: historicoAtual };
                     await db.collection("financas").doc(FIREBASE_DOC_ID).set({ contas: contas, metadados: metaInfo });
                     localStorage.setItem('financas_v9', JSON.stringify(contas)); localStorage.setItem('financas_meta', JSON.stringify(metaInfo)); 
@@ -685,30 +691,20 @@ function verificarRendimentosDiarios() {
     }
 
     function exportarBackup() {
-        const a = document.createElement('a');
-        a.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(contas)));
-        a.setAttribute("download", `financeiro_backup_${new Date().toISOString().slice(0,10)}.json`);
-        document.body.appendChild(a); a.click(); a.remove();
+        const a = document.createElement('a'); a.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(contas))); a.setAttribute("download", `financeiro_backup_${new Date().toISOString().slice(0,10)}.json`); document.body.appendChild(a); a.click(); a.remove();
     }
 
     function importarBackup(event) {
         const file = event.target.files[0]; if (!file || !confirm("Isto substituirá todos os dados. Prosseguir?")) return;
         const reader = new FileReader();
-        reader.onload = function(e) {
-            try { const importedData = JSON.parse(e.target.result); if (Array.isArray(importedData)) { contas = importedData; salvarEAtualizar(); location.reload(); } } catch (err) { alert("Erro ao ler."); }
-        };
+        reader.onload = function(e) { try { const importedData = JSON.parse(e.target.result); if (Array.isArray(importedData)) { contas = importedData; salvarEAtualizar(); location.reload(); } } catch (err) { alert("Erro ao ler."); } };
         reader.readAsText(file);
     }
 
     function exportarCSV() {
         if (contas.length === 0) return alert("Nenhuma conta.");
         let csv = "data:text/csv;charset=utf-8,Conta;Data;Descricao;Tipo;Valor;Status_Data;Status_Valor;Tag\n";
-        contas.forEach(c => {
-            if(!c.lancamentos) return;
-            c.lancamentos.forEach(l => {
-                csv += `${c.nome};${(l.data||"").split('-').reverse().join('/')};"${l.desc||''}";${l.tipo};${isFinite(l.valor) ? l.valor.toString().replace('.',',') : "0,00"};${l.dataOk?'CONF':'EST'};${l.valorOk?'CONF':'EST'};${l.tag||''}\n`;
-            });
-        });
+        contas.forEach(c => { if(!c.lancamentos) return; c.lancamentos.forEach(l => { csv += `${c.nome};${(l.data||"").split('-').reverse().join('/')};"${l.desc||''}";${l.tipo};${isFinite(l.valor) ? l.valor.toString().replace('.',',') : "0,00"};${l.dataOk?'CONF':'EST'};${l.valorOk?'CONF':'EST'};${l.tag||''}\n`; }); });
         const a = document.createElement("a"); a.setAttribute("href", encodeURI(csv)); a.setAttribute("download", "financas.csv"); a.click();
     }
 
@@ -716,69 +712,35 @@ function verificarRendimentosDiarios() {
         let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return;
         let l = c.lancamentos.find(x => x.id === id); if (!l) return;
         const conf = (!l.dataOk || !l.valorOk); 
-        
         if (l.isFaturaCartao && !l.valorOk) { l.valor = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
-        
         l.dataOk = true; l.valorOk = true;
-
-        if (l.transferId) {
-            contas.forEach(ct => {
-                if(!ct.lancamentos) return;
-                let i = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
-                if (i) { i.valor = l.valor; i.data = l.data; }
-            });
-        }
+        if (l.transferId) { contas.forEach(ct => { if(!ct.lancamentos) return; let i = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id); if (i) { i.valor = l.valor; i.data = l.data; } }); }
         if (conf && (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) && !l.isFaturaCartao && !l.transferId) processarProximo(c, l);
         salvarEAtualizar();
     }
 
-function ajustarRendimentoL(id, dataRefStr) {
+    function ajustarRendimentoL(id, dataRefStr) {
         let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return;
         let l = c.lancamentos.find(x => x.id === id); if (!l) return;
-        
-        let saldoInformadoStr = prompt(`Informe o SALDO ATUAL da conta ${c.nome} no banco:\n(Apenas números e vírgula. Ex: 1540,50)`);
-        if (!saldoInformadoStr) return; 
-        
-        let saldoReal = parseFloat(saldoInformadoStr.replace(/\./g, '').replace(',', '.'));
-        if (isNaN(saldoReal)) return alert("Valor inválido. Use apenas números e vírgula.");
-
+        let saldoInformadoStr = prompt(`Informe o SALDO ATUAL da conta ${c.nome} no banco:\n(Apenas números e vírgula. Ex: 1540,50)`); if (!saldoInformadoStr) return; 
+        let saldoReal = parseFloat(saldoInformadoStr.replace(/\./g, '').replace(',', '.')); if (isNaN(saldoReal)) return alert("Valor inválido. Use apenas números e vírgula.");
         let saldoTeoricoAnterior = 0;
-        
-        [...(c.lancamentos||[])].forEach(lx => {
-            if (lx.data <= dataRefStr && lx.id !== id) {
-                let v = lx.valor || 0;
-                if (lx.isFaturaCartao && !lx.valorOk) v = Math.abs(obterSaldoCartao(lx.isFaturaCartao, lx.data));
-                saldoTeoricoAnterior += (lx.tipo === 'credito' ? v : -v);
-            }
-        });
-
+        [...(c.lancamentos||[])].forEach(lx => { if (lx.data <= dataRefStr && lx.id !== id) { let v = lx.valor || 0; if (lx.isFaturaCartao && !lx.valorOk) v = Math.abs(obterSaldoCartao(lx.isFaturaCartao, lx.data)); saldoTeoricoAnterior += (lx.tipo === 'credito' ? v : -v); } });
         let rendimentoCalculado = saldoReal - saldoTeoricoAnterior;
-
-        if (rendimentoCalculado < 0) {
-            if (!confirm(`O saldo informado gerou um rendimento NEGATIVO de R$ ${rendimentoCalculado.toFixed(2)}.\nIsso geralmente indica que você esqueceu de lançar alguma despesa antes de ajustar.\nDeseja salvar assim mesmo?`)) return;
-        }
-
-        l.valor = parseFloat(rendimentoCalculado.toFixed(2));
-        l.dataOk = true; l.valorOk = true;
+        if (rendimentoCalculado < 0) { if (!confirm(`O saldo informado gerou um rendimento NEGATIVO de R$ ${rendimentoCalculado.toFixed(2)}.\nIsso geralmente indica que você esqueceu de lançar alguma despesa antes de ajustar.\nDeseja salvar assim mesmo?`)) return; }
+        l.valor = parseFloat(rendimentoCalculado.toFixed(2)); l.dataOk = true; l.valorOk = true;
         if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) { processarProximo(c, l); }
         salvarEAtualizar();
     }
     
     function salvarL() {
         calcularValor();
-        const d = document.getElementById('f_data').value;
-        const vRaw = document.getElementById('f_valor').value;
-        const v = parseFloat(vRaw.replace(/\./g, '').replace(/,/g, '.'));
-        if(isNaN(v)) return alert("Valor inválido.");
-        
-        let descBase = document.getElementById('f_desc').value;
-        const tipo = document.getElementById('f_tipo').value;
-        const idEdit = document.getElementById('id_editando_l').value;
-        const freq = document.getElementById('f_freq').value;
-        const pTotal = parseInt(document.getElementById('f_parc_total').value) || 0;
-        const pAtual = parseInt(document.getElementById('f_parc_atual').value) || 0;
+        const d = document.getElementById('f_data').value; const vRaw = document.getElementById('f_valor').value;
+        const v = parseFloat(vRaw.replace(/\./g, '').replace(/,/g, '.')); if(isNaN(v)) return alert("Valor inválido.");
+        let descBase = document.getElementById('f_desc').value; const tipo = document.getElementById('f_tipo').value;
+        const idEdit = document.getElementById('id_editando_l').value; const freq = document.getElementById('f_freq').value;
+        const pTotal = parseInt(document.getElementById('f_parc_total').value) || 0; const pAtual = parseInt(document.getElementById('f_parc_atual').value) || 0;
         const tag = document.getElementById('f_tag').value.trim();
-
         if(!d || (!descBase && tipo !== 'transferencia' && !idEdit)) return;
         let c = contas.find(x => x.id === contaAtiva); if (!c.lancamentos) c.lancamentos = [];
 
@@ -792,33 +754,11 @@ function ajustarRendimentoL(id, dataRefStr) {
 
             if(idEdit) {
                 let l = c.lancamentos.find(x => x.id === idEdit); if (!l) return;
+                if (eRecurrente || l.pTotal > 0) { c.lancamentos.forEach(fut => { let ehIrmao = fut.desc === l.desc && fut.pTotal === l.pTotal && fut.id !== l.id; let ehFuturo = l.pTotal > 0 ? fut.pAtual > l.pAtual : fut.data >= l.data; if (ehIrmao && ehFuturo && (!fut.dataOk || !fut.valorOk) && !fut.transferId) { fut.desc = descFinal; fut.valor = v; fut.tag = tag; fut.cartaoId = cartaoId; } }); }
+                if (l.transferId) { l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk; l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual; l.tag = tag; contas.forEach(ct => { if(!ct.lancamentos) return; let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id); if (irma) { Object.assign(irma, { data: d, valor: v, eRecurrente, freq, pTotal, pAtual, tag }); } }); } 
+                else Object.assign(l, { data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, cartaoId, tag });
                 
-                if (eRecurrente || l.pTotal > 0) {
-                    c.lancamentos.forEach(fut => {
-                        let ehIrmao = fut.desc === l.desc && fut.pTotal === l.pTotal && fut.id !== l.id;
-                        let ehFuturo = l.pTotal > 0 ? fut.pAtual > l.pAtual : fut.data >= l.data;
-                        if (ehIrmao && ehFuturo && (!fut.dataOk || !fut.valorOk) && !fut.transferId) {
-                            fut.desc = descFinal; fut.valor = v; fut.tag = tag; fut.cartaoId = cartaoId;
-                        }
-                    });
-                }
-                
-                if (l.transferId) {
-                    l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk; l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual; l.tag = tag;
-                    contas.forEach(ct => {
-                        if(!ct.lancamentos) return;
-                        let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
-                        if (irma) { Object.assign(irma, { data: d, valor: v, eRecurrente, freq, pTotal, pAtual, tag }); }
-                    });
-                } else Object.assign(l, { data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, cartaoId, tag });
-                
-                if (l.isFaturaCartao) {
-                    let sibC = contas.find(cx => cx.id !== c.id && cx.lancamentos && cx.lancamentos.some(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1))); 
-                    if (sibC) {
-                        let sibL = sibC.lancamentos.find(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1));
-                        if (sibL) { sibL.dataOk = dataOk; sibL.valorOk = valorOk; sibL.valor = v; sibL.data = d; }
-                    }
-                }
+                if (l.isFaturaCartao) { let sibC = contas.find(cx => cx.id !== c.id && cx.lancamentos && cx.lancamentos.some(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1))); if (sibC) { let sibL = sibC.lancamentos.find(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1)); if (sibL) { sibL.dataOk = dataOk; sibL.valorOk = valorOk; sibL.valor = v; sibL.data = d; } } }
                 if (dataOk && valorOk && eRecurrente && !l.isFaturaCartao && !l.transferId) processarProximo(c, l);
             } else {
                 const novoL = { id: Date.now().toString(), data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, ordem: (c.lancamentos.length > 0 ? Math.max(...c.lancamentos.map(lx => lx.ordem || 0)) : 0) + 1, eRecurrente, freq, pTotal, pAtual, cartaoId, tag };
@@ -829,8 +769,7 @@ function ajustarRendimentoL(id, dataRefStr) {
     }
 
     function execTransf(cO, d, v, descBase, cD, tI, isDataOk, isValorOk, isRec, freq, pT, pA, tagUser) {
-        if(!cO.lancamentos) cO.lancamentos = []; if(!cD.lancamentos) cD.lancamentos = [];
-        let obs = descBase ? ` - ${descBase}` : "";
+        if(!cO.lancamentos) cO.lancamentos = []; if(!cD.lancamentos) cD.lancamentos = []; let obs = descBase ? ` - ${descBase}` : "";
         cO.lancamentos.push({ id: tI+"A", transferId: tI, data: d, valor: v, desc: `Transf. para ${cD.nome}${obs}`, tipo: 'debito', dataOk: isDataOk, valorOk: isValorOk, ordem: (cO.lancamentos.length > 0 ? Math.max(...cO.lancamentos.map(l => l.ordem || 0)) : 0) + 1, eRecurrente: isRec || false, freq: freq || 'mensal', pTotal: pT || 0, pAtual: pA || 1, tag: tagUser || "" });
         cD.lancamentos.push({ id: tI+"B", transferId: tI, data: d, valor: v, desc: `Transf. de ${cO.nome}${obs}`, tipo: 'credito', dataOk: isDataOk, valorOk: isValorOk, ordem: (cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(l => l.ordem || 0)) : 0) + 1, eRecurrente: isRec || false, freq: freq || 'mensal', pTotal: pT || 0, pAtual: pA || 1, tag: tagUser || "" });
     }
@@ -839,62 +778,33 @@ function ajustarRendimentoL(id, dataRefStr) {
         const t = document.getElementById('f_tipo').value;
         const gD = document.getElementById('groupDestino'); const sD = document.getElementById('f_destino');
         const gC = document.getElementById('groupCartao'); const sC = document.getElementById('f_cartao_vinculado');
-        const fDesc = document.getElementById('f_desc'); 
-
-        gD.style.display = 'none'; gC.style.display = 'none';
-
-        if (t === 'transferencia') {
-            gD.style.display = 'flex'; let cur = sD.value; sD.innerHTML = '<option value="">Selecione...</option>';
-            contas.filter(c => c.id !== contaAtiva).forEach(c => { sD.innerHTML += `<option value="${c.id}">${c.nome}</option>`; });
-            if (cur) sD.value = cur; fDesc.placeholder = "Opcional (ex: Pagamento)"; 
-        } else if (t === 'cartao') {
-            gC.style.display = 'flex'; let cur = sC.value; sC.innerHTML = '<option value="">Selecione...</option>';
-            contas.filter(c => c.tipoConta === 'cartao').forEach(c => { sC.innerHTML += `<option value="${c.id}">${c.nome}</option>`; });
-            if (cur) sC.value = cur; fDesc.placeholder = "Ex: Mercado";
-        } else fDesc.placeholder = "Ex: IPVA";
+        const fDesc = document.getElementById('f_desc'); gD.style.display = 'none'; gC.style.display = 'none';
+        if (t === 'transferencia') { gD.style.display = 'flex'; let cur = sD.value; sD.innerHTML = '<option value="">Selecione...</option>'; contas.filter(c => c.id !== contaAtiva).forEach(c => { sD.innerHTML += `<option value="${c.id}">${c.nome}</option>`; }); if (cur) sD.value = cur; fDesc.placeholder = "Opcional (ex: Pagamento)"; } 
+        else if (t === 'cartao') { gC.style.display = 'flex'; let cur = sC.value; sC.innerHTML = '<option value="">Selecione...</option>'; contas.filter(c => c.tipoConta === 'cartao').forEach(c => { sC.innerHTML += `<option value="${c.id}">${c.nome}</option>`; }); if (cur) sC.value = cur; fDesc.placeholder = "Ex: Mercado"; } 
+        else fDesc.placeholder = "Ex: IPVA";
     }
 
-function processarProximo(conta, l) {
-        if (l.pTotal > 0 && l.pAtual >= l.pTotal) return;
-        let dA = new Date(l.data + 'T12:00:00');
-
-        if (l.freq === 'anual') {
-            dA.setFullYear(dA.getFullYear() + 1);
-        } else if (l.freq === 'diario') {
-            dA.setDate(dA.getDate() + 1);
-            if ((l.desc || "").toLowerCase() === "rendimento diário") {
-                if (dA.getDay() === 6) dA.setDate(dA.getDate() + 2); 
-                else if (dA.getDay() === 0) dA.setDate(dA.getDate() + 1); 
-            }
-        } else {
-            dA.setMonth(dA.getMonth() + 1);
-        }
-
+    function processarProximo(conta, l) {
+        if (l.pTotal > 0 && l.pAtual >= l.pTotal) return; let dA = new Date(l.data + 'T12:00:00');
+        if (l.freq === 'anual') { dA.setFullYear(dA.getFullYear() + 1); } 
+        else if (l.freq === 'diario') { dA.setDate(dA.getDate() + 1); if ((l.desc || "").toLowerCase() === "rendimento diário") { if (dA.getDay() === 6) dA.setDate(dA.getDate() + 2); else if (dA.getDay() === 0) dA.setDate(dA.getDate() + 1); } } 
+        else { dA.setMonth(dA.getMonth() + 1); }
         const nD = dA.toISOString().split('T')[0]; const proxP = l.pTotal > 0 ? l.pAtual + 1 : 0;
         let nValor = l.valor; if (l.freq === 'diario' && (l.desc||'').toLowerCase() === "rendimento diário") nValor = calcularRendimento(conta, nD);
-        
         let isRend = (l.desc || "").toLowerCase() === "rendimento diário";
 
         if (l.transferId) {
             if (!conta.lancamentos.find(x => x.data === nD && x.transferId && x.pAtual === proxP && x.desc === l.desc)) {
                 let ctO = contas.find(cx => cx.id !== conta.id && cx.lancamentos.some(lx => lx.transferId === l.transferId));
                 if (ctO) {
-                    let lO = ctO.lancamentos.find(lx => lx.transferId === l.transferId);
-                    let nTId = Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000);
+                    let lO = ctO.lancamentos.find(lx => lx.transferId === l.transferId); let nTId = Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000);
                     conta.lancamentos.push({ id: nTId+"A", transferId: nTId, data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: l.tag || "", cartaoId: l.cartaoId || null });
                     ctO.lancamentos.push({ id: nTId+"B", transferId: nTId, data: nD, valor: nValor, desc: lO.desc, tipo: lO.tipo, dataOk: false, valorOk: false, ordem: Math.max(...ctO.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: lO.tag || "", cartaoId: lO.cartaoId || null });
                 }
             }
         } else {
-            let jaExiste = conta.lancamentos.find(x => {
-                if (isRend) return x.data === nD && (x.desc || "").toLowerCase() === "rendimento diário";
-                if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP;
-                return x.data === nD && x.desc === l.desc; 
-            });
-
-            if (!jaExiste) {
-                conta.lancamentos.push({ id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, cartaoId: l.cartaoId || null, tag: l.tag || "" });
-            }
+            let jaExiste = conta.lancamentos.find(x => { if (isRend) return x.data === nD && (x.desc || "").toLowerCase() === "rendimento diário"; if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP; return x.data === nD && x.desc === l.desc; });
+            if (!jaExiste) { conta.lancamentos.push({ id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, cartaoId: l.cartaoId || null, tag: l.tag || "" }); }
         }
     }
 
@@ -954,47 +864,35 @@ function processarProximo(conta, l) {
             if (!tR) tb.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 20px; color: #64748b;">Nenhum rendimento.</td></tr>`;
             document.getElementById('totalRendimentos').innerText = fmt(tG);
 
-} else if (relatorioAtivo === 'auditoria') {
+        } else if (relatorioAtivo === 'auditoria') {
             document.getElementById('labelMesAnoAuditoria').innerText = formatarMesInteligente(dataFiltro);
             let tb = document.getElementById('corpoTabelaAuditoria'); tb.innerHTML = ""; let tD = false;
-            
-            if(tb.previousElementSibling) {
-                tb.previousElementSibling.innerHTML = `<tr><th>Data</th><th style="text-align:right">Saldo Base</th><th style="text-align:right">Rend. Real</th><th style="text-align:right">Rend. Esperado</th><th style="text-align:right">% CDI</th><th style="text-align:right">Dif. (%)</th></tr>`;
-            }
+            if(tb.previousElementSibling) { tb.previousElementSibling.innerHTML = `<tr><th>Data</th><th style="text-align:right">Saldo Base</th><th style="text-align:right">Rend. Real</th><th style="text-align:right">Rend. Esperado</th><th style="text-align:right">% CDI</th><th style="text-align:right">Dif. (%)</th></tr>`; }
 
             contas.forEach(c => {
                 if (!c.remun) return; let cl = [...(c.lancamentos||[])].sort((a, b) => new Date(a.data||0) - new Date(b.data||0));
                 const gSB = (dA) => { let s = 0; for (let l of cl) { if (l.data < dA) { let v = l.valor||0; if ((l.tipo === 'cartao' && l.cartaoId && !l.valorOk) || (l.isFaturaCartao && !l.valorOk)) v = Math.abs(obterSaldoCartao(l.cartaoId || l.isFaturaCartao, l.data)); s += (l.tipo === 'credito' ? v : -v); } else break; } return s; };
                 
                 let cdiConf = parseFloat(c.cdi) || 120;
-                const txD = Math.pow(1 + (((parseFloat(dbConfig.selic)||10.50) - 0.1)/100) * (cdiConf/100), 1/(parseInt(c.baseDias)||252)) - 1;
-                const txD100 = Math.pow(1 + (((parseFloat(dbConfig.selic)||10.50) - 0.1)/100), 1/(parseInt(c.baseDias)||252)) - 1;
+                const txD = Math.pow(1 + (((parseFloat(dbConfig.selic||10.50)) - 0.1)/100) * (cdiConf/100), 1/(parseInt(c.baseDias)||252)) - 1;
+                const txD100 = Math.pow(1 + (((parseFloat(dbConfig.selic||10.50)) - 0.1)/100), 1/(parseInt(c.baseDias)||252)) - 1;
                 
                 let rm = cl.filter(l => { let dL = new Date((l.data||"") + 'T12:00:00'); return dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear() && (l.desc||"").toLowerCase() === "rendimento diário" && l.tipo === 'credito'; });
                 
                 if (rm.length > 0) { 
-                    tD = true; 
-                    
-                    let somaRendReal = 0; let somaRendEsperado = 0; let somaCDIEfetivo = 0; let diasValidos = 0;
-                    let linhasHTML = ""; 
+                    tD = true; let somaRendReal = 0; let somaRendEsperado = 0; let somaCDIEfetivo = 0; let diasValidos = 0; let linhasHTML = ""; 
                     
                     rm.forEach(r => { 
                         let dO = new Date((r.data||"") + 'T12:00:00'); if (dO.getDay() === 0 || dO.getDay() === 6) return; 
                         let sB = gSB(r.data); let rR = r.valor||0; let rE = parseFloat((sB * txD).toFixed(2)); 
-                        let cE = (sB > 0 && txD100 > 0) ? ((rR/sB)/txD100)*100 : 0;
-                        let dfPerc = cE - cdiConf; 
-                        
+                        let cE = (sB > 0 && txD100 > 0) ? ((rR/sB)/txD100)*100 : 0; let dfPerc = cE - cdiConf; 
                         somaRendReal += rR; somaRendEsperado += rE; somaCDIEfetivo += cE; diasValidos++;
                         
-                        // Adicionada a classe identificadora e o display:none por padrão
                         linhasHTML += `<tr class="detalhe-aud-${c.id}" style="display: none;"><td>${(r.data||"").split('-').reverse().join('/')}</td><td class="val-col">${fmt(sB)}</td><td class="val-col" style="color:var(--success)">${fmt(rR)}</td><td class="val-col" style="color:#64748b">${fmt(rE)}</td><td class="val-col" style="font-size:0.85rem; color:#94a3b8;">${cE.toFixed(2)}%</td><td class="val-col" style="color:${dfPerc < -0.5 ? 'var(--danger)' : (dfPerc > 0.5 ? 'var(--success)' : '#64748b')}; font-weight:${Math.abs(dfPerc)>0.5?'bold':'normal'};">${dfPerc > 0 ? '+' : ''}${dfPerc.toFixed(2)}%</td></tr>`;
                     });
                     
                     if (diasValidos > 0) {
-                        let mediaCDI = somaCDIEfetivo / diasValidos;
-                        let mediaDf = mediaCDI - cdiConf;
-                        
-                        // Linha de cabeçalho agora possui cursor de clique e chama a função de alternância
+                        let mediaCDI = somaCDIEfetivo / diasValidos; let mediaDf = mediaCDI - cdiConf;
                         tb.innerHTML += `<tr style="background:#f8fafc; border-bottom: 2px solid #cbd5e1; cursor: pointer;" onclick="toggleAuditoriaDetalhes('${c.id}')">
                             <td colspan="2" style="font-weight:bold; color:var(--primary); padding-top: 15px; padding-bottom: 15px;"><span id="seta-aud-${c.id}" style="display: inline-block; margin-right: 8px; color: #64748b;">▼</span> 🏦 ${c.nome} <span style="font-size:0.8rem; font-weight:normal; color:#64748b; margin-left: 5px;">(Conf: ${cdiConf}%)</span></td>
                             <td class="val-col" style="color:var(--success); font-weight:bold; padding-top: 15px; padding-bottom: 15px;">${fmt(somaRendReal)}</td>
@@ -1002,89 +900,47 @@ function processarProximo(conta, l) {
                             <td class="val-col" style="font-size:0.85rem; color:var(--primary); font-weight:bold; padding-top: 15px; padding-bottom: 15px;">${mediaCDI.toFixed(2)}%</td>
                             <td class="val-col" style="color:${mediaDf < -0.5 ? 'var(--danger)' : (mediaDf > 0.5 ? 'var(--success)' : '#64748b')}; font-weight:bold; padding-top: 15px; padding-bottom: 15px;">${mediaDf > 0 ? '+' : ''}${mediaDf.toFixed(2)}%</td>
                         </tr>`;
-                        
                         tb.innerHTML += linhasHTML;
                     }
                 }
             });
             if (!tD) tb.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #64748b;">Nenhuma auditoria.</td></tr>`;
         }
+    }
 
+    function toggleAuditoriaDetalhes(contaId) {
+        const linhas = document.querySelectorAll('.detalhe-aud-' + contaId); const seta = document.getElementById('seta-aud-' + contaId);
+        if (linhas.length === 0) return;
+        const estaoEscondidas = linhas[0].style.display === 'none';
+        linhas.forEach(l => { l.style.display = estaoEscondidas ? 'table-row' : 'none'; });
+        seta.innerText = estaoEscondidas ? '▲' : '▼';
     }
 
     function renderAgenda() {
-        const bdAgenda = document.getElementById('corpoTabelaAgenda');
-        const agendaVazia = document.getElementById('agendaVazia');
-        const agendaTabelaContainer = document.getElementById('agendaTabelaContainer');
-        
-        if (!bdAgenda) return;
-        bdAgenda.innerHTML = '';
-        
-        let agendaItems = [];
+        const bdAgenda = document.getElementById('corpoTabelaAgenda'); const agendaVazia = document.getElementById('agendaVazia'); const agendaTabelaContainer = document.getElementById('agendaTabelaContainer');
+        if (!bdAgenda) return; bdAgenda.innerHTML = ''; let agendaItems = [];
         
         contas.forEach(c => {
             if (c.tipoConta === 'cartao') return; 
-            
-            let ordens = [...(c.lancamentos||[])].sort((a,b) => {
-                let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
-                return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0);
-            });
-            
+            let ordens = [...(c.lancamentos||[])].sort((a,b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); });
             let sT = 0; let mS = {}; let mVal = {};
-            ordens.forEach(l => {
-                let v = l.valor||0; 
-                if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                sT += (l.tipo === 'credito' ? v : -v);
-                mS[l.id] = sT;
-                mVal[l.id] = v;
-            });
-            
-            c.lancamentos.forEach(l => {
-                if (!l.dataOk || !l.valorOk) { 
-                    if ((l.desc || "").toLowerCase() === "rendimento diário") return; 
-                    
-                    let dL = new Date((l.data||"") + 'T12:00:00');
-                    let limiteFuturo = new Date();
-                    limiteFuturo.setDate(limiteFuturo.getDate() + 30);
-                    if (dL > limiteFuturo) return;
-
-                    if (l.transferId && l.tipo === 'credito') return;
-
-                    agendaItems.push({ ...l, nomeConta: c.nome, contaId: c.id, saldoProjetado: mS[l.id], valorDin: mVal[l.id] });
-                }
-            });
+            ordens.forEach(l => { let v = l.valor||0; if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); sT += (l.tipo === 'credito' ? v : -v); mS[l.id] = sT; mVal[l.id] = v; });
+            c.lancamentos.forEach(l => { if (!l.dataOk || !l.valorOk) { if ((l.desc || "").toLowerCase() === "rendimento diário") return; let dL = new Date((l.data||"") + 'T12:00:00'); let limiteFuturo = new Date(); limiteFuturo.setDate(limiteFuturo.getDate() + 30); if (dL > limiteFuturo) return; if (l.transferId && l.tipo === 'credito') return; agendaItems.push({ ...l, nomeConta: c.nome, contaId: c.id, saldoProjetado: mS[l.id], valorDin: mVal[l.id] }); } });
         });
         
-        agendaItems.sort((a, b) => {
-            let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
-            return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0);
-        });
-        
-        if (agendaItems.length === 0) {
-            agendaVazia.style.display = 'block'; agendaTabelaContainer.style.display = 'none';
-        } else {
-            agendaVazia.style.display = 'none'; agendaTabelaContainer.style.display = 'block';
-            const hj = new Date(); hj.setHours(0,0,0,0);
-            
+        agendaItems.sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); });
+        if (agendaItems.length === 0) { agendaVazia.style.display = 'block'; agendaTabelaContainer.style.display = 'none'; } 
+        else {
+            agendaVazia.style.display = 'none'; agendaTabelaContainer.style.display = 'block'; const hj = new Date(); hj.setHours(0,0,0,0);
             agendaItems.forEach(l => {
-                let dL = new Date((l.data||"") + 'T00:00:00'); 
-                let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-negativa" : "");
-                
-                if (l.saldoProjetado < 0) {
-                    cl += " linha-negativa"; 
-                }
-                
-                let th = ""; 
-                let valorExibicao = l.valorDin !== undefined ? l.valorDin : (l.valor||0);
-                if (l.isFaturaCartao && !l.valorOk) {
-                    valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                }
-                
+                let dL = new Date((l.data||"") + 'T00:00:00'); let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : "");
+                if (l.saldoProjetado < 0) { cl += " linha-negativa"; }
+                let th = ""; let valorExibicao = l.valorDin !== undefined ? l.valorDin : (l.valor||0);
+                if (l.isFaturaCartao && !l.valorOk) { valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
                 if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; 
                 else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; 
                 else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
                 if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
-                
                 let bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaId}'; confirmarRapidoL('${l.id}')" title="Confirmar pagamento">C</button>`;
                 
                 bdAgenda.innerHTML += `<tr class="${cl}">
@@ -1106,67 +962,63 @@ function processarProximo(conta, l) {
     function finalizarDrag(ev) { ev.target.classList.remove('linha-arrastando'); document.querySelectorAll('.linha-alvo-drop').forEach(e => e.classList.remove('linha-alvo-drop')); }
     
     function soltarDrop(ev, dId, dDR) {
-        ev.preventDefault(); finalizarDrag(ev); if (!dragIdL || dragIdL === dId) return;
-        if (dragDataRef !== dDR) return alert("Reordenação apenas no mesmo dia.");
-        
+        ev.preventDefault(); finalizarDrag(ev); if (!dragIdL || dragIdL === dId) return; if (dragDataRef !== dDR) return alert("Reordenação apenas no mesmo dia.");
         let c = contas.find(x => x.id === contaAtiva); 
-        
-        let ld = c.lancamentos.filter(x => x.data === dragDataRef).sort((a,b) => {
-            if (modoConciliacao && c.tipoConta === 'cartao') { 
-                let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); 
-                if (tA !== tB) return tA.localeCompare(tB); 
-            }
-            return ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0);
-        });
-        
-        const iO = ld.findIndex(x => x.id === dragIdL); 
-        const iD = ld.findIndex(x => x.id === dId);
+        let ld = c.lancamentos.filter(x => x.data === dragDataRef).sort((a,b) => { if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); } return ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0); });
+        const iO = ld.findIndex(x => x.id === dragIdL); const iD = ld.findIndex(x => x.id === dId);
         
         if (iO !== -1 && iD !== -1) {
-            let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b);
-            let itemArrastado = ld[iO];
-            ld.splice(iO, 1); 
-            let indiceAlvoCorrigido = (iO < iD) ? iD - 1 : iD; 
-            ld.splice(indiceAlvoCorrigido, 0, itemArrastado); 
-            if (ordemDesc) oA.reverse();
-            ld.forEach((l, i) => l.ordem = oA[i]); 
-            salvarEAtualizar();
+            let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b); let itemArrastado = ld[iO]; ld.splice(iO, 1); 
+            let indiceAlvoCorrigido = (iO < iD) ? iD - 1 : iD; ld.splice(indiceAlvoCorrigido, 0, itemArrastado); if (ordemDesc) oA.reverse();
+            ld.forEach((l, i) => l.ordem = oA[i]); salvarEAtualizar();
         }
     }
 
     function render() {
+        // Atualização Dinâmica do Painel de Boas-Vindas IA
+        const pIA = document.getElementById('painelOnboardingIA');
+        if (pIA) {
+            if (!dbConfig.geminiKey) {
+                pIA.innerHTML = `<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <b style="color: #64748b;">🤖 Assistente de Lançamentos (IA Gemini):</b> <span class="badge" style="background: #cbd5e1; color: #475569;">⚪ Não Configurado</span>
+                        <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: #64748b;">Para ditar ou digitar seus gastos em linguagem natural, configure sua API Key nas opções avançadas.</p>
+                    </div>
+                    <button class="btn btn-primary" style="height: 32px; font-size: 0.8rem; padding: 0 12px;" onclick="mudarAba('aba-nuvem', document.querySelectorAll('.tab-btn')[5])">Configurar IA Avançada ⚙️</button>
+                </div>`;
+            } else {
+                pIA.innerHTML = `<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <b style="color: var(--primary);">🤖 Assistente de Inteligência Artificial:</b> <span class="badge badge-diario">🟢 Pronto para Uso!</span>
+                        <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: #475569;">Você já pode começar a lançar seus gastos por comandos de voz ou texto de forma simples.</p>
+                    </div>
+                    <button class="btn btn-success" style="height: 32px; font-size: 0.8rem; padding: 0 12px;" onclick="document.getElementById('btnAbaAssistente').click()">Ir para o Assistente 🤖</button>
+                </div>`;
+            }
+        }
+
         if (contas.length === 0) { 
             const abaNuvemAtiva = document.getElementById('aba-nuvem').classList.contains('active');
             const abaConfigAtiva = document.getElementById('aba-config').classList.contains('active');
-            
             if (!abaNuvemAtiva && !abaConfigAtiva) {
                 document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
-                const abaLanc = document.getElementById('aba-lancamentos');
-                if(abaLanc) abaLanc.classList.add('active');
-                const btnLanc = document.getElementById('btnAbaLancamentos');
-                if(btnLanc) btnLanc.classList.add('active');
+                if(document.getElementById('aba-lancamentos')) document.getElementById('aba-lancamentos').classList.add('active');
+                if(document.getElementById('btnAbaLancamentos')) document.getElementById('btnAbaLancamentos').classList.add('active');
             }
-
             document.getElementById('painelPrincipalLancamentos').style.display = 'none'; 
             document.getElementById('estadoVazio').style.display = 'block'; 
-            
-            const btnAgenda = document.getElementById('btnAbaAgenda');
-            if(btnAgenda) btnAgenda.style.display = 'none'; 
-            
-            const lc = document.getElementById('listaConfigContas'); if(lc) lc.innerHTML = ""; 
-            gerarDadosRelatorio(); atualizarSaudeBanco(); return; 
+            if(document.getElementById('btnAbaAgenda')) document.getElementById('btnAbaAgenda').style.display = 'none'; 
+            if(document.getElementById('listaConfigContas')) document.getElementById('listaConfigContas').innerHTML = ""; 
+            gerarDadosRelatorio(); atualizarSaudeBanco(); renderAgenda(); return; 
         } else { 
             document.getElementById('painelPrincipalLancamentos').style.display = 'block'; 
             document.getElementById('estadoVazio').style.display = 'none'; 
-            const btnAgenda = document.getElementById('btnAbaAgenda');
-            if(btnAgenda) btnAgenda.style.display = 'inline-block';
+            if(document.getElementById('btnAbaAgenda')) document.getElementById('btnAbaAgenda').style.display = 'inline-block';
         }
 
         document.getElementById('labelMesAno').innerText = formatarMesInteligente(dataFiltro);
-
-        const pend = verificarPendencias();
-        const cp = document.getElementById('containerPills'); cp.innerHTML = "";
+        const pend = verificarPendencias(); const cp = document.getElementById('containerPills'); cp.innerHTML = "";
         contas.forEach(c => {
             const p = document.createElement('div'); p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
             p.innerText = c.nome; if (c.tipoConta === 'cartao') p.innerText += ' 💳'; else if (c.remun) { const s = document.createElement('span'); s.className = 'badge badge-mensal'; s.innerText = '📈 REMUN'; p.appendChild(s); }
@@ -1174,19 +1026,14 @@ function processarProximo(conta, l) {
         });
 
         if(contaAtiva) {
-            document.getElementById('painelOperacional').style.display = 'block';
-            let c = contas.find(x => x.id === contaAtiva);
+            document.getElementById('painelOperacional').style.display = 'block'; let c = contas.find(x => x.id === contaAtiva);
             if (c) {
-                document.getElementById('tituloConta').innerText = c.nome;
-                document.getElementById('tituloAreaLancamento').innerText = "✏️ Área de Lançamento - " + c.nome;
-
+                document.getElementById('tituloConta').innerText = c.nome; document.getElementById('tituloAreaLancamento').innerText = "✏️ Área de Lançamento - " + c.nome;
                 const inP = document.getElementById('inputPesquisa'); const tP = inP ? inP.value.trim().toLowerCase() : ""; const mP = tP !== "";
-                const mNB = document.getElementById('mesNavegadorBox'); if (mNB) mNB.style.display = mP ? 'none' : 'flex';
-                const cabContas = document.getElementById('cabecalhoContas'); if (cabContas) cabContas.style.display = mP ? 'none' : 'flex';
+                if (document.getElementById('mesNavegadorBox')) document.getElementById('mesNavegadorBox').style.display = mP ? 'none' : 'flex';
+                if (document.getElementById('cabecalhoContas')) document.getElementById('cabecalhoContas').style.display = mP ? 'none' : 'flex';
                 document.getElementById('containerPills').style.display = mP ? 'none' : 'flex';
-                
-                const oC = document.querySelector('#f_tipo option[value="cartao"]');
-                if (oC) { oC.style.display = 'none'; oC.disabled = true; if (document.getElementById('f_tipo').value === 'cartao') { document.getElementById('f_tipo').value = 'debito'; checkTransf(); } }
+                const oC = document.querySelector('#f_tipo option[value="cartao"]'); if (oC) { oC.style.display = 'none'; oC.disabled = true; if (document.getElementById('f_tipo').value === 'cartao') { document.getElementById('f_tipo').value = 'debito'; checkTransf(); } }
 
                 if (c.tipoConta === 'cartao') {
                     document.getElementById('groupTag').style.display = 'flex'; document.getElementById('boxFaturaParcial').style.display = mP ? 'none' : 'block'; document.getElementById('btnModoConciliacao').classList.toggle('active', modoConciliacao);
@@ -1199,122 +1046,36 @@ function processarProximo(conta, l) {
                 } else { document.getElementById('groupTag').style.display = 'none'; document.getElementById('boxFaturaParcial').style.display = 'none'; modoConciliacao = false; }
 
                 const thead = document.getElementById('theadLancamentos');
-                if (mP) {
-                    thead.innerHTML = `<tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">${ordemDesc ? '▼' : '▲'}</span></th><th>Conta</th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:center">Ações</th></tr>`;
-                } else {
-                    thead.innerHTML = `<tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">${ordemDesc ? '▼' : '▲'}</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr>`;
-                }
+                if (mP) { thead.innerHTML = `<tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">${ordemDesc ? '▼' : '▲'}</span></th><th>Conta</th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:center">Ações</th></tr>`; } 
+                else { thead.innerHTML = `<tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">${ordemDesc ? '▼' : '▲'}</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr>`; }
 
-                const bd = document.getElementById('corpoTabela'); bd.innerHTML = ""; const hj = new Date(); hj.setHours(0,0,0,0);
-                let dR = [];
-                
-                if (mP) {
-                    contas.forEach(ct => {
-                        if (ct.lancamentos) {
-                            ct.lancamentos.forEach(l => {
-                                let v = l.valor||0;
-                                if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                                let strBusca = `${l.desc||''} ${l.tag||''} ${(l.data||"").split('-').reverse().join('/')} ${fmt(v)} ${ct.nome}`.toLowerCase();
-                                if (strBusca.includes(tP)) dR.push({ ...l, s: 0, valorDin: v, nomeConta: ct.nome, contaOrigemId: ct.id });
-                            });
-                        }
-                    });
-                    dR.sort((a, b) => {
-                        let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
-                        return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
-                    });
-                } else {
+                const bd = document.getElementById('corpoTabela'); bd.innerHTML = ""; const hj = new Date(); hj.setHours(0,0,0,0); let dR = [];
+                if (mP) { contas.forEach(ct => { if (ct.lancamentos) { ct.lancamentos.forEach(l => { let v = l.valor||0; if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); let strBusca = `${l.desc||''} ${l.tag||''} ${(l.data||"").split('-').reverse().join('/')} ${fmt(v)} ${ct.nome}`.toLowerCase(); if (strBusca.includes(tP)) dR.push({ ...l, s: 0, valorDin: v, nomeConta: ct.nome, contaOrigemId: ct.id }); }); } }); dR.sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0)); }); } 
+                else {
                     document.getElementById('tituloConta').innerText = c.nome;
+                    const ord = [...(c.lancamentos||[])].map(l => { let dataOriginalVis = l.data; if (modoConciliacao && c.tipoConta === 'cartao' && l.pTotal > 0) { let dCalc = new Date(l.data + 'T12:00:00'); dCalc.setMonth(dCalc.getMonth() - (l.pAtual - 1)); dataOriginalVis = dCalc.toISOString().split('T')[0]; } return { ...l, dataOriginalVis }; }).sort((a, b) => { if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); let dA = new Date(a.dataOriginalVis||0).getTime(); let dB = new Date(b.dataOriginalVis||0).getTime(); return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0)); } let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0)); });    
+                    let mS = {}; let sI = 0; let sT = 0; let pD = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-01`; let mVal = {};
+                    [...(c.lancamentos||[])].sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }).forEach(l => { let v = l.valor||0; if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); if (l.data < pD) sI += (l.tipo === 'credito' ? v : -v); sT += (l.tipo === 'credito' ? v : -v); mS[l.id] = sT; mVal[l.id] = v; });
+                    const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial'); if(rT && cSI) { rT.style.display = 'table-footer-group'; cSI.innerText = fmt(sI); cSI.style.color = sI < 0 ? 'var(--danger)' : 'var(--text)'; }
+                    let dFA_atual = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`; let dCA_atual = getDataFechamentoParaFatura(c, dFA_atual);
+                    let dF_ant_obj = new Date(dataFiltro.getFullYear(), dataFiltro.getMonth() - 1, 1); let dFA_ant = `${dF_ant_obj.getFullYear()}-${String(dF_ant_obj.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`; let dCA_ant = getDataFechamentoParaFatura(c, dFA_ant);
 
-                const ord = [...(c.lancamentos||[])].map(l => {
-                        let dataOriginalVis = l.data;
-                        if (modoConciliacao && c.tipoConta === 'cartao' && l.pTotal > 0) {
-                            let dCalc = new Date(l.data + 'T12:00:00');
-                            dCalc.setMonth(dCalc.getMonth() - (l.pAtual - 1));
-                            dataOriginalVis = dCalc.toISOString().split('T')[0];
-                        }
-                        return { ...l, dataOriginalVis };
-                    }).sort((a, b) => {
-                        if (modoConciliacao && c.tipoConta === 'cartao') { 
-                            let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); 
-                            if (tA !== tB) return tA.localeCompare(tB); 
-                            let dA = new Date(a.dataOriginalVis||0).getTime(); let dB = new Date(b.dataOriginalVis||0).getTime();
-                            return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
-                        }
-                        let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime();
-                        return dA !== dB ? (ordemDesc ? dB - dA : dA - dB) : (ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0));
-                    });    
-
-                    let mS = {}; let sI = 0; let sT = 0; let pD = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-01`;
-                    let mVal = {};
-                    [...(c.lancamentos||[])].sort((a, b) => { let dA = new Date(a.data||0).getTime(); let dB = new Date(b.data||0).getTime(); return dA !== dB ? dA - dB : (a.ordem || 0) - (b.ordem || 0); }).forEach(l => {
-                        let v = l.valor||0; if (l.isFaturaCartao && !l.valorOk) v = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                        if (l.data < pD) sI += (l.tipo === 'credito' ? v : -v);
-                        sT += (l.tipo === 'credito' ? v : -v); 
-                        mS[l.id] = sT;
-                        mVal[l.id] = v;
-                    });
-
-                    const rT = document.getElementById('rodapeTabela'); const cSI = document.getElementById('celulaSaldoInicial');
-                    if(rT && cSI) { rT.style.display = 'table-footer-group'; cSI.innerText = fmt(sI); cSI.style.color = sI < 0 ? 'var(--danger)' : 'var(--text)'; }
-
-                    let dFA_atual = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
-                    let dCA_atual = getDataFechamentoParaFatura(c, dFA_atual);
-                    
-                    let dF_ant_obj = new Date(dataFiltro.getFullYear(), dataFiltro.getMonth() - 1, 1);
-                    let dFA_ant = `${dF_ant_obj.getFullYear()}-${String(dF_ant_obj.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
-                    let dCA_ant = getDataFechamentoParaFatura(c, dFA_ant);
-
-                    ord.forEach(l => {
-                        let dL = new Date((l.data||"") + 'T12:00:00');
-                        let deveExibir = false;
-
-                        if (modoConciliacao && c.tipoConta === 'cartao') {
-                            deveExibir = (l.data > dCA_ant && l.data <= dCA_atual);
-                        } else {
-                            deveExibir = (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear());
-                        }
-
-                        if (deveExibir) {
-                            dR.push({ ...l, s: mS[l.id], valorDin: mVal[l.id], contaOrigemId: c.id });
-                        }
-                    });
+                    ord.forEach(l => { let dL = new Date((l.data||"") + 'T12:00:00'); let deveExibir = modoConciliacao && c.tipoConta === 'cartao' ? (l.data > dCA_ant && l.data <= dCA_atual) : (dL.getMonth() === dataFiltro.getMonth() && dL.getFullYear() === dataFiltro.getFullYear()); if (deveExibir) { dR.push({ ...l, s: mS[l.id], valorDin: mVal[l.id], contaOrigemId: c.id }); } });
                 }
 
-                const rT = document.getElementById('rodapeTabela'); 
-                if (rT) rT.style.display = mP ? 'none' : 'table-footer-group';
-
+                if (document.getElementById('rodapeTabela')) document.getElementById('rodapeTabela').style.display = mP ? 'none' : 'table-footer-group';
                 dR.forEach((l, i) => {
-                    let dL = new Date((l.data||"") + 'T00:00:00'); let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : "");
-                    if (l.s < 0 && !mP) cl += " linha-negativa"; 
+                    let dL = new Date((l.data||"") + 'T00:00:00'); let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : ""); if (l.s < 0 && !mP) cl += " linha-negativa"; 
                     if (dR[i+1]) { if (!mP && modoConciliacao && c.tipoConta === 'cartao') { if ((l.tag||"").toLowerCase() !== (dR[i+1].tag||"").toLowerCase()) cl += " separador-dia"; } else if (dR[i+1].data !== l.data) cl += " separador-dia"; }
-                    
-                    let valorExibicao = l.valorDin !== undefined ? l.valorDin : (l.valor||0);
-                    if (l.isFaturaCartao && !l.valorOk) {
-                        valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data));
-                    }
-
+                    let valorExibicao = l.valorDin !== undefined ? l.valorDin : (l.valor||0); if (l.isFaturaCartao && !l.valorOk) { valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
                     let th = ""; if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
                     if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
                     
-                    let bC = '';
-                    if (!l.dataOk || !l.valorOk) {
-                        if ((l.desc || "").toLowerCase() === "rendimento diário" && l.tipo === "credito") {
-                            bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')" title="Confirmar projeção">C</button>
-                                  <button class="mini-btn btn-audit" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')" title="Informar Saldo do Banco">A</button>`;
-                        } else {
-                            bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>`;
-                        }
-                    }
-
+                    let bC = ''; if (!l.dataOk || !l.valorOk) { if ((l.desc || "").toLowerCase() === "rendimento diário" && l.tipo === "credito") { bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')" title="Confirmar projeção">C</button> <button class="mini-btn btn-audit" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')" title="Informar Saldo do Banco">A</button>`; } else { bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>`; } }
                     let cCen = mP ? `<td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td><td>${l.desc||''} ${th}</td>` : `<td>${l.desc||''} ${th}</td>`;
                     let cSal = mP ? "" : `<td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td>`;
                     let setOr = mP ? "" : `<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div>`;
-
-                    let strDataExibicao = (l.data||"").split('-').reverse().join('/');
-                    if (modoConciliacao && c.tipoConta === 'cartao' && l.pTotal > 0) {
-                        strDataExibicao = `<span style="color:#64748b" title="Data original da compra">🛒 ${(l.dataOriginalVis||"").split('-').reverse().join('/')}</span>`;
-                    }
+                    let strDataExibicao = (l.data||"").split('-').reverse().join('/'); if (modoConciliacao && c.tipoConta === 'cartao' && l.pTotal > 0) { strDataExibicao = `<span style="color:#64748b" title="Data original da compra">🛒 ${(l.dataOriginalVis||"").split('-').reverse().join('/')}</span>`; }
 
                     bd.innerHTML += `<tr class="${cl}" draggable="true" ondragstart="iniciarDrag(event, '${l.id}', '${l.data}')" ondragover="permitirDrop(event)" ondrop="soltarDrop(event, '${l.id}', '${l.data}')" ondragenter="entrarDrag(event)" ondragleave="sairDrag(event)" ondragend="finalizarDrag(event)" style="cursor: grab;">
                         <td class="${l.dataOk?'':'incerto'}">${strDataExibicao}${setOr}</td>
@@ -1382,9 +1143,7 @@ function processarProximo(conta, l) {
     function mudarAba(id, b) { 
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-        b.classList.add('active'); 
-        render(); 
+        document.getElementById(id).classList.add('active'); b.classList.add('active'); render(); 
     }
     
     function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
@@ -1404,36 +1163,13 @@ function processarProximo(conta, l) {
     function moverParaConta(id) {
         let cO = contas.find(x => x.id === contaAtiva); if(!cO||!cO.lancamentos) return;
         let i = cO.lancamentos.findIndex(x => x.id === id); let l = cO.lancamentos[i]; if(!l) return;
-        
-        if (l.transferId) {
-            if (!(l.isFaturaCartao && l.tipo === 'debito')) {
-                return alert("Não é possível mover transferências vinculadas comuns ou o crédito da fatura.");
-            }
-        }
-        
-        let out = contas.filter(c => c.id !== contaAtiva);
-        if (l.isFaturaCartao) out = out.filter(c => c.tipoConta !== 'cartao'); 
-        
-        if(out.length === 0) return alert("Nenhuma conta destino válida disponível.");
-        
-        let sel = prompt("Para qual conta deseja mover este pagamento?\n" + out.map((c, idx) => `${idx + 1} - ${c.nome}`).join('\n'));
-        if(!sel) return; 
-        
+        if (l.transferId) { if (!(l.isFaturaCartao && l.tipo === 'debito')) { return alert("Não é possível mover transferências vinculadas comuns ou o crédito da fatura."); } }
+        let out = contas.filter(c => c.id !== contaAtiva); if (l.isFaturaCartao) out = out.filter(c => c.tipoConta !== 'cartao'); if(out.length === 0) return alert("Nenhuma conta destino válida disponível.");
+        let sel = prompt("Para qual conta deseja mover este pagamento?\n" + out.map((c, idx) => `${idx + 1} - ${c.nome}`).join('\n')); if(!sel) return; 
         let cD = out[parseInt(sel) - 1];
         if(cD && confirm(`Confirmar a mudança do pagamento para a conta: ${cD.nome}?`)) {
-            cO.lancamentos.splice(i, 1); 
-            l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; 
-            if(!cD.lancamentos) cD.lancamentos=[]; 
-            cD.lancamentos.push(l);
-            
-            if (l.isFaturaCartao) {
-                contas.forEach(ct => {
-                    if (ct.lancamentos) {
-                        let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id);
-                        if (irma) irma.desc = `Transf. de ${cD.nome} (Pagamento)`;
-                    }
-                });
-            }
+            cO.lancamentos.splice(i, 1); l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; if(!cD.lancamentos) cD.lancamentos=[]; cD.lancamentos.push(l);
+            if (l.isFaturaCartao) { contas.forEach(ct => { if (ct.lancamentos) { let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id); if (irma) irma.desc = `Transf. de ${cD.nome} (Pagamento)`; } }); }
             salvarEAtualizar(); 
         }
     }
@@ -1441,12 +1177,8 @@ function processarProximo(conta, l) {
     function editarL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return;
         let l = c.lancamentos.find(x => x.id === id); if(!l) return;
-        
-        let valorParaEdicao = l.valor || 0;
-        if (l.isFaturaCartao) { valorParaEdicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
-        
-        let btnLanc = document.getElementById('btnAbaLancamentos');
-        if(btnLanc) btnLanc.click();
+        let valorParaEdicao = l.valor || 0; if (l.isFaturaCartao) { valorParaEdicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
+        let btnLanc = document.getElementById('btnAbaLancamentos'); if(btnLanc) btnLanc.click();
         
         document.getElementById('id_editando_l').value = l.id; document.getElementById('f_data').value = l.data||""; document.getElementById('f_desc').value = (l.desc||"").replace(/ \(Parc\. \d+\/\d+\)$/, ""); document.getElementById('f_valor').value = isFinite(valorParaEdicao) ? valorParaEdicao.toFixed(2).replace('.', ',') : "0,00";
         document.getElementById('f_tipo').value = l.tipo||"debito"; document.getElementById('f_freq').value = l.freq || "mensal"; document.getElementById('f_parc_total').value = l.pTotal || 0; document.getElementById('f_parc_atual').value = l.pAtual || 1; document.getElementById('f_tag').value = l.tag || ""; 
@@ -1458,8 +1190,7 @@ function processarProximo(conta, l) {
         } else if (l.tipo === 'cartao') {
             const oC = document.querySelector('#f_tipo option[value="cartao"]'); if (oC) { oC.style.display = ''; oC.disabled = false; }
             document.getElementById('f_tipo').value = 'cartao'; document.getElementById('f_tipo').disabled = true; document.getElementById('f_desc').disabled = false; document.getElementById('f_destino').disabled = false; document.getElementById('f_desc').title = ""; checkTransf();
-            if (l.cartaoId) document.getElementById('f_cartao_vinculado').value = l.cartaoId;
-            document.getElementById('f_cartao_vinculado').disabled = true; document.getElementById('f_desc').title = "O tipo e o cartão vinculado não podem ser alterados.";
+            if (l.cartaoId) document.getElementById('f_cartao_vinculado').value = l.cartaoId; document.getElementById('f_cartao_vinculado').disabled = true; document.getElementById('f_desc').title = "O tipo e o cartão vinculado não podem ser alterados.";
         } else {
             document.getElementById('f_tipo').disabled = false; document.getElementById('f_desc').disabled = false; document.getElementById('f_destino').disabled = false; document.getElementById('f_cartao_vinculado').disabled = false; document.getElementById('f_desc').title = ""; checkTransf();
             if (l.tipo === 'cartao' && l.cartaoId) document.getElementById('f_cartao_vinculado').value = l.cartaoId;
@@ -1470,7 +1201,6 @@ function processarProximo(conta, l) {
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
         setTimeout(() => { 
-            // O ÚNICO SCROLL ATIVO: Rola direto para a área de lançamento ao clicar em "E"
             document.getElementById('painelOperacional').scrollIntoView({ behavior: 'smooth', block: 'start' });
             document.getElementById('f_valor').focus(); 
         }, 150);
@@ -1482,97 +1212,43 @@ function processarProximo(conta, l) {
     async function processarComandoIA() {
         let apiKey = dbConfig.geminiKey || localStorage.getItem('gemini_api_key');
         if (!apiKey) {
-            apiKey = prompt("Para usar o assistente, cole sua API Key do Google Gemini:");
-            if (!apiKey) return;
-            dbConfig.geminiKey = apiKey;
-            localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
+            apiKey = prompt("Para usar o assistente, cole sua API Key do Google Gemini:"); if (!apiKey) return;
+            dbConfig.geminiKey = apiKey; localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
         }
-
-        const texto = document.getElementById('txtComandoIA').value.trim();
-        if (!texto) return alert("Por favor, digite ou dite um comando financeiro primeiro.");
-
-        const btn = document.getElementById('btnProcessarIA');
-        const originalText = btn.innerText;
-        btn.innerText = "⏳ A IA está decifrando o comando...";
-        btn.disabled = true;
+        const texto = document.getElementById('txtComandoIA').value.trim(); if (!texto) return alert("Por favor, digite ou dita um comando financeiro primeiro.");
+        const btn = document.getElementById('btnProcessarIA'); const originalText = btn.innerText; btn.innerText = "⏳ A IA está decifrando o comando..."; btn.disabled = true;
 
         const instrucaoMestra = `Você é um assistente financeiro de extração de dados.
         Analise a frase do usuário e devolva EXATAMENTE E APENAS um objeto JSON válido, sem qualquer formatação markdown (sem \`\`\`json).
-        
         REGRAS DE OURO:
         - Se o usuário falar de gastos no cartão, mas não especificar o nome do cartão ou da conta, assuma OBRIGATORIAMENTE que o valor para "Cartao_Conta" é "CEFGold".
         - O campo "Valor" deve ser exclusivamente numérico (ex: 150.30).
         - O campo "Tipo" deve ser estritamente "debito" para gastos ou "credito" para receitas/rendimentos.
-        
         Modelo esperado de saída:
         { "Descricao": "...", "Valor": 0.00, "Cartao_Conta": "...", "Tipo": "debito" }
-        
         Frase a analisar: "${texto}"`;
 
         try {
             const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: instrucaoMestra }] }] })
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: instrucaoMestra }] }] })
             });
-
             const resJson = await resposta.json();
-            
-            if (resJson.error) {
-                alert("Erro na IA: " + resJson.error.message);
-                dbConfig.geminiKey = ""; localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig));
-            } else {
-                let txtData = resJson.candidates[0].content.parts[0].text;
-                txtData = txtData.replace(/```json/g, '').replace(/```/g, '').trim();
+            if (resJson.error) { alert("Erro na IA: " + resJson.error.message); dbConfig.geminiKey = ""; localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig)); } 
+            else {
+                let txtData = resJson.candidates[0].content.parts[0].text; txtData = txtData.replace(/```json/g, '').replace(/```/g, '').trim();
                 let dados = JSON.parse(txtData);
-
-                let alvoStr = (dados.Cartao_Conta || "CEFGold").toLowerCase();
-                let contaEncontrada = contas.find(c => c.nome.toLowerCase().includes(alvoStr));
-                
-                if (contaEncontrada) {
-                    contaAtiva = contaEncontrada.id;
-                } else if (contas.length > 0) {
-                    contaAtiva = contas[0].id; 
-                }
-
+                let alvoStr = (dados.Cartao_Conta || "CEFGold").toLowerCase(); let contaEncontrada = contas.find(c => c.nome.toLowerCase().includes(alvoStr));
+                if (contaEncontrada) { contaAtiva = contaEncontrada.id; } else if (contas.length > 0) { contaAtiva = contas[0].id; }
                 document.getElementById('btnAbaLancamentos').click();
                 
                 setTimeout(() => {
-                    document.getElementById('f_desc').value = dados.Descricao;
-                    document.getElementById('f_valor').value = dados.Valor.toFixed(2).replace('.', ',');
-                    
-                    let selectTipo = document.getElementById('f_tipo');
-                    selectTipo.value = dados.Tipo === "credito" ? "credito" : "debito"; 
-                    
-                    checkTransf(); 
-                    
-                    document.getElementById('txtComandoIA').value = ""; 
-                    document.getElementById('f_valor').focus(); 
+                    document.getElementById('f_desc').value = dados.Descricao; document.getElementById('f_valor').value = dados.Valor.toFixed(2).replace('.', ',');
+                    let selectTipo = document.getElementById('f_tipo'); selectTipo.value = dados.Tipo === "credito" ? "credito" : "debito"; 
+                    checkTransf(); document.getElementById('txtComandoIA').value = ""; document.getElementById('f_valor').focus(); 
                 }, 100);
             }
-        } catch (err) {
-            alert("Erro de comunicação com o assistente IA. Verifique a conexão ou a chave.");
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
-    }
-
-    function toggleAuditoriaDetalhes(contaId) {
-        const linhas = document.querySelectorAll('.detalhe-aud-' + contaId);
-        const seta = document.getElementById('seta-aud-' + contaId);
-        if (linhas.length === 0) return;
-
-        // Verifica o estado atual baseado na primeira linha do grupo
-        const estaoEscondidas = linhas[0].style.display === 'none';
-
-        // Alterna o display de todas as linhas de detalhe daquela conta
-        linhas.forEach(l => {
-            l.style.display = estaoEscondidas ? 'table-row' : 'none';
-        });
-
-        // Altera o triângulo: se abriu aponta para cima (levantou), se fechou aponta para baixo
-        seta.innerText = estaoEscondidas ? '▲' : '▼';
+        } catch (err) { alert("Erro de comunicação com o assistente IA. Verifique a conexão ou a chave."); } 
+        finally { btn.innerText = originalText; btn.disabled = false; }
     }
 
     window.onload = () => { carregarDados(); };
