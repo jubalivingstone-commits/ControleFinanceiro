@@ -304,12 +304,31 @@
                 <div id="resDetetive" style="margin-top:15px; padding:15px; border-radius:10px; display:none; border:1px solid #cbd5e1;"></div>
             </div>
 
+            <!-- TAB 2: AUDITOR DE EXTRATO (IA) -->
             <div id="tabModalAuditor" style="display:none;">
-                <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:15px;">Copie a listagem textual dos lançamentos diretamente do ecrã ou extrato do seu banco e cole abaixo. A IA auditará omissões ou divergências de valores.</p>
-                <textarea id="txtExtratoBruto" style="width:100%; height:160px; border-radius:8px; padding:12px; border:1px solid var(--divider); font-family:monospace; font-size:0.85rem; resize:vertical; box-sizing:border-box; background:#f8fafc;" placeholder="Cole o extrato aqui... Ex:&#10;24/06 AMAZON R$ 129,90&#10;25/06 POSTO X R$ 50,00"></textarea>
-                <button class="btn btn-sync" id="btnAuditarExtratoIA" style="width:100%; margin-top:12px; height:42px; font-size:0.95rem;" onclick="executarAuditorExtratoIA()">Auditar com Inteligência Artificial</button>
-                <div id="resAuditorIA" style="margin-top:20px; padding:15px; border-radius:10px; background:#f1f5f9; border:1px solid #cbd5e1; display:none; font-size:0.9rem; white-space:pre-wrap; max-height:300px; overflow-y:auto; line-height:1.6;"></div>
+                <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:15px;">Anexe o PDF/Imagem da sua fatura ou cole o texto. A IA cruzará as informações e gerará uma tabela sintética apenas com os erros reais.</p>
+                
+                <div class="form-grid-config" style="gap:10px; margin-bottom:15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--divider);">
+                    <div class="field-group" style="flex:1; margin-bottom:0;">
+                        <label style="font-weight:bold; color:var(--primary);">1. Anexar Arquivo (PDF ou Imagem)</label>
+                        <input type="file" id="fileFaturaBanco" accept=".pdf,image/png,image/jpeg" style="font-size: 0.85rem; padding: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%;">
+                    </div>
+                    <div style="width: 100%; text-align: center; font-size: 0.8rem; color: #64748b; font-weight: bold;">OU</div>
+                    <div class="field-group" style="flex:1; margin-bottom:0;">
+                        <label style="font-weight:bold;">Colar Texto Bruto</label>
+                        <textarea id="txtExtratoBruto" style="width:100%; height:60px; border-radius:6px; padding:8px; border:1px solid var(--divider); font-family:monospace; font-size:0.85rem; resize:vertical;" placeholder="Cole o texto aqui (caso não anexe arquivo)..."></textarea>
+                    </div>
+                </div>
+
+                <details class="acc-interno" style="margin-bottom: 15px; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; background: white;">
+                    <summary style="font-size: 0.85rem; color: #475569; font-weight: bold;">⚙️ Instruções Adicionais para a IA (Opcional)</summary>
+                    <textarea id="txtPromptCustomizado" style="width:100%; height:50px; margin-top: 8px; border-radius:6px; padding:8px; border:1px solid var(--divider); font-size:0.85rem;" placeholder="Ex: Ignorar diferenças de até R$ 5,00. Focar apenas em despesas no exterior..."></textarea>
+                </details>
+
+                <button class="btn btn-sync" id="btnAuditarExtratoIA" style="width:100%; height:42px; font-size:0.95rem;" onclick="executarAuditorExtratoIA()">🤖 Auditar com Inteligência Artificial</button>
+                <div id="resAuditorIA" style="margin-top:20px; padding:15px; border-radius:10px; background:#f1f5f9; border:1px solid #cbd5e1; display:none; font-size:0.9rem; max-height:400px; overflow-y:auto; line-height:1.6;"></div>
             </div>
+
         </div>
     </div>
 
@@ -333,6 +352,17 @@
     let combinacaoDetectadaGlobal = [];
 
     const fmt = (v) => { if (!isFinite(v)) return "0,00"; return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    
+    // Função auxiliar para converter arquivos para a IA
+    function lerArquivoBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }    
+
     function formatarDataHora(isoStr) { if(!isoStr) return "Desconhecido"; let d = new Date(isoStr); return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR'); }
 
     // ==========================================
@@ -455,11 +485,19 @@
 
     async function executarAuditorExtratoIA() {
         let apiKey = dbConfig.geminiKey;
-        if (!apiKey) return alert("Configure a sua Gemini API Key na aba Avançado & IA para ativar esta função.");
+        if (!apiKey) return alert("Configure a sua Gemini API Key na aba Avançado & IA.");
+        
+        let fileInput = document.getElementById('fileFaturaBanco');
         let txtExtrato = document.getElementById('txtExtratoBruto').value.trim();
-        if (!txtExtrato) return alert("Por favor, cole o texto do extrato bancário.");
+        let customPrompt = document.getElementById('txtPromptCustomizado').value.trim();
+        
+        if (!fileInput.files[0] && !txtExtrato) {
+            return alert("Por favor, anexe o arquivo da fatura (PDF/Imagem) ou cole o texto do extrato.");
+        }
 
         let c = contas.find(x => x.id === contaAtiva); if(!c) return;
+        
+        // Mantemos a trava de escopo da fatura exata que o usuário está visualizando
         let dFA = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
         let dCA = getDataFechamentoParaFatura(c, dFA);
         let dF_ant_obj = new Date(dataFiltro.getFullYear(), dataFiltro.getMonth() - 1, 1);
@@ -468,46 +506,92 @@
 
         let lancamentosCompactos = [];
         (c.lancamentos || []).forEach(l => {
-            let deveExibir = modoConciliacao ? (l.data > dCA_ant && l.data <= dCA) : (new Date(l.data+'T12:00:00').getMonth() === dataFiltro.getMonth() && new Date(l.data+'T12:00:00').getFullYear() === dataFiltro.getFullYear());
+            let deveExibir = (l.data > dCA_ant && l.data <= dCA);
             if (deveExibir) {
-                if (l.isFaturaCartao && !l.valorOk && l.data === dFA) return;
-                lancamentosCompactos.push({ data: l.data.split('-').reverse().join('/'), desc: l.desc, valor: l.valor, tipo: l.tipo, status: (l.dataOk && l.valorOk) ? "Confirmado" : "Estimado", tag: l.tag || "" });
+                // HARD FILTER: Impedimos que o "Pagamento da Fatura" chegue até a IA
+                if (l.isFaturaCartao === c.id) return; 
+
+                lancamentosCompactos.push({ 
+                    data: l.data.split('-').reverse().join('/'), 
+                    desc: l.desc, 
+                    valor: l.valor, 
+                    status: (l.dataOk && l.valorOk) ? "Confirmado" : "Estimado" 
+                });
             }
         });
 
         const btn = document.getElementById('btnAuditarExtratoIA'); const originalText = btn.innerText;
-        btn.innerText = "⏳ O Gemini está processando a auditoria..."; btn.disabled = true;
+        btn.innerText = "⏳ A IA está analisando..."; btn.disabled = true;
         const resDiv = document.getElementById('resAuditorIA'); resDiv.style.display = "none";
 
-        const promptAuditoria = `Você é um auditor financeiro de alta precisão. 
-        Compare o extrato bruto do banco com a lista de lançamentos que o usuário tem no sistema de controle financeiro dele.
-        Gere um relatório detalhado estruturado estritamente em tópicos (usando bullets):
-        1. Lançamentos presentes no extrato do banco mas NÃO encontrados no sistema (Esquecimentos de registro).
-        2. Lançamentos criados no sistema mas que NÃO constam no extrato do banco.
-        3. Itens que aparecem em ambos, mas que possuem divergência de Valores, Datas ou indicação de Parcelas.
-        
-        Se tudo estiver idêntico e perfeito, elogie o usuário pelo rigor e informe que o fecho foi concluído com sucesso. Seja conciso e direto.
-        
-        TEXTO BRUTO DO EXTRATO DO BANCO:
-        """
-        ${txtExtrato}
-        """
-        
-        LANÇAMENTOS NO SISTEMA DO USUÁRIO:
-        ${JSON.stringify(lancamentosCompactos)}`;
+        // PROMPT SINTÉTICO (O NOVO CÉREBRO)
+        let promptAuditoria = `Atue como um auditor financeiro objetivo e direto.
+Compare a fatura do banco (anexada ou em texto) com os lançamentos do sistema.
+
+REGRAS RÍGIDAS DE AUDITORIA:
+1. Ignore divergências de data de até 5 dias (comum no processamento de parcelas). Trate como MATCH CORRETO.
+2. Ignore divergências na numeração da parcela se o valor e a loja baterem.
+3. Ignore centavos de diferença (até R$ 0,10).
+4. Seja EXTREMAMENTE SINTÉTICO. Responda APENAS usando uma tabela Markdown com as seguintes colunas:
+   | Tipo de Erro | Lançamento (Banco) | Lançamento (Sistema) | Diferença/Motivo |
+5. Se não houver divergências relevantes, retorne apenas "Nenhuma anomalia grave encontrada. Tudo certo!"
+${customPrompt ? "\nREGRA CUSTOMIZADA DO USUÁRIO:\n" + customPrompt : ""}
+
+LANÇAMENTOS NO SISTEMA DO USUÁRIO (Ciclo Atual):
+${JSON.stringify(lancamentosCompactos)}`;
+
+        if (txtExtrato) {
+            promptAuditoria += `\n\nTEXTO DA FATURA DO BANCO:\n"""\n${txtExtrato}\n"""`;
+        }
+
+        let parts = [{ text: promptAuditoria }];
 
         try {
-            const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: promptAuditoria }] }] })
-            });
-            const resJson = await resposta.json();
-            if (resJson.error) { alert("Erro na IA: " + resJson.error.message); } 
-            else {
-                let outText = resJson.candidates[0].content.parts[0].text;
-                resDiv.innerHTML = outText; resDiv.style.display = "block";
+            // Processamento do Arquivo PDF/Imagem
+            if (fileInput.files[0]) {
+                let file = fileInput.files[0];
+                let base64Data = await lerArquivoBase64(file);
+                parts.push({
+                    inlineData: {
+                        mimeType: file.type,
+                        data: base64Data
+                    }
+                });
             }
-        } catch(e) { alert("Falha na comunicação com o servidor da IA."); } 
-        finally { btn.innerText = originalText; btn.disabled = false; }
+
+            const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                    contents: [{ parts: parts }],
+                    generationConfig: { temperature: 0.1 } // Temperatura baixa para respostas mais lógicas
+                })
+            });
+            
+            const resJson = await resposta.json();
+            if (resJson.error) { 
+                alert("Erro na IA: " + resJson.error.message); 
+            } else {
+                let outText = resJson.candidates[0].content.parts[0].text;
+                
+                // Transforma a tabela Markdown em uma tabela HTML elegante
+                outText = outText.replace(/\|(.+)\|/g, (match, p1) => {
+                    let cells = p1.split('|').map(c => `<td>${c.trim()}</td>`).join('');
+                    return `<tr>${cells}</tr>`;
+                }).replace(/<tr><td>---.*?<\/tr>/g, ''); // Remove a linha separadora do markdown
+                
+                if(outText.includes('<tr>')) {
+                     outText = `<table style="width:100%; border-collapse: collapse; font-size: 0.85rem; border: 1px solid #cbd5e1; background: white;" border="1">${outText}</table>`;
+                }
+                
+                resDiv.innerHTML = outText; 
+                resDiv.style.display = "block";
+            }
+        } catch(e) { 
+            alert("Falha na comunicação com o servidor da IA. " + e); 
+        } finally { 
+            btn.innerText = originalText; btn.disabled = false; 
+        }
     }
 
     // ==========================================
