@@ -372,18 +372,22 @@
 
         let dFA = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
         let dCA = getDataFechamentoParaFatura(c, dFA);
-        let dF_ant_obj = new Date(dataFiltro.getFullYear(), dataFiltro.getMonth() - 1, 1);
-        let dFA_ant = `${dF_ant_obj.getFullYear()}-${String(dF_ant_obj.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
-        let dCA_ant = getDataFechamentoParaFatura(c, dFA_ant);
 
         let sConf = 0; let candidatos = [];
         (c.lancamentos || []).forEach(l => {
-            let deveExibir = modoConciliacao ? (l.data > dCA_ant && l.data <= dCA) : (new Date(l.data+'T12:00:00').getMonth() === dataFiltro.getMonth() && new Date(l.data+'T12:00:00').getFullYear() === dataFiltro.getFullYear());
-            if (deveExibir) {
-                if (l.isFaturaCartao && !l.valorOk && l.data === dFA) return; 
-                let v = l.valor || 0; let mult = l.tipo === 'credito' ? -1 : 1;
-                if (l.dataOk && l.valorOk) sConf += (v * mult);
-                else candidatos.push({ id: l.id, desc: l.desc, val: v, mult: mult, netVal: (v * mult), lRef: l });
+            // Varre todo o histórico até a data de fechamento, exatamente como o totalizador faz
+            if (l.data <= dCA) {
+                // Ignora o pagamento da fatura deste ciclo para não zerar o saldo auditado
+                if (l.isFaturaCartao && l.data === dFA) return; 
+
+                let v = l.valor || 0; 
+                let mult = l.tipo === 'debito' ? 1 : -1;
+                
+                if (l.dataOk && l.valorOk) {
+                    sConf += (v * mult);
+                } else {
+                    candidatos.push({ id: l.id, desc: l.desc, val: v, mult: mult, netVal: (v * mult), lRef: l });
+                }
             }
         });
 
@@ -396,6 +400,7 @@
             passos++; if (passos > 60000) return false; 
             if (Math.abs(currentSum - targetUnconfirmed) <= 0.05) { solucao = [...currentSubset]; return true; }
             if (idx >= candidatos.length) return false;
+            
             currentSubset.push(candidatos[idx]);
             if (backtrack(idx + 1, currentSum + candidatos[idx].netVal, currentSubset)) return true;
             currentSubset.pop();
