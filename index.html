@@ -338,9 +338,28 @@
     // ==========================================
     // SEÇÃO DE FUNÇÕES DA CENTRAL DE CONCILIAÇÃO
     // ==========================================
+
     function abrirModalConciliacao() {
         let c = contas.find(x => x.id === contaAtiva); if (!c) return;
-        document.getElementById('modalNomeCartao').innerText = c.nome;
+        
+        // 1) LÓGICA DE SALTO INTELIGENTE
+        // Verifica se estamos no mês calendário atual e se a fatura já fechou
+        let hj = new Date(); hj.setHours(0,0,0,0);
+        let isMesAtual = (dataFiltro.getMonth() === hj.getMonth() && dataFiltro.getFullYear() === hj.getFullYear());
+        let dFA = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
+        let dCA = getDataFechamentoParaFatura(c, dFA);
+        let dataCorte = new Date(dCA + 'T12:00:00'); dataCorte.setHours(0,0,0,0);
+        
+        if (isMesAtual && hj > dataCorte) {
+            // A fatura deste mês já passou da data de corte. Pula para a próxima fatura.
+            dataFiltro.setMonth(dataFiltro.getMonth() + 1);
+            render(); // Atualiza a tela de fundo para você ver a fatura nova
+        }
+
+        // 2) TÍTULO COM O MÊS DO FECHAMENTO (Sua 2ª sugestão)
+        const nomeMesAlvo = formatarMesInteligente(dataFiltro);
+        document.getElementById('modalNomeCartao').innerHTML = `${c.nome} <span class="badge badge-mensal" style="font-size:0.8rem; vertical-align:middle; margin-left:10px;">Fatura de ${nomeMesAlvo}</span>`;
+        
         document.getElementById('valFaturaBanco').value = "";
         document.getElementById('resDetetive').style.display = "none";
         document.getElementById('txtExtratoBruto').value = "";
@@ -349,6 +368,7 @@
         mudarTabModal('detetive');
         document.getElementById('modalConciliacao').style.display = "flex";
     }
+
 
     function fecharModalConciliacao() { document.getElementById('modalConciliacao').style.display = "none"; }
 
@@ -869,7 +889,14 @@
         contas.forEach(c => {
             const p = document.createElement('div'); p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
             p.innerText = c.nome; if (c.tipoConta === 'cartao') p.innerText += ' 💳'; else if (c.remun) { const s = document.createElement('span'); s.className = 'badge badge-mensal'; s.innerText = '📈 REMUN'; p.appendChild(s); }
-            p.onclick = () => { contaAtiva = c.id; render(); }; cp.appendChild(p);
+            p.onclick = () => { 
+                if (contaAtiva !== c.id) {
+                    contaAtiva = c.id; 
+                    modoConciliacao = (c.tipoConta === 'cartao');
+                }
+                render(); 
+            }; 
+            cp.appendChild(p);
         });
 
         if(contaAtiva) {
@@ -977,7 +1004,14 @@
     function alignDate(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); }
-    function proximaConta() { if (contas.length === 0) return; const i = contas.findIndex(c => c.id === contaAtiva); contaAtiva = contas[(i + 1) % contas.length].id; render(); }
+    function proximaConta() { 
+        if (contas.length === 0) return; 
+        const i = contas.findIndex(c => c.id === contaAtiva); 
+        const nC = contas[(i + 1) % contas.length];
+        contaAtiva = nC.id; 
+        modoConciliacao = (nC.tipoConta === 'cartao');
+        render(); 
+    }
 
     function deletaL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return; let l = c.lancamentos.find(x => x.id === id); if(!l) return;
