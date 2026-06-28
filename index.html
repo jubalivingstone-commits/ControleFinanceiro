@@ -1147,8 +1147,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
         } catch (err) { alert("Erro de comunicação com o assistente."); } finally { btn.innerText = originalText; btn.disabled = false; }
     }
 
-    window.onload = () => { carregarDados(); };
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { if (dbConfig.mode === 'nuvem') { carregarDados(); } } });
+window.onload = () => { carregarDados(); };
 </script>
 </body>
 </html>
