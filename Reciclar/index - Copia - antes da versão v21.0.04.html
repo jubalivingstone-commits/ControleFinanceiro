@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v21.0.04</title>
+    <title>Meu Controle Financeiro Pro - v21.0.03</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -56,8 +56,7 @@
         .btn-audit { background-color: #ffc107 !important; color: #000 !important; margin-left: 2px; }
         .mes-navegador { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; }
         .mes-atual-label { font-size: 1.2rem; font-weight: bold; color: var(--primary); min-width: 200px; text-align: center; }
-        .btn-nav { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-nav:hover { background: #e2e8f0; }
+        .btn-nav { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .pill { padding: 8px 15px; background: white; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-right: 5px; margin-bottom: 5px; display: inline-flex; align-items: center; gap: 6px; }
         .pill.active { background: var(--primary); color: white; border-color: var(--primary); }
         .table-container { overflow-x: auto; overflow-y: auto; max-height: 75vh; min-height: 600px; resize: vertical; border-radius: 12px; border: 1px solid #e2e8f0; background: white; position: relative; }
@@ -77,6 +76,7 @@
         .form-grid-config { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
         .form-grid-config .field-group { display: flex; flex-direction: column; gap: 6px; }
         .th-ordenavel { cursor: pointer; user-select: none; transition: 0.2s; } .th-ordenavel:hover { background: #e2e8f0; }
+        .tutorial-steps { list-style-type: decimal; margin-left: 20px; padding-left: 10px; color: #334155; font-size: 0.9rem;} .tutorial-steps li { margin-bottom: 10px; }
         #estadoVazio { text-align: center; padding: 60px 20px; } #estadoVazio h2 { color: var(--primary); margin-bottom: 15px; } #estadoVazio p { color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; }
         .box-metadados { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; color: #166534; margin-bottom: 15px; display: flex; align-items: flex-start; gap: 10px; }
         .linha-arrastando { opacity: 0.4; transform: scale(0.99); } .linha-alvo-drop { border-top: 2px dashed var(--primary) !important; background-color: rgba(52, 152, 219, 0.05) !important; }
@@ -108,12 +108,24 @@
                 <h3 style="margin: 0;">🗓️ Agenda Financeira (Fluxo Previsto)</h3>
             </div>
             <p style="font-size: 0.85rem; color: #64748b; margin-top: 0px; margin-bottom: 20px;">Visão cronológica de todos os lançamentos não confirmados.</p>
+            
             <div id="agendaVazia" style="display:none; text-align: center; padding: 40px 20px;">
-                <span style="font-size: 3rem;">🎉</span><h3 style="color: var(--success); margin-top: 10px;">Tudo em dia!</h3><p style="color: #64748b; font-size: 1.1rem;">Nenhum compromisso pendente.</p>
+                <span style="font-size: 3rem;">🎉</span>
+                <h3 style="color: var(--success); margin-top: 10px;">Tudo em dia!</h3>
+                <p style="color: #64748b; font-size: 1.1rem;">Você não possui nenhum compromisso pendente no sistema.</p>
             </div>
+            
             <div id="agendaTabelaContainer" class="table-container" style="max-height: 70vh;">
                 <table style="min-width: 100%;">
-                    <thead><tr><th>Data</th><th>Conta Base</th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:center">Ações</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Conta Base</th>
+                            <th>Descrição</th>
+                            <th style="text-align:right">Valor (R$)</th>
+                            <th style="text-align:center">Ações</th>
+                        </tr>
+                    </thead>
                     <tbody id="corpoTabelaAgenda"></tbody>
                 </table>
             </div>
@@ -123,10 +135,25 @@
     <div id="aba-lancamentos" class="content-section">
         <div id="estadoVazio" style="display:none;">
             <div class="card">
-                <h2>Bem-vindo ao Controle Financeiro! 🎉</h2>
-                <p>Crie sua primeira conta corrente, poupança ou cartão para iniciar.</p>
-                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[4].click()">Criar Primeira Conta ➡️</button>
-                <div id="painelOnboardingIA" style="margin-top: 20px; border: 1px solid var(--divider); background: #f8fafc; padding: 20px; border-radius: 12px; text-align: left;"></div>
+                <h2>Bem-vindo ao seu Controle Financeiro! 🎉</h2>
+                <p>Parece que você ainda não tem nenhuma conta configurada. Crie sua primeira conta corrente, poupança ou cartão.</p>
+                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 30px; height: auto;" onclick="document.querySelectorAll('.tab-btn')[4].click()">Criar Minha Primeira Conta ➡️</button>
+                
+                <div style="margin-top: 35px; text-align: left;">
+                    <details class="accordion" style="box-shadow: none; border: 1px dashed #cbd5e1;">
+                        <summary style="font-size: 0.95rem; color: var(--primary); text-align: center; justify-content: center; gap: 8px;">📖 O que este sistema pode fazer por você?</summary>
+                        <div style="font-size: 0.9rem; color: #475569; line-height: 1.6;">
+                            <p style="margin-top: 0;">O <b>Meu Controle Financeiro Pro</b> é uma ferramenta completa e de alta precisão para organizar sua vida financeira. Veja os principais recursos:</p>
+                            <ul style="margin-left: 20px; padding-left: 10px; margin-bottom: 0;">
+                                <li style="margin-bottom: 8px;"><b>💳 Cartões e Conciliação:</b> Controle de faturas, datas de fechamento e agrupamento por Etiquetas (Tags) para facilitar a conferência cruzada com o seu extrato bancário.</li>
+                                <li style="margin-bottom: 8px;"><b>📈 Auditoria de Rendimentos:</b> O sistema calcula sozinho quanto seu dinheiro deve render diariamente (baseado na Selic e no % do CDI da conta), permitindo auditar visualmente se o banco está pagando o valor correto.</li>
+                                <li style="margin-bottom: 8px;"><b>🔄 Lançamentos Inteligentes:</b> Suporte robusto a compras parceladas, despesas fixas (mensais ou anuais) e transferências espelhadas entre contas.</li>
+                                <li style="margin-bottom: 8px;"><b>📊 Relatórios Dinâmicos:</b> Visão limpa da projeção do seu Saldo Líquido no fim do mês e do peso real das despesas reuniões no seu orçamento.</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+                <div id="painelOnboardingIA" class="card" style="margin-top: 20px; border: 1px solid var(--divider); background: #f8fafc; padding: 20px; border-radius: 12px; text-align: left;"></div>
             </div>
         </div>
 
@@ -138,10 +165,7 @@
 
                 <div id="cabecalhoContas" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
                     <h2 id="tituloConta" style="margin:0;">Selecionar Conta</h2>
-                    <div style="display:flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <button id="btnToggleScroll" class="btn-nav" style="background: var(--bg); border: 1px solid #cbd5e1; font-size: 0.8rem; padding: 6px 12px;" onclick="toggleAutoScroll()" title="Ligar/Desligar pulo automático de tela ao editar">🎯 Scroll: ON</button>
-                        <button class="btn btn-primary" onclick="proximaConta()">🔄 Trocar Conta<span id="alertaGeral" class="badge-alerta-geral" style="display:none;">0</span></button>
-                    </div>
+                    <button class="btn btn-primary" onclick="proximaConta()">🔄 Trocar Conta<span id="alertaGeral" class="badge-alerta-geral" style="display:none;">0</span></button>
                 </div>
                 <div id="containerPills" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;"></div>
                 
@@ -233,6 +257,7 @@
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;"><button class="btn btn-sync" onclick="exportarBackup()">📥 Baixar Backup (.json)</button><label class="btn btn-success" style="cursor: pointer; background: #64748b;">📂 Restaurar Backup<input type="file" id="importFile" style="display:none" onchange="importarBackup(event)"></label><button class="btn" style="background: #10b981;" onclick="exportarCSV()">📊 Exportar Excel (.csv)</button></div>
             </div>
         </details>
+
         <details class="accordion" id="accGeminiIA">
             <summary><div style="display: flex; align-items: center; gap: 10px;">🤖 Inteligência Artificial (Gemini) <span id="badgeGeminiStatus" class="badge">Verificando...</span></div></summary>
             <div>
@@ -243,6 +268,7 @@
                 </div>
             </div>
         </details>
+
         <details class="accordion" id="accMotor">
             <summary><div style="display: flex; align-items: center; gap: 10px;">💽 Sincronização e Acesso Online <span id="badgeConexao" class="badge badge-diario" style="font-weight: normal;">Verificando...</span></div></summary>
             <div>
@@ -265,12 +291,12 @@
             <h3 style="color:var(--primary); margin-top:0; margin-bottom:20px; display:flex; align-items:center; gap:10px;">🪄 Central de Conciliação: <span id="modalNomeCartao" style="color:var(--text)"></span></h3>
             
             <div style="display:flex; gap:10px; margin-bottom:25px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-                <button class="pill active" id="btnTabDetetive" onclick="mudarTabModal('detetive')" style="margin:0;">🔍 1. Detetive Matemático</button>
-                <button class="pill" id="btnTabAuditor" onclick="mudarTabModal('auditor')" style="margin:0;">🤖 2. Auditor de Extrato (IA)</button>
+                <button class="pill active" id="btnTabDetetive" onclick="mudarTabModal('detetive')" style="margin:0;">🔍 1. Detetive Matemático (JS)</button>
+                <button class="pill" id="btnTabAuditor" onclick="mudarTabModal('auditor')" style="margin:0;">🤖 2. Auditor de Extrato (IA Gemini)</button>
             </div>
 
             <div id="tabModalDetetive">
-                <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:15px;">Informe o valor final ou parcial fechado indicado pelo seu banco. O sistema cruzará instantaneamente as despesas estimadas até localizar a combinação exata.</p>
+                <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:15px;">Informe o valor final ou parcial fechado indicado pelo seu banco. O sistema cruzará instantaneamente as despesas estimadas do mês até localizar a combinação exata.</p>
                 <div class="form-grid-config" style="align-items:flex-end; gap:10px; margin-bottom:15px;">
                     <div class="field-group" style="flex:1; margin-bottom:0;"><label style="font-weight:bold;">Valor Fechado no Banco (R$)</label><input type="text" id="valFaturaBanco" placeholder="0,00" inputmode="decimal" onfocus="this.select()"></div>
                     <button class="btn btn-primary" onclick="executarDetetiveMatematico()" style="height:38px;">Buscar Combinação</button>
@@ -278,8 +304,10 @@
                 <div id="resDetetive" style="margin-top:15px; padding:15px; border-radius:10px; display:none; border:1px solid #cbd5e1;"></div>
             </div>
 
+            <!-- TAB 2: AUDITOR DE EXTRATO (IA) -->
             <div id="tabModalAuditor" style="display:none;">
                 <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:15px;">Anexe o PDF/Imagem da sua fatura ou cole o texto. A IA cruzará as informações e gerará uma tabela sintética apenas com os erros reais.</p>
+                
                 <div class="form-grid-config" style="gap:10px; margin-bottom:15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--divider);">
                     <div class="field-group" style="flex:1; margin-bottom:0;">
                         <label style="font-weight:bold; color:var(--primary);">1. Anexar Arquivo (PDF ou Imagem)</label>
@@ -291,17 +319,20 @@
                         <textarea id="txtExtratoBruto" style="width:100%; height:60px; border-radius:6px; padding:8px; border:1px solid var(--divider); font-family:monospace; font-size:0.85rem; resize:vertical;" placeholder="Cole o texto aqui (caso não anexe arquivo)..."></textarea>
                     </div>
                 </div>
+
                 <details class="acc-interno" style="margin-bottom: 15px; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; background: white;">
                     <summary style="font-size: 0.85rem; color: #475569; font-weight: bold;">⚙️ Instruções Adicionais para a IA (Opcional)</summary>
                     <textarea id="txtPromptCustomizado" style="width:100%; height:50px; margin-top: 8px; border-radius:6px; padding:8px; border:1px solid var(--divider); font-size:0.85rem;" placeholder="Ex: Ignorar diferenças de até R$ 5,00. Focar apenas em despesas no exterior..."></textarea>
                 </details>
+
                 <button class="btn btn-sync" id="btnAuditarExtratoIA" style="width:100%; height:42px; font-size:0.95rem;" onclick="executarAuditorExtratoIA()">🤖 Auditar com Inteligência Artificial</button>
                 <div id="resAuditorIA" style="margin-top:20px; padding:15px; border-radius:10px; background:#f1f5f9; border:1px solid #cbd5e1; display:none; font-size:0.9rem; max-height:400px; overflow-y:auto; line-height:1.6;"></div>
             </div>
+
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.04</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.03</div>
 </div>
 
 <script>
@@ -315,18 +346,14 @@
     let incluirParceladosRelatorio = false; 
     let dataFiltro = new Date(); dataFiltro.setDate(1);
     let ordemDesc = true; 
-    let autoScrollAtivo = true; // Controle Global do Pulo da Tela
     let ultimaDataUsada = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
     let relatorioAtivo = null;
     let modoConciliacao = false;
     let combinacaoDetectadaGlobal = [];
 
     const fmt = (v) => { if (!isFinite(v)) return "0,00"; return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
-    function formatarDataHora(isoStr) { if(!isoStr) return "Desconhecido"; let d = new Date(isoStr); return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR'); }
-
-    // ==========================================
-    // FUNÇÃO AUXILIAR DA IA (LEITOR DE ARQUIVO BASE64)
-    // ==========================================
+    
+    // Função auxiliar para converter arquivos para a IA
     function lerArquivoBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -334,14 +361,19 @@
             reader.onerror = error => reject(error);
             reader.readAsDataURL(file);
         });
-    }
+    }    
+
+    function formatarDataHora(isoStr) { if(!isoStr) return "Desconhecido"; let d = new Date(isoStr); return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR'); }
 
     // ==========================================
     // SEÇÃO DE FUNÇÕES DA CENTRAL DE CONCILIAÇÃO
     // ==========================================
+
     function abrirModalConciliacao() {
         let c = contas.find(x => x.id === contaAtiva); if (!c) return;
         
+        // 1) LÓGICA DE SALTO INTELIGENTE
+        // Verifica se estamos no mês calendário atual e se a fatura já fechou
         let hj = new Date(); hj.setHours(0,0,0,0);
         let isMesAtual = (dataFiltro.getMonth() === hj.getMonth() && dataFiltro.getFullYear() === hj.getFullYear());
         let dFA = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
@@ -349,30 +381,37 @@
         let dataCorte = new Date(dCA + 'T12:00:00'); dataCorte.setHours(0,0,0,0);
         
         if (isMesAtual && hj > dataCorte) {
+            // A fatura deste mês já passou da data de corte. Pula para a próxima fatura.
             dataFiltro.setMonth(dataFiltro.getMonth() + 1);
-            render(); 
+            render(); // Atualiza a tela de fundo para você ver a fatura nova
         }
 
+        // 2) TÍTULO COM O MÊS DO FECHAMENTO (Sua 2ª sugestão)
         const nomeMesAlvo = formatarMesInteligente(dataFiltro);
         document.getElementById('modalNomeCartao').innerHTML = `${c.nome} <span class="badge badge-mensal" style="font-size:0.8rem; vertical-align:middle; margin-left:10px;">Fatura de ${nomeMesAlvo}</span>`;
         
         document.getElementById('valFaturaBanco').value = "";
         document.getElementById('resDetetive').style.display = "none";
         document.getElementById('txtExtratoBruto').value = "";
-        document.getElementById('fileFaturaBanco').value = "";
         document.getElementById('resAuditorIA').style.display = "none";
         combinacaoDetectadaGlobal = [];
         mudarTabModal('detetive');
         document.getElementById('modalConciliacao').style.display = "flex";
     }
 
+
     function fecharModalConciliacao() { document.getElementById('modalConciliacao').style.display = "none"; }
 
     function mudarTabModal(tab) {
         const d = document.getElementById('tabModalDetetive'); const a = document.getElementById('tabModalAuditor');
         const bD = document.getElementById('btnTabDetetive'); const bA = document.getElementById('btnTabAuditor');
-        if(tab === 'detetive') { d.style.display = 'block'; a.style.display = 'none'; bD.classList.add('active'); bA.classList.remove('active'); } 
-        else { d.style.display = 'none'; a.style.display = 'block'; bD.classList.remove('active'); bA.classList.add('active'); }
+        if(tab === 'detetive') {
+            d.style.display = 'block'; a.style.display = 'none';
+            bD.classList.add('active'); bA.classList.remove('active');
+        } else {
+            d.style.display = 'none'; a.style.display = 'block';
+            bD.classList.remove('active'); bA.classList.add('active');
+        }
     }
 
     function executarDetetiveMatematico() {
@@ -386,11 +425,19 @@
 
         let sConf = 0; let candidatos = [];
         (c.lancamentos || []).forEach(l => {
+            // Varre todo o histórico até a data de fechamento, exatamente como o totalizador faz
             if (l.data <= dCA) {
-                if (l.isFaturaCartao && l.data === dFA) return; // Ignora o próprio pagamento da fatura visualizada
-                let v = l.valor || 0; let mult = l.tipo === 'debito' ? 1 : -1;
-                if (l.dataOk && l.valorOk) sConf += (v * mult);
-                else candidatos.push({ id: l.id, desc: l.desc, val: v, mult: mult, netVal: (v * mult), lRef: l });
+                // Ignora o pagamento da fatura deste ciclo para não zerar o saldo auditado
+                if (l.isFaturaCartao && l.data === dFA) return; 
+
+                let v = l.valor || 0; 
+                let mult = l.tipo === 'debito' ? 1 : -1;
+                
+                if (l.dataOk && l.valorOk) {
+                    sConf += (v * mult);
+                } else {
+                    candidatos.push({ id: l.id, desc: l.desc, val: v, mult: mult, netVal: (v * mult), lRef: l });
+                }
             }
         });
 
@@ -403,6 +450,7 @@
             passos++; if (passos > 60000) return false; 
             if (Math.abs(currentSum - targetUnconfirmed) <= 0.05) { solucao = [...currentSubset]; return true; }
             if (idx >= candidatos.length) return false;
+            
             currentSubset.push(candidatos[idx]);
             if (backtrack(idx + 1, currentSum + candidatos[idx].netVal, currentSubset)) return true;
             currentSubset.pop();
@@ -438,10 +486,18 @@
     async function executarAuditorExtratoIA() {
         let apiKey = dbConfig.geminiKey;
         if (!apiKey) return alert("Configure a sua Gemini API Key na aba Avançado & IA.");
-        let fileInput = document.getElementById('fileFaturaBanco'); let txtExtrato = document.getElementById('txtExtratoBruto').value.trim(); let customPrompt = document.getElementById('txtPromptCustomizado').value.trim();
-        if (!fileInput.files[0] && !txtExtrato) return alert("Por favor, anexe o arquivo da fatura (PDF/Imagem) ou cole o texto do extrato.");
+        
+        let fileInput = document.getElementById('fileFaturaBanco');
+        let txtExtrato = document.getElementById('txtExtratoBruto').value.trim();
+        let customPrompt = document.getElementById('txtPromptCustomizado').value.trim();
+        
+        if (!fileInput.files[0] && !txtExtrato) {
+            return alert("Por favor, anexe o arquivo da fatura (PDF/Imagem) ou cole o texto do extrato.");
+        }
 
         let c = contas.find(x => x.id === contaAtiva); if(!c) return;
+        
+        // Mantemos a trava de escopo da fatura exata que o usuário está visualizando
         let dFA = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
         let dCA = getDataFechamentoParaFatura(c, dFA);
         let dF_ant_obj = new Date(dataFiltro.getFullYear(), dataFiltro.getMonth() - 1, 1);
@@ -452,8 +508,15 @@
         (c.lancamentos || []).forEach(l => {
             let deveExibir = (l.data > dCA_ant && l.data <= dCA);
             if (deveExibir) {
-                if (l.isFaturaCartao === c.id) return; // Ignora pagamento de fatura para a IA
-                lancamentosCompactos.push({ data: l.data.split('-').reverse().join('/'), desc: l.desc, valor: l.valor, status: (l.dataOk && l.valorOk) ? "Confirmado" : "Estimado" });
+                // HARD FILTER: Impedimos que o "Pagamento da Fatura" chegue até a IA
+                if (l.isFaturaCartao === c.id) return; 
+
+                lancamentosCompactos.push({ 
+                    data: l.data.split('-').reverse().join('/'), 
+                    desc: l.desc, 
+                    valor: l.valor, 
+                    status: (l.dataOk && l.valorOk) ? "Confirmado" : "Estimado" 
+                });
             }
         });
 
@@ -461,32 +524,74 @@
         btn.innerText = "⏳ A IA está analisando..."; btn.disabled = true;
         const resDiv = document.getElementById('resAuditorIA'); resDiv.style.display = "none";
 
-        let promptAuditoria = `Atue como um auditor financeiro objetivo e direto. Compare a fatura do banco (anexada ou em texto) com os lançamentos do sistema.
+        // PROMPT SINTÉTICO (O NOVO CÉREBRO)
+        let promptAuditoria = `Atue como um auditor financeiro objetivo e direto.
+Compare a fatura do banco (anexada ou em texto) com os lançamentos do sistema.
+
 REGRAS RÍGIDAS DE AUDITORIA:
 1. Ignore divergências de data de até 5 dias (comum no processamento de parcelas). Trate como MATCH CORRETO.
 2. Ignore divergências na numeração da parcela se o valor e a loja baterem.
 3. Ignore centavos de diferença (até R$ 0,10).
-4. Seja EXTREMAMENTE SINTÉTICO. Responda APENAS usando uma tabela Markdown com as seguintes colunas: | Tipo de Erro | Lançamento (Banco) | Lançamento (Sistema) | Diferença/Motivo |
+4. Seja EXTREMAMENTE SINTÉTICO. Responda APENAS usando uma tabela Markdown com as seguintes colunas:
+   | Tipo de Erro | Lançamento (Banco) | Lançamento (Sistema) | Diferença/Motivo |
 5. Se não houver divergências relevantes, retorne apenas "Nenhuma anomalia grave encontrada. Tudo certo!"
 ${customPrompt ? "\nREGRA CUSTOMIZADA DO USUÁRIO:\n" + customPrompt : ""}
+
 LANÇAMENTOS NO SISTEMA DO USUÁRIO (Ciclo Atual):
 ${JSON.stringify(lancamentosCompactos)}`;
 
-        if (txtExtrato) promptAuditoria += `\n\nTEXTO DA FATURA DO BANCO:\n"""\n${txtExtrato}\n"""`;
+        if (txtExtrato) {
+            promptAuditoria += `\n\nTEXTO DA FATURA DO BANCO:\n"""\n${txtExtrato}\n"""`;
+        }
+
         let parts = [{ text: promptAuditoria }];
 
         try {
-            if (fileInput.files[0]) { let file = fileInput.files[0]; let base64Data = await lerArquivoBase64(file); parts.push({ inlineData: { mimeType: file.type, data: base64Data } }); }
-            const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: parts }], generationConfig: { temperature: 0.1 } }) });
-            const resJson = await resposta.json();
-            if (resJson.error) { alert("Erro na IA: " + resJson.error.message); } 
-            else {
-                let outText = resJson.candidates[0].content.parts[0].text;
-                outText = outText.replace(/\|(.+)\|/g, (match, p1) => { let cells = p1.split('|').map(c => `<td>${c.trim()}</td>`).join(''); return `<tr>${cells}</tr>`; }).replace(/<tr><td>---.*?<\/tr>/g, '');
-                if(outText.includes('<tr>')) outText = `<table style="width:100%; border-collapse: collapse; font-size: 0.85rem; border: 1px solid #cbd5e1; background: white;" border="1">${outText}</table>`;
-                resDiv.innerHTML = outText; resDiv.style.display = "block";
+            // Processamento do Arquivo PDF/Imagem
+            if (fileInput.files[0]) {
+                let file = fileInput.files[0];
+                let base64Data = await lerArquivoBase64(file);
+                parts.push({
+                    inlineData: {
+                        mimeType: file.type,
+                        data: base64Data
+                    }
+                });
             }
-        } catch(e) { alert("Falha na comunicação com o servidor da IA."); } finally { btn.innerText = originalText; btn.disabled = false; }
+
+            const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                    contents: [{ parts: parts }],
+                    generationConfig: { temperature: 0.1 } // Temperatura baixa para respostas mais lógicas
+                })
+            });
+            
+            const resJson = await resposta.json();
+            if (resJson.error) { 
+                alert("Erro na IA: " + resJson.error.message); 
+            } else {
+                let outText = resJson.candidates[0].content.parts[0].text;
+                
+                // Transforma a tabela Markdown em uma tabela HTML elegante
+                outText = outText.replace(/\|(.+)\|/g, (match, p1) => {
+                    let cells = p1.split('|').map(c => `<td>${c.trim()}</td>`).join('');
+                    return `<tr>${cells}</tr>`;
+                }).replace(/<tr><td>---.*?<\/tr>/g, ''); // Remove a linha separadora do markdown
+                
+                if(outText.includes('<tr>')) {
+                     outText = `<table style="width:100%; border-collapse: collapse; font-size: 0.85rem; border: 1px solid #cbd5e1; background: white;" border="1">${outText}</table>`;
+                }
+                
+                resDiv.innerHTML = outText; 
+                resDiv.style.display = "block";
+            }
+        } catch(e) { 
+            alert("Falha na comunicação com o servidor da IA. " + e); 
+        } finally { 
+            btn.innerText = originalText; btn.disabled = false; 
+        }
     }
 
     // ==========================================
@@ -593,7 +698,6 @@ ${JSON.stringify(lancamentosCompactos)}`;
         localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig)); alert("Configuração salva!"); location.reload(); 
     }
 
-    function toggleAutoScroll() { autoScrollAtivo = !autoScrollAtivo; const btn = document.getElementById('btnToggleScroll'); if(btn) { btn.innerText = autoScrollAtivo ? "🎯 Scroll: ON" : "🎯 Scroll: OFF"; btn.style.opacity = autoScrollAtivo ? "1" : "0.5"; } }
     function formatarMesInteligente(data) { if (!data || !data.getFullYear) return "MÊS ATUAL"; const nomeMes = data.toLocaleDateString('pt-BR', { month: 'long' }).toUpperCase(); const anoFiltro = data.getFullYear(); if (anoFiltro !== new Date().getFullYear()) return `${nomeMes}/${anoFiltro.toString().slice(-2)}`; return nomeMes; }
     function toggleOrdem() { ordemDesc = !ordemDesc; document.getElementById('iconeOrdem').innerText = ordemDesc ? "▼" : "▲"; render(); }
     function toggleConciliacao() { modoConciliacao = !modoConciliacao; document.getElementById('btnModoConciliacao').classList.toggle('active', modoConciliacao); render(); }
@@ -671,20 +775,6 @@ ${JSON.stringify(lancamentosCompactos)}`;
 
     function calcularValor() { let campo = document.getElementById('f_valor'); if(!campo) return; let val = campo.value.replace(/\s/g, ''); if (!val || /^\d+$/.test(val) || /^\d+,\d{1,2}$/.test(val)) return; try { let res = Function('"use strict";return (' + val.replace(/\./g, '').replace(/,/g, '.').replace(/[^\d\.\+\-\*\/\(\)]/g, '') + ')')(); if (isFinite(res)) campo.value = parseFloat(res).toFixed(2).replace('.', ','); } catch(e) {} }
     function moverConta(id, dir) { const idx = contas.findIndex(x => x.id === id); const aIdx = dir === 'sobe' ? idx - 1 : idx + 1; if (aIdx >= 0 && aIdx < contas.length) { const t = contas[idx]; contas[idx] = contas[aIdx]; contas[aIdx] = t; salvarEAtualizar(); } }
-    
-    // Função NOVA para mover o lançamento para cima ou para baixo
-    function mover(id, dir) {
-        let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return;
-        let l = c.lancamentos.find(x => x.id === id); if(!l) return;
-        let ld = c.lancamentos.filter(x => x.data === l.data).sort((a,b) => { return ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0); });
-        let localIdx = ld.findIndex(x => x.id === id);
-        if (dir === 'sobe' && localIdx > 0) {
-            let swap = ld[localIdx - 1]; let temp = l.ordem; l.ordem = swap.ordem; swap.ordem = temp; salvarEAtualizar();
-        } else if (dir === 'desce' && localIdx < ld.length - 1) {
-            let swap = ld[localIdx + 1]; let temp = l.ordem; l.ordem = swap.ordem; swap.ordem = temp; salvarEAtualizar();
-        }
-    }
-
     function toggleParceladosRelatorio() { incluirParceladosRelatorio = !incluirParceladosRelatorio; const btn = document.getElementById('btnToggleParcelados'); if(btn) { btn.innerText = incluirParceladosRelatorio ? "🔄 Omitir Parcelados" : "🔄 Incluir Parcelados"; btn.classList.toggle('active', incluirParceladosRelatorio); } gerarDadosRelatorio(); }
     function exportarBackup() { const a = document.createElement('a'); a.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(contas))); a.setAttribute("download", `financeiro_backup_${new Date().toISOString().slice(0,10)}.json`); document.body.appendChild(a); a.click(); a.remove(); }
     function importarBackup(event) { const file = event.target.files[0]; if (!file || !confirm("Isto substituirá todos os dados. Prosseguir?")) return; const reader = new FileReader(); reader.onload = function(e) { try { const importedData = JSON.parse(e.target.result); if (Array.isArray(importedData)) { contas = importedData; salvarEAtualizar(); location.reload(); } } catch (err) { alert("Erro ao ler."); } }; reader.readAsText(file); }
@@ -862,44 +952,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
     function entrarDrag(ev) { ev.preventDefault(); let t = ev.target.closest('tr'); if(t && !t.classList.contains('linha-arrastando')) t.classList.add('linha-alvo-drop'); }
     function sairDrag(ev) { let t = ev.target.closest('tr'); if(t) t.classList.remove('linha-alvo-drop'); }
     function finalizarDrag(ev) { ev.target.classList.remove('linha-arrastando'); document.querySelectorAll('.linha-alvo-drop').forEach(e => e.classList.remove('linha-alvo-drop')); }
-    
-    function soltarDrop(ev, dId, dDR) { 
-        ev.preventDefault(); finalizarDrag(ev); 
-        if (!dragIdL || dragIdL === dId) return; 
-        
-        let c = contas.find(x => x.id === contaAtiva); 
-        let lOrigem = c.lancamentos.find(x => x.id === dragIdL);
-        if(!lOrigem) return;
-
-        if (dragDataRef !== dDR) { 
-            if(confirm(`Mudar a data deste lançamento para ${(dDR||"").split('-').reverse().join('/')}?`)) {
-                lOrigem.data = dDR;
-                lOrigem.ordem = Math.max(0, ...c.lancamentos.filter(x => x.data === dDR).map(x => x.ordem || 0)) + 1;
-                salvarEAtualizar();
-            }
-            return; 
-        } 
-        
-        let ld = c.lancamentos.filter(x => x.data === dragDataRef).sort((a,b) => { 
-            if (modoConciliacao && c.tipoConta === 'cartao') { 
-                let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); 
-                if (tA !== tB) return tA.localeCompare(tB); 
-            } 
-            return ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0); 
-        }); 
-        
-        const iO = ld.findIndex(x => x.id === dragIdL); 
-        const iD = ld.findIndex(x => x.id === dId); 
-        if (iO !== -1 && iD !== -1) { 
-            let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b); 
-            let itemArrastado = ld[iO]; 
-            ld.splice(iO, 1); 
-            ld.splice(iD, 0, itemArrastado); // Inserção Direta e sem erros matemáticos
-            if (ordemDesc) oA.reverse(); 
-            ld.forEach((l, i) => l.ordem = oA[i]); 
-            salvarEAtualizar(); 
-        } 
-    }
+    function soltarDrop(ev, dId, dDR) { ev.preventDefault(); finalizarDrag(ev); if (!dragIdL || dragIdL === dId) return; if (dragDataRef !== dDR) return alert("Reordenação apenas no mesmo dia."); let c = contas.find(x => x.id === contaAtiva); let ld = c.lancamentos.filter(x => x.data === dragDataRef).sort((a,b) => { if (modoConciliacao && c.tipoConta === 'cartao') { let tA = (a.tag || "").toLowerCase(); let tB = (b.tag || "").toLowerCase(); if (tA !== tB) return tA.localeCompare(tB); } return ordemDesc ? (b.ordem || 0) - (a.ordem || 0) : (a.ordem || 0) - (b.ordem || 0); }); const iO = ld.findIndex(x => x.id === dragIdL); const iD = ld.findIndex(x => x.id === dId); if (iO !== -1 && iD !== -1) { let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b); let itemArrastado = ld[iO]; ld.splice(iO, 1); let indiceAlvoCorrigido = (iO < iD) ? iD - 1 : iD; ld.splice(indiceAlvoCorrigido, 0, itemArrastado); if (ordemDesc) oA.reverse(); ld.forEach((l, i) => l.ordem = oA[i]); salvarEAtualizar(); } }
 
     function render() {
         const pIA = document.getElementById('painelOnboardingIA');
@@ -921,7 +974,10 @@ ${JSON.stringify(lancamentosCompactos)}`;
             const p = document.createElement('div'); p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
             p.innerText = c.nome; if (c.tipoConta === 'cartao') p.innerText += ' 💳'; else if (c.remun) { const s = document.createElement('span'); s.className = 'badge badge-mensal'; s.innerText = '📈 REMUN'; p.appendChild(s); }
             p.onclick = () => { 
-                if (contaAtiva !== c.id) { contaAtiva = c.id; modoConciliacao = (c.tipoConta === 'cartao'); }
+                if (contaAtiva !== c.id) {
+                    contaAtiva = c.id; 
+                    modoConciliacao = (c.tipoConta === 'cartao');
+                }
                 render(); 
             }; 
             cp.appendChild(p);
@@ -1002,15 +1058,6 @@ ${JSON.stringify(lancamentosCompactos)}`;
         const bG = document.getElementById('alertaGeral'); if (tG > 0) { bG.innerText = tG; bG.style.display = 'inline-block'; } else bG.style.display = 'none'; return { totalGlobal: tG, pendenciasPorConta: pC };
     }
 
-    function proximaConta() { 
-        if (contas.length === 0) return; 
-        const i = contas.findIndex(c => c.id === contaAtiva); 
-        const nC = contas[(i + 1) % contas.length];
-        contaAtiva = nC.id; 
-        modoConciliacao = (nC.tipoConta === 'cartao');
-        render(); 
-    }
-
     function salvarC() {
         const iE = document.getElementById('c_id_editando').value; const n = document.getElementById('c_nome').value; if(!n) return;
         const d = { nome: n, tipoConta: document.getElementById('c_tipo').value, vencimento: parseInt(document.getElementById('c_vencimento').value) || 10, fechamento: parseInt(document.getElementById('c_fechamento').value) || '', remun: document.getElementById('c_remun').value === 's', cdi: parseFloat(document.getElementById('c_cdi').value) || 0, baseDias: parseInt(document.getElementById('c_base_dias').value) || 252, alertaNivel: document.getElementById('c_alerta_nivel').value || '1', obs: document.getElementById('c_obs').value };
@@ -1041,6 +1088,14 @@ ${JSON.stringify(lancamentosCompactos)}`;
     function alignDate(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); }
+    function proximaConta() { 
+        if (contas.length === 0) return; 
+        const i = contas.findIndex(c => c.id === contaAtiva); 
+        const nC = contas[(i + 1) % contas.length];
+        contaAtiva = nC.id; 
+        modoConciliacao = (nC.tipoConta === 'cartao');
+        render(); 
+    }
 
     function deletaL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return; let l = c.lancamentos.find(x => x.id === id); if(!l) return;
@@ -1069,13 +1124,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
         
         let rec = l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false); dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
-        
-        // Pulo Automático da Tela controlável
-        if (autoScrollAtivo) {
-            setTimeout(() => { document.getElementById('painelOperacional').scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('f_valor').focus(); }, 150);
-        } else {
-            setTimeout(() => { document.getElementById('f_valor').focus(); }, 150);
-        }
+        setTimeout(() => { document.getElementById('painelOperacional').scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('f_valor').focus(); }, 150);
     }
 
     async function processarComandoIA() {
@@ -1098,8 +1147,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
         } catch (err) { alert("Erro de comunicação com o assistente."); } finally { btn.innerText = originalText; btn.disabled = false; }
     }
 
-    // Removido o evento de visibilitychange para evitar o refresh indevido
-    window.onload = () => { carregarDados(); };
+window.onload = () => { carregarDados(); };
 </script>
 </body>
 </html>
