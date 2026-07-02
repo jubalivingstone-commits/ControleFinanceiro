@@ -1055,7 +1055,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
         if(cD && confirm(`Mudar para a conta: ${cD.nome}?`)) { cO.lancamentos.splice(i, 1); l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; if(!cD.lancamentos) cD.lancamentos=[]; cD.lancamentos.push(l); if (l.isFaturaCartao) { contas.forEach(ct => { if (ct.lancamentos) { let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id); if (irma) irma.desc = `Transf. de ${cD.nome} (Pagamento)`; } }); } salvarEAtualizar(); }
     }
     
-    function editarL(id) {
+function editarL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return; let l = c.lancamentos.find(x => x.id === id); if(!l) return;
         let valorParaEdicao = l.valor || 0; if (l.isFaturaCartao) { valorParaEdicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
         let btnLanc = document.getElementById('btnAbaLancamentos'); if(btnLanc) btnLanc.click();
@@ -1070,14 +1070,17 @@ ${JSON.stringify(lancamentosCompactos)}`;
         let rec = l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false); dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
-        // Pulo Automático da Tela controlável
+        // CORREÇÃO: Agora o código verifica explicitamente a variável global autoScrollAtivo
         if (autoScrollAtivo) {
-            setTimeout(() => { document.getElementById('painelOperacional').scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('f_valor').focus(); }, 150);
+            setTimeout(() => { 
+                const area = document.getElementById('painelOperacional');
+                if(area) area.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+                document.getElementById('f_valor').focus(); 
+            }, 150);
         } else {
             setTimeout(() => { document.getElementById('f_valor').focus(); }, 150);
         }
     }
-
     async function processarComandoIA() {
         let apiKey = dbConfig.geminiKey || localStorage.getItem('gemini_api_key');
         if (!apiKey) { apiKey = prompt("Cole a sua API Key do Google Gemini:"); if (!apiKey) return; dbConfig.geminiKey = apiKey; localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig)); }
