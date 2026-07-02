@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v21.0.04</title>
+    <title>Meu Controle Financeiro Pro - v21.0.05</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -301,7 +301,7 @@
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.04</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.05</div>
 </div>
 
 <script>
@@ -315,11 +315,12 @@
     let incluirParceladosRelatorio = false; 
     let dataFiltro = new Date(); dataFiltro.setDate(1);
     let ordemDesc = true; 
-    let autoScrollAtivo = true; // Controle Global do Pulo da Tela
-    let ultimaDataUsada = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
-    let relatorioAtivo = null;
+    let autoScrollAtivo = true;
     let modoConciliacao = false;
     let combinacaoDetectadaGlobal = [];
+    let deveFocarHoje = false; // Gatilho global para o pulo da tela
+    let ultimaDataUsada = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+    let relatorioAtivo = null;
 
     const fmt = (v) => { if (!isFinite(v)) return "0,00"; return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     function formatarDataHora(isoStr) { if(!isoStr) return "Desconhecido"; let d = new Date(isoStr); return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR'); }
@@ -672,7 +673,6 @@ ${JSON.stringify(lancamentosCompactos)}`;
     function calcularValor() { let campo = document.getElementById('f_valor'); if(!campo) return; let val = campo.value.replace(/\s/g, ''); if (!val || /^\d+$/.test(val) || /^\d+,\d{1,2}$/.test(val)) return; try { let res = Function('"use strict";return (' + val.replace(/\./g, '').replace(/,/g, '.').replace(/[^\d\.\+\-\*\/\(\)]/g, '') + ')')(); if (isFinite(res)) campo.value = parseFloat(res).toFixed(2).replace('.', ','); } catch(e) {} }
     function moverConta(id, dir) { const idx = contas.findIndex(x => x.id === id); const aIdx = dir === 'sobe' ? idx - 1 : idx + 1; if (aIdx >= 0 && aIdx < contas.length) { const t = contas[idx]; contas[idx] = contas[aIdx]; contas[aIdx] = t; salvarEAtualizar(); } }
     
-    // Função NOVA para mover o lançamento para cima ou para baixo
     function mover(id, dir) {
         let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return;
         let l = c.lancamentos.find(x => x.id === id); if(!l) return;
@@ -894,7 +894,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
             let oA = ld.map(l => l.ordem || 0).sort((a,b) => a - b); 
             let itemArrastado = ld[iO]; 
             ld.splice(iO, 1); 
-            ld.splice(iD, 0, itemArrastado); // Inserção Direta e sem erros matemáticos
+            ld.splice(iD, 0, itemArrastado);
             if (ordemDesc) oA.reverse(); 
             ld.forEach((l, i) => l.ordem = oA[i]); 
             salvarEAtualizar(); 
@@ -921,17 +921,21 @@ ${JSON.stringify(lancamentosCompactos)}`;
             const p = document.createElement('div'); p.className = `pill ${contaAtiva === c.id ? 'active' : ''} ${pend.pendenciasPorConta[c.id] > 0 ? 'conta-pendente' : ''}`;
             p.innerText = c.nome; if (c.tipoConta === 'cartao') p.innerText += ' 💳'; else if (c.remun) { const s = document.createElement('span'); s.className = 'badge badge-mensal'; s.innerText = '📈 REMUN'; p.appendChild(s); }
             p.onclick = () => { 
-                if (contaAtiva !== c.id) { contaAtiva = c.id; modoConciliacao = (c.tipoConta === 'cartao'); }
+                if (contaAtiva !== c.id) { 
+                    contaAtiva = c.id; 
+                    modoConciliacao = (c.tipoConta === 'cartao'); 
+                    deveFocarHoje = true; // Gatilho de scroll armado
+                }
                 render(); 
             }; 
             cp.appendChild(p);
         });
 
+        const inP = document.getElementById('inputPesquisa'); const tP = inP ? inP.value.trim().toLowerCase() : ""; const mP = tP !== "";
         if(contaAtiva) {
             document.getElementById('painelOperacional').style.display = 'block'; let c = contas.find(x => x.id === contaAtiva);
             if (c) {
                 document.getElementById('tituloConta').innerText = c.nome; document.getElementById('tituloAreaLancamento').innerText = "✏️ Área de Lançamento - " + c.nome;
-                const inP = document.getElementById('inputPesquisa'); const tP = inP ? inP.value.trim().toLowerCase() : ""; const mP = tP !== "";
                 if (document.getElementById('mesNavegadorBox')) document.getElementById('mesNavegadorBox').style.display = mP ? 'none' : 'flex';
                 if (document.getElementById('cabecalhoContas')) document.getElementById('cabecalhoContas').style.display = mP ? 'none' : 'flex';
                 document.getElementById('containerPills').style.display = mP ? 'none' : 'flex';
@@ -993,7 +997,27 @@ ${JSON.stringify(lancamentosCompactos)}`;
                 lc.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px; margin-bottom:10px; flex-wrap: wrap; gap: 10px;"><div><b>${c.nome}</b><span style="font-size:0.8rem; color:#64748b;">${tn}</span>${ib}<div class="order-controls" style="display:inline-flex; margin-left: 10px;"><button class="btn-ord" onclick="moverConta('${c.id}','sobe')">▲</button><button class="btn-ord" onclick="moverConta('${c.id}','desce')">▼</button></div></div><div class="actions"><button class="mini-btn btn-primary" onclick="editarC('${c.id}')">E</button><button class="mini-btn btn-danger" onclick="if(confirm('Apagar a conta e todo o histórico?')) {contas=contas.filter(x=>x.id!=='${c.id}'); salvarEAtualizar();}">X</button></div></div>`;
             });
         }
+        
         gerarDadosRelatorio(); atualizarSaudeBanco(); renderAgenda();
+
+        // NOVO: SCROLL INTELIGENTE PARA O DIA DE HOJE
+        if (deveFocarHoje && !mP) {
+            deveFocarHoje = false;
+            setTimeout(() => {
+                let alvo = document.querySelector('.linha-hoje');
+                
+                if (!alvo) {
+                    const passadas = Array.from(document.querySelectorAll('.linha-passada'));
+                    if (passadas.length > 0) {
+                        alvo = ordemDesc ? passadas[0] : passadas[passadas.length - 1];
+                    }
+                }
+                
+                if (alvo) {
+                    alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
     }
 
     function verificarPendencias() {
@@ -1008,6 +1032,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
         const nC = contas[(i + 1) % contas.length];
         contaAtiva = nC.id; 
         modoConciliacao = (nC.tipoConta === 'cartao');
+        deveFocarHoje = true; // Gatilho de scroll armado
         render(); 
     }
 
@@ -1040,7 +1065,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
     function mudarAba(id, b) { document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(id).classList.add('active'); b.classList.add('active'); render(); }
     function alignDate(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
-    function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); render(); }
+    function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); deveFocarHoje = true; render(); } // Gatilho de scroll armado
 
     function deletaL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return; let l = c.lancamentos.find(x => x.id === id); if(!l) return;
@@ -1055,7 +1080,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
         if(cD && confirm(`Mudar para a conta: ${cD.nome}?`)) { cO.lancamentos.splice(i, 1); l.ordem = (cD.lancamentos && cD.lancamentos.length > 0 ? Math.max(...cD.lancamentos.map(x => x.ordem || 0)) : 0) + 1; if(!cD.lancamentos) cD.lancamentos=[]; cD.lancamentos.push(l); if (l.isFaturaCartao) { contas.forEach(ct => { if (ct.lancamentos) { let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id); if (irma) irma.desc = `Transf. de ${cD.nome} (Pagamento)`; } }); } salvarEAtualizar(); }
     }
     
-function editarL(id) {
+    function editarL(id) {
         let c = contas.find(x => x.id === contaAtiva); if(!c||!c.lancamentos) return; let l = c.lancamentos.find(x => x.id === id); if(!l) return;
         let valorParaEdicao = l.valor || 0; if (l.isFaturaCartao) { valorParaEdicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
         let btnLanc = document.getElementById('btnAbaLancamentos'); if(btnLanc) btnLanc.click();
@@ -1070,7 +1095,6 @@ function editarL(id) {
         let rec = l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false); dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
-        // CORREÇÃO: Agora o código verifica explicitamente a variável global autoScrollAtivo
         if (autoScrollAtivo) {
             setTimeout(() => { 
                 const area = document.getElementById('painelOperacional');
@@ -1081,6 +1105,7 @@ function editarL(id) {
             setTimeout(() => { document.getElementById('f_valor').focus(); }, 150);
         }
     }
+
     async function processarComandoIA() {
         let apiKey = dbConfig.geminiKey || localStorage.getItem('gemini_api_key');
         if (!apiKey) { apiKey = prompt("Cole a sua API Key do Google Gemini:"); if (!apiKey) return; dbConfig.geminiKey = apiKey; localStorage.setItem('financas_db_setup', JSON.stringify(dbConfig)); }
@@ -1101,7 +1126,6 @@ function editarL(id) {
         } catch (err) { alert("Erro de comunicação com o assistente."); } finally { btn.innerText = originalText; btn.disabled = false; }
     }
 
-    // Removido o evento de visibilitychange para evitar o refresh indevido
     window.onload = () => { carregarDados(); };
 </script>
 </body>
