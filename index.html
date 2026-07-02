@@ -270,10 +270,20 @@
             </div>
 
             <div id="tabModalDetetive">
-                <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:15px;">Informe o valor final ou parcial fechado indicado pelo seu banco. O sistema cruzará instantaneamente as despesas estimadas até localizar a combinação exata.</p>
+                <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:15px;">Informe o valor final da fatura OU a diferença que você encontrou. O sistema cruzará as despesas estimadas até localizar a combinação exata.</p>
                 <div class="form-grid-config" style="align-items:flex-end; gap:10px; margin-bottom:15px;">
-                    <div class="field-group" style="flex:1; margin-bottom:0;"><label style="font-weight:bold;">Valor Fechado no Banco (R$)</label><input type="text" id="valFaturaBanco" placeholder="0,00" inputmode="decimal" onfocus="this.select()"></div>
-                    <button class="btn btn-primary" onclick="executarDetetiveMatematico()" style="height:38px;">Buscar Combinação</button>
+                    <div class="field-group" style="flex:1; margin-bottom:0; min-width: 150px;">
+                        <label style="font-weight:bold; color:var(--primary);">O que deseja investigar?</label>
+                        <select id="tipoBuscaDetetive" style="background:#f8fafc; font-weight: bold;">
+                            <option value="total">Valor Fechado no Banco</option>
+                            <option value="diferenca">Diferença Exata (Ex: 129,93)</option>
+                        </select>
+                    </div>
+                    <div class="field-group" style="flex:1; margin-bottom:0; min-width: 120px;">
+                        <label style="font-weight:bold;">Valor (R$)</label>
+                        <input type="text" id="valFaturaBanco" placeholder="0,00" inputmode="decimal" onfocus="this.select()">
+                    </div>
+                    <button class="btn btn-primary" onclick="executarDetetiveMatematico()" style="height:38px;">🕵️‍♂️ Investigar</button>
                 </div>
                 <div id="resDetetive" style="margin-top:15px; padding:15px; border-radius:10px; display:none; border:1px solid #cbd5e1;"></div>
             </div>
@@ -383,59 +393,71 @@
         else { d.style.display = 'none'; a.style.display = 'block'; bD.classList.remove('active'); bA.classList.add('active'); }
     }
 
-    function executarDetetiveMatematico() {
-        let c = contas.find(x => x.id === contaAtiva); if(!c) return;
-        let inputRaw = document.getElementById('valFaturaBanco').value;
-        let valBanco = parseFloat(inputRaw.replace(/\s/g, '').replace(/\./g, '').replace(',', '.'));
-        if (isNaN(valBanco)) return alert("Introduza um valor válido do banco.");
+function executarDetetiveMatematico() {
+    let c = contas.find(x => x.id === contaAtiva); if(!c) return;
+    let inputRaw = document.getElementById('valFaturaBanco').value;
+    let valInput = parseFloat(inputRaw.replace(/\s/g, '').replace(/\./g, '').replace(',', '.'));
+    if (isNaN(valInput)) return alert("Introduza um valor válido do banco ou a diferença exata.");
 
-        let dFA = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
-        let dCA = getDataFechamentoParaFatura(c, dFA);
+    let tipoBusca = document.getElementById('tipoBuscaDetetive') ? document.getElementById('tipoBuscaDetetive').value : 'total';
 
-        let sConf = 0; let candidatos = [];
-        (c.lancamentos || []).forEach(l => {
-            if (l.data <= dCA) {
-                if (l.isFaturaCartao && l.data === dFA) return; // Ignora o próprio pagamento da fatura visualizada
-                let v = l.valor || 0; let mult = l.tipo === 'debito' ? 1 : -1;
-                if (l.dataOk && l.valorOk) sConf += (v * mult);
-                else candidatos.push({ id: l.id, desc: l.desc, val: v, mult: mult, netVal: (v * mult), lRef: l });
-            }
-        });
+    let dFA = `${dataFiltro.getFullYear()}-${String(dataFiltro.getMonth() + 1).padStart(2, '0')}-${String(c.vencimento || 10).padStart(2, '0')}`;
+    let dCA = getDataFechamentoParaFatura(c, dFA);
 
-        let targetUnconfirmed = valBanco - sConf;
-        let solucao = null; let passos = 0;
+    let sConf = 0; let candidatos = [];
+    (c.lancamentos || []).forEach(l => {
+        if (l.data <= dCA) {
+            if (l.isFaturaCartao && l.data === dFA) return; 
+            let v = l.valor || 0; let mult = l.tipo === 'debito' ? 1 : -1;
+            if (l.dataOk && l.valorOk) sConf += (v * mult);
+            else candidatos.push({ id: l.id, desc: l.desc, val: v, mult: mult, netVal: (v * mult), lRef: l });
+        }
+    });
+
+    // A mágica da seleção de modo:
+    let targetUnconfirmed = (tipoBusca === 'total') ? (valInput - sConf) : valInput;
+    let targetAbsoluto = Math.abs(targetUnconfirmed);
+
+    let solucao = null; let passos = 0;
+    candidatos.sort((a, b) => b.netVal - a.netVal);
+
+    function backtrack(idx, currentSum, currentSubset) {
+        passos++; if (passos > 60000) return false; 
         
-        candidatos.sort((a, b) => b.netVal - a.netVal);
-
-        function backtrack(idx, currentSum, currentSubset) {
-            passos++; if (passos > 60000) return false; 
-            if (Math.abs(currentSum - targetUnconfirmed) <= 0.05) { solucao = [...currentSubset]; return true; }
-            if (idx >= candidatos.length) return false;
-            currentSubset.push(candidatos[idx]);
-            if (backtrack(idx + 1, currentSum + candidatos[idx].netVal, currentSubset)) return true;
-            currentSubset.pop();
-            if (backtrack(idx + 1, currentSum, currentSubset)) return true;
-            return false;
+        // Testa a soma exata e a soma em módulo (para pegar divergências de sinal)
+        if (Math.abs(currentSum - targetUnconfirmed) <= 0.05 || Math.abs(currentSum - targetAbsoluto) <= 0.05) { 
+            solucao = [...currentSubset]; 
+            return true; 
         }
-
-        backtrack(0, 0, []);
-        let divRes = document.getElementById('resDetetive'); divRes.style.display = "block";
-
-        if (solucao) {
-            combinacaoDetectadaGlobal = solucao.map(x => x.id);
-            let html = `<h4 style="margin-top:0; color:var(--success);">✔️ Combinação Encontrada com Sucesso!</h4>`;
-            html += `<p style="font-size:0.85rem;">Confirmando os <b>${solucao.length} lançamentos</b> abaixo, a sua fatura baterá exatamente nos R$ ${fmt(valBanco)}:</p><ul style="padding-left:20px; font-size:0.9rem;">`;
-            solucao.forEach(x => { html += `<li>${x.desc} - <b>R$ ${fmt(x.val)}</b> (${x.lRef.data.split('-').reverse().join('/')})</li>`; });
-            html += `</ul><button class="btn btn-success" style="width:100%; margin-top:10px;" onclick="confirmarLoteDetetive()">💥 Confirmar Todos Estes Lançamentos</button>`;
-            divRes.innerHTML = html; divRes.style.background = "#f0fdf4"; divRes.style.borderColor = "#bbf7d0";
-        } else {
-            combinacaoDetectadaGlobal = [];
-            let msg = passos > 60000 ? "A análise foi interrompida para segurança do ecrã." : "Não foi possível achar uma combinação lógica exata.";
-            divRes.innerHTML = `<h4 style="margin-top:0; color:var(--danger);">❌ Nenhuma Combinação Exata</h4><p style="font-size:0.85rem; margin-bottom:0;">${msg} Revise se todos os valores foram digitados corretamente ou utilize o Auditor por IA na aba ao lado.</p>`;
-            divRes.style.background = "#fef2f2"; divRes.style.borderColor = "#fca5a5";
-        }
+        if (idx >= candidatos.length) return false;
+        
+        currentSubset.push(candidatos[idx]);
+        if (backtrack(idx + 1, currentSum + candidatos[idx].netVal, currentSubset)) return true;
+        currentSubset.pop();
+        
+        if (backtrack(idx + 1, currentSum, currentSubset)) return true;
+        return false;
     }
 
+    backtrack(0, 0, []);
+    let divRes = document.getElementById('resDetetive'); divRes.style.display = "block";
+
+    if (solucao) {
+        combinacaoDetectadaGlobal = solucao.map(x => x.id);
+        let html = `<h4 style="margin-top:0; color:var(--success);">✔️ Combinação Encontrada com Sucesso!</h4>`;
+        let msgModo = tipoBusca === 'total' ? `a sua fatura baterá exatamente nos R$ ${fmt(valInput)}` : `você justifica a diferença de R$ ${fmt(valInput)}`;
+        
+        html += `<p style="font-size:0.85rem;">Confirmando os <b>${solucao.length} lançamentos</b> abaixo, ${msgModo}:</p><ul style="padding-left:20px; font-size:0.9rem;">`;
+        solucao.forEach(x => { html += `<li>${x.desc} - <b>R$ ${fmt(x.val)}</b> (${x.lRef.data.split('-').reverse().join('/')})</li>`; });
+        html += `</ul><button class="btn btn-success" style="width:100%; margin-top:10px;" onclick="confirmarLoteDetetive()">💥 Confirmar Todos Estes Lançamentos</button>`;
+        divRes.innerHTML = html; divRes.style.background = "#f0fdf4"; divRes.style.borderColor = "#bbf7d0";
+    } else {
+        combinacaoDetectadaGlobal = [];
+        let msg = passos > 60000 ? "A análise foi interrompida (muitas combinações complexas possíveis)." : "Não foi possível achar uma combinação lógica exata.";
+        divRes.innerHTML = `<h4 style="margin-top:0; color:var(--danger);">❌ Nenhuma Combinação Exata</h4><p style="font-size:0.85rem; margin-bottom:0;">${msg} Veja a tabela gerada pela IA na aba ao lado para cruzar manualmente o que faltou ou sobrou.</p>`;
+        divRes.style.background = "#fef2f2"; divRes.style.borderColor = "#fca5a5";
+    }
+}
     function confirmarLoteDetetive() {
         if (combinacaoDetectadaGlobal.length === 0) return;
         let c = contas.find(x => x.id === contaAtiva); if(!c) return;
@@ -469,16 +491,18 @@
         btn.innerText = "⏳ A IA está analisando..."; btn.disabled = true;
         const resDiv = document.getElementById('resAuditorIA'); resDiv.style.display = "none";
 
-        let promptAuditoria = `Atue como um auditor financeiro objetivo e direto. Compare a fatura do banco (anexada ou em texto) com os lançamentos do sistema.
-REGRAS RÍGIDAS DE AUDITORIA:
-1. Ignore divergências de data de até 5 dias (comum no processamento de parcelas). Trate como MATCH CORRETO.
-2. Ignore divergências na numeração da parcela se o valor e a loja baterem.
-3. Ignore centavos de diferença (até R$ 0,10).
-4. Seja EXTREMAMENTE SINTÉTICO. Responda APENAS usando uma tabela Markdown com as seguintes colunas: | Tipo de Erro | Lançamento (Banco) | Lançamento (Sistema) | Diferença/Motivo |
-5. Se não houver divergências relevantes, retorne apenas "Nenhuma anomalia grave encontrada. Tudo certo!"
-${customPrompt ? "\nREGRA CUSTOMIZADA DO USUÁRIO:\n" + customPrompt : ""}
-LANÇAMENTOS NO SISTEMA DO USUÁRIO (Ciclo Atual):
-${JSON.stringify(lancamentosCompactos)}`;
+        let promptAuditoria = `Atue como um extrator de dados rigoroso. Compare a fatura do banco (anexada ou em texto) com os lançamentos do sistema.
+        REGRAS RÍGIDAS E ABSOLUTAS:
+        1. NÃO faça cálculos matemáticos de totais, subtotais ou diferenças finais. A matemática de fechamento será feita pelo nosso sistema.
+        2. NÃO escreva introduções como "Como auditor financeiro...".
+        3. NÃO escreva conclusões, explicações ou desculpas.
+        4. Ignore divergências de data de até 5 dias. Ignore divergências na numeração da parcela se o nome bater. Ignore centavos de diferença (até R$ 0,10).
+        5. Responda ÚNICA E EXCLUSIVAMENTE com uma tabela em formato Markdown contendo APENAS os lançamentos problemáticos (o que sobrou de um lado ou do outro).
+        6. Formato obrigatório da tabela:
+        | Status | Lançamento | Valor (R$) | Origem (Banco ou Sistema) |
+        ${customPrompt ? "\nREGRA CUSTOMIZADA DO USUÁRIO:\n" + customPrompt : ""}
+        LANÇAMENTOS NO SISTEMA DO USUÁRIO (Ciclo Atual):
+        ${JSON.stringify(lancamentosCompactos)}`;
 
         if (txtExtrato) promptAuditoria += `\n\nTEXTO DA FATURA DO BANCO:\n"""\n${txtExtrato}\n"""`;
         let parts = [{ text: promptAuditoria }];
