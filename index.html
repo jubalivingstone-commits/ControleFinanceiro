@@ -643,7 +643,7 @@ ${JSON.stringify(lancamentosCompactos)}`;
 
     function gerarParFatura(cO, cC, dBase, vDia) {
         if (!cO.lancamentos || !cC.lancamentos) return; let dFat = `${dBase.getFullYear()}-${String(dBase.getMonth() + 1).padStart(2, '0')}-${String(vDia).padStart(2, '0')}`;
-        if (cO.lancamentos.some(l => l.isFaturaCartao === cC.id && l.data === dFat)) return; const tId = Date.now().toString() + "_FAT" + cC.id.substring(0,4);
+        if (cO.lancamentos.some(l => l.isFaturaCartao === cC.id && l.data === dFat)) return; const tId = Date.now().toString() + "_" + Math.floor(Math.random() * 10000) + "_FAT" + cC.id.substring(0,4);
         cO.lancamentos.push({ id: tId+"A", transferId: tId, data: dFat, valor: 0, desc: `Transf. para ${cC.nome} (Fatura)`, tipo: 'debito', dataOk: false, valorOk: false, ordem: (cO.lancamentos.length > 0 ? Math.max(...cO.lancamentos.map(lx => lx.ordem || 0)) : 0) + 1, eRecurrente: false, freq: 'mensal', pTotal: 0, pAtual: 1, isFaturaCartao: cC.id });
         cC.lancamentos.push({ id: tId+"B", transferId: tId, data: dFat, valor: 0, desc: `Transf. de ${cO.nome} (Pagamento)`, tipo: 'credito', dataOk: false, valorOk: false, ordem: (cC.lancamentos.length > 0 ? Math.max(...cC.lancamentos.map(lx => lx.ordem || 0)) : 0) + 1, eRecurrente: false, freq: 'mensal', pTotal: 0, pAtual: 1, isFaturaCartao: cC.id });
     }
