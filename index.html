@@ -1399,50 +1399,7 @@ function copiarTabelaAuditoria() {
     novaJanela.document.close();
 }
 
-    // GERADOR DA NOVA JANELA VISUAL
-    let html = `
-        <!DOCTYPE html>
-        <html lang="pt-br">
-        <head>
-            <meta charset="UTF-8">
-            <title>Diagnóstico da Base - ConFIA</title>
-            <style>
-                body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 25px; background: #f8fafc; color: #1e293b; line-height: 1.5; }
-                h2 { color: #3498db; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0; }
-                h3 { color: #e67e22; margin-top: 35px; border-left: 4px solid #e67e22; padding-left: 10px; }
-                .ok { color: #27ae60; font-weight: bold; background: #e8f8f5; padding: 10px 15px; border-radius: 8px; border: 1px solid #a3e4d7; display: inline-block; }
-                table { width: 100%; border-collapse: collapse; background: white; margin-top: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-                th, td { padding: 12px 15px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 0.9rem; }
-                th { background: #f1f5f9; text-transform: uppercase; font-size: 0.8rem; color: #64748b; }
-                tr:last-child td { border-bottom: none; }
-                tr:hover { background-color: #f8fafc; }
-                .dica { color: #64748b; font-size: 0.95rem; }
-            </style>
-        </head>
-        <body>
-            <h2>🐕 Relatório do Cão Farejador</h2>
-            <p class="dica">Coloque esta janela lado a lado com o ConFIA. Use as informações abaixo para localizar os meses problemáticos e excluir as cópias excedentes. O nosso novo motor blindado impedirá que elas voltem.</p>
-    `;
-
-    const buildTable = (arr, cols, colMap) => {
-        if (arr.length === 0) return `<div class="ok">✔️ Nenhum problema detectado nesta categoria. O sistema está limpo!</div>`;
-        let tb = `<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
-        arr.forEach(item => { tb += `<tr>${colMap.map(col => `<td>${item[col] || ''}</td>`).join('')}</tr>`; });
-        tb += `</tbody></table>`;
-        return tb;
-    };
-
-    html += `<h3>1. Rendimentos Diários Duplicados</h3>` + buildTable(relatorio.rendimentosDuplicados, ['Conta', 'Data do Conflito', 'Valor (R$)'], ['conta', 'data', 'valor']);
-    html += `<h3>2. Anomalias em Parcelamentos</h3>` + buildTable(relatorio.parcelasEstruturaProblema, ['Conta Vinculada', 'Descrição do Gasto', 'Diagnóstico', 'Indicador do Erro'], ['conta', 'desc', 'problema', 'info']);
-    html += `<h3>3. Deriva de Datas (Saltos)</h3>` + buildTable(relatorio.derivaDeData, ['Conta', 'Descrição', 'Data Quebrada', 'Dia Certo', 'Dia Errado'], ['conta', 'desc', 'dataErro', 'original', 'atual']);
-    html += `<h3>4. Alerta de Inconsistência de Valores</h3>` + buildTable(relatorio.valoresInconsistentes, ['Conta', 'Descrição Base', 'Qtd. Variações na Cadeia'], ['conta', 'desc', 'variacoes']);
-
-    html += `</body></html>`;
-
-    const novaJanela = window.open('', '_blank', 'width=900,height=700');
-    novaJanela.document.write(html);
-    novaJanela.document.close();
-}
+ 
 
     window.onload = () => { carregarDados(); };
 </script>
