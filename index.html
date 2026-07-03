@@ -787,33 +787,53 @@ function copiarTabelaAuditoria() {
     }
     
     function salvarL() {
-        calcularValor(); const d = document.getElementById('f_data').value; const vRaw = document.getElementById('f_valor').value;
-        const v = parseFloat(vRaw.replace(/\./g, '').replace(/,/g, '.')); if(isNaN(v)) return alert("Valor inválido.");
-        let descBase = document.getElementById('f_desc').value; const tipo = document.getElementById('f_tipo').value;
-        const idEdit = document.getElementById('id_editando_l').value; const freq = document.getElementById('f_freq').value;
-        const pTotal = parseInt(document.getElementById('f_parc_total').value) || 0; const pAtual = parseInt(document.getElementById('f_parc_atual').value) || 0; const tag = document.getElementById('f_tag').value.trim();
-        if(!d || (!descBase && tipo !== 'transferencia' && !idEdit)) return; let c = contas.find(x => x.id === contaAtiva); if (!c.lancamentos) c.lancamentos = [];
+    calcularValor(); const d = document.getElementById('f_data').value; const vRaw = document.getElementById('f_valor').value;
+    const v = parseFloat(vRaw.replace(/\./g, '').replace(/,/g, '.')); if(isNaN(v)) return alert("Valor inválido.");
+    let descBase = document.getElementById('f_desc').value; const tipo = document.getElementById('f_tipo').value;
+    const idEdit = document.getElementById('id_editando_l').value; const freq = document.getElementById('f_freq').value;
+    const pTotal = parseInt(document.getElementById('f_parc_total').value) || 0; const pAtual = parseInt(document.getElementById('f_parc_atual').value) || 0; const tag = document.getElementById('f_tag').value.trim();
+    if(!d || (!descBase && tipo !== 'transferencia' && !idEdit)) return; let c = contas.find(x => x.id === contaAtiva); if (!c.lancamentos) c.lancamentos = [];
 
-        if (tipo === 'transferencia' && !idEdit) {
-            const idD = document.getElementById('f_destino').value; if(!idD) return alert("Selecione destino.");
-            execTransf(c, d, v, descBase, contas.find(x => x.id === idD), Date.now().toString(), dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, tag);
-            if (dataOk && valorOk && eRecurrente) processarProximo(c, c.lancamentos[c.lancamentos.length - 1]);
-        } else {
-            let descFinal = descBase.replace(/ \(Parc\. \d+\/\d+\)$/, ""); const cartaoId = tipo === 'cartao' ? document.getElementById('f_cartao_vinculado').value : null;
-            if(idEdit) {
-                let l = c.lancamentos.find(x => x.id === idEdit); if (!l) return;
-                if (eRecurrente || l.pTotal > 0) { c.lancamentos.forEach(fut => { let ehIrmao = fut.desc === l.desc && fut.pTotal === l.pTotal && fut.id !== l.id; let ehFuturo = l.pTotal > 0 ? fut.pAtual > l.pAtual : fut.data >= l.data; if (ehIrmao && ehFuturo && (!fut.dataOk || !fut.valorOk) && !fut.transferId) { fut.desc = descFinal; fut.valor = v; fut.tag = tag; fut.cartaoId = cartaoId; } }); }
-                if (l.transferId) { l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk; l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual; l.tag = tag; contas.forEach(ct => { if(!ct.lancamentos) return; let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id); if (irma) { Object.assign(irma, { data: d, valor: v, eRecurrente, freq, pTotal, pAtual, tag }); } }); } 
-                else Object.assign(l, { data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, cartaoId, tag });
-                if (l.isFaturaCartao) { let sibC = contas.find(cx => cx.id !== c.id && cx.lancamentos && cx.lancamentos.some(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1))); if (sibC) { let sibL = sibC.lancamentos.find(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1)); if (sibL) { sibL.dataOk = dataOk; sibL.valorOk = valorOk; sibL.valor = v; sibL.data = d; } } }
-                if (dataOk && valorOk && eRecurrente && !l.isFaturaCartao && !l.transferId) processarProximo(c, l);
-            } else {
-                const novoL = { id: Date.now().toString(), data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, ordem: (c.lancamentos.length > 0 ? Math.max(...c.lancamentos.map(lx => lx.ordem || 0)) : 0) + 1, eRecurrente, freq, pTotal, pAtual, cartaoId, tag };
-                c.lancamentos.push(novoL); if (dataOk && valorOk && eRecurrente && !novoL.isFaturaCartao) processarProximo(c, novoL);
+    if (tipo === 'transferencia' && !idEdit) {
+        const idD = document.getElementById('f_destino').value; if(!idD) return alert("Selecione destino.");
+        execTransf(c, d, v, descBase, contas.find(x => x.id === idD), Date.now().toString() + "_" + Math.floor(Math.random()*10000), dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, tag);
+        if (dataOk && valorOk && eRecurrente) processarProximo(c, c.lancamentos[c.lancamentos.length - 1]);
+    } else {
+        let descFinal = descBase.replace(/ \(Parc\. \d+\/\d+\)$/, ""); const cartaoId = tipo === 'cartao' ? document.getElementById('f_cartao_vinculado').value : null;
+        if(idEdit) {
+            let l = c.lancamentos.find(x => x.id === idEdit); if (!l) return;
+            
+            // NOVO: Pop-up interativo para propagar alterações aos irmãos
+            let atualizarIrmaos = false;
+            if ((eRecurrente || l.pTotal > 0) && (l.valor !== v || l.desc !== descFinal || l.tag !== tag || l.cartaoId !== cartaoId)) {
+                atualizarIrmaos = confirm("Você alterou o valor, nome, tag ou vínculo deste lançamento recorrente.\nDeseja que o ConFIA atualize todas as parcelas FUTURAS (estimadas) desta mesma série?");
             }
+
+            if (atualizarIrmaos) {
+                c.lancamentos.forEach(fut => {
+                    let ehIrmao = fut.desc === l.desc && fut.pTotal === l.pTotal && fut.id !== l.id;
+                    let ehFuturo = l.pTotal > 0 ? fut.pAtual > l.pAtual : new Date(fut.data).getTime() >= new Date(l.data).getTime();
+                    if (ehIrmao && ehFuturo && (!fut.dataOk || !fut.valorOk) && !fut.transferId) {
+                        fut.desc = descFinal; fut.valor = v; fut.tag = tag; fut.cartaoId = cartaoId;
+                    }
+                });
+            }
+
+            if (l.transferId) { 
+                l.data = d; l.valor = v; l.dataOk = dataOk; l.valorOk = valorOk; l.eRecurrente = eRecurrente; l.freq = freq; l.pTotal = pTotal; l.pAtual = pAtual; l.tag = tag; 
+                contas.forEach(ct => { if(!ct.lancamentos) return; let irma = ct.lancamentos.find(lx => lx.transferId === l.transferId && lx.id !== l.id); if (irma) { Object.assign(irma, { data: d, valor: v, eRecurrente, freq, pTotal, pAtual, tag }); } }); 
+            } 
+            else Object.assign(l, { data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, eRecurrente, freq, pTotal, pAtual, cartaoId, tag });
+            
+            if (l.isFaturaCartao) { let sibC = contas.find(cx => cx.id !== c.id && cx.lancamentos && cx.lancamentos.some(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1))); if (sibC) { let sibL = sibC.lancamentos.find(lx => lx.isFaturaCartao === l.isFaturaCartao && lx.id.substring(0, lx.id.length-1) === l.id.substring(0, l.id.length-1)); if (sibL) { sibL.dataOk = dataOk; sibL.valorOk = valorOk; sibL.valor = v; sibL.data = d; } } }
+            if (dataOk && valorOk && eRecurrente && !l.isFaturaCartao && !l.transferId) processarProximo(c, l);
+        } else {
+            const novoL = { id: Date.now().toString() + "_" + Math.floor(Math.random()*10000), data: d, valor: v, desc: descFinal, tipo, dataOk, valorOk, ordem: (c.lancamentos.length > 0 ? Math.max(...c.lancamentos.map(lx => lx.ordem || 0)) : 0) + 1, eRecurrente, freq, pTotal, pAtual, cartaoId, tag };
+            c.lancamentos.push(novoL); if (dataOk && valorOk && eRecurrente && !novoL.isFaturaCartao) processarProximo(c, novoL);
         }
-        ultimaDataUsada = d; salvarEAtualizar(); limparFL();
     }
+    ultimaDataUsada = d; salvarEAtualizar(); limparFL();
+}
 
     function execTransf(cO, d, v, descBase, cD, tI, isDataOk, isValorOk, isRec, freq, pT, pA, tagUser) {
         if(!cO.lancamentos) cO.lancamentos = []; if(!cD.lancamentos) cD.lancamentos = []; let obs = descBase ? ` - ${descBase}` : "";
@@ -828,29 +848,70 @@ function copiarTabelaAuditoria() {
         else fDesc.placeholder = "Ex: IPVA";
     }
 
-    function processarProximo(conta, l) {
-        if (l.pTotal > 0 && l.pAtual >= l.pTotal) return; let dA = new Date(l.data + 'T12:00:00');
-        if (l.freq === 'anual') { dA.setFullYear(dA.getFullYear() + 1); } 
-        else if (l.freq === 'diario') { dA.setDate(dA.getDate() + 1); if ((l.desc || "").toLowerCase() === "rendimento diário") { if (dA.getDay() === 6) dA.setDate(dA.getDate() + 2); else if (dA.getDay() === 0) dA.setDate(dA.getDate() + 1); } } 
-        else { dA.setMonth(dA.getMonth() + 1); }
-        const nD = dA.toISOString().split('T')[0]; const proxP = l.pTotal > 0 ? l.pAtual + 1 : 0;
-        let nValor = l.valor; if (l.freq === 'diario' && (l.desc||'').toLowerCase() === "rendimento diário") nValor = calcularRendimento(conta, nD);
-        let isRend = (l.desc || "").toLowerCase() === "rendimento diário";
+        function processarProximo(conta, l) {
+    if (l.pTotal > 0 && l.pAtual >= l.pTotal) return;
+    
+    let nD = "";
+    let dA = new Date(l.data + 'T12:00:00');
+    
+    if (l.freq === 'anual') { 
+        dA.setFullYear(dA.getFullYear() + 1); 
+        nD = dA.toISOString().split('T')[0];
+    } else if (l.freq === 'diario') { 
+        dA.setDate(dA.getDate() + 1); 
+        if ((l.desc || "").toLowerCase() === "rendimento diário") { 
+            if (dA.getDay() === 6) dA.setDate(dA.getDate() + 2); 
+            else if (dA.getDay() === 0) dA.setDate(dA.getDate() + 1); 
+        }
+        nD = dA.toISOString().split('T')[0];
+    } else {
+        // MENSAL FIXO: O Fim da Deriva de Datas
+        let partes = l.data.split('-');
+        let ano = parseInt(partes[0]);
+        let mes = parseInt(partes[1]) - 1; // 0 a 11
+        let dia = parseInt(partes[2]);
+        
+        let proxMes = mes + 1;
+        if (proxMes > 11) { proxMes = 0; ano++; }
+        
+        // Garante que o dia não transborde meses mais curtos (ex: 31 de fev)
+        let maxDiasProx = new Date(ano, proxMes + 1, 0).getDate();
+        let diaNovo = dia > maxDiasProx ? maxDiasProx : dia;
+        
+        nD = `${ano}-${String(proxMes + 1).padStart(2, '0')}-${String(diaNovo).padStart(2, '0')}`;
+    }
+    
+    const proxP = l.pTotal > 0 ? l.pAtual + 1 : 0;
+    let nValor = l.valor; 
+    if (l.freq === 'diario' && (l.desc||'').toLowerCase() === "rendimento diário") nValor = calcularRendimento(conta, nD);
+    let isRend = (l.desc || "").toLowerCase() === "rendimento diário";
 
-        if (l.transferId) {
-            if (!conta.lancamentos.find(x => x.data === nD && x.transferId && x.pAtual === proxP && x.desc === l.desc)) {
-                let ctO = contas.find(cx => cx.id !== conta.id && cx.lancamentos.some(lx => lx.transferId === l.transferId));
-                if (ctO) {
-                    let lO = ctO.lancamentos.find(lx => lx.transferId === l.transferId); let nTId = Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000);
-                    conta.lancamentos.push({ id: nTId+"A", transferId: nTId, data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: l.tag || "", cartaoId: l.cartaoId || null });
-                    ctO.lancamentos.push({ id: nTId+"B", transferId: nTId, data: nD, valor: nValor, desc: lO.desc, tipo: lO.tipo, dataOk: false, valorOk: false, ordem: Math.max(...ctO.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: lO.tag || "", cartaoId: lO.cartaoId || null });
-                }
+    if (l.transferId) {
+        // Checagem blindada para transferências
+        if (!conta.lancamentos.find(x => x.transferId && x.pAtual === proxP && x.desc === l.desc && (l.freq === 'mensal' ? x.data.substring(0,7) === nD.substring(0,7) : x.data === nD))) {
+            let ctO = contas.find(cx => cx.id !== conta.id && cx.lancamentos.some(lx => lx.transferId === l.transferId));
+            if (ctO) {
+                let lO = ctO.lancamentos.find(lx => lx.transferId === l.transferId); 
+                let nTId = Date.now().toString() + "_" + Math.floor(Math.random()*10000) + "_PROX";
+                conta.lancamentos.push({ id: nTId+"A", transferId: nTId, data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: l.tag || "", cartaoId: l.cartaoId || null });
+                ctO.lancamentos.push({ id: nTId+"B", transferId: nTId, data: nD, valor: nValor, desc: lO.desc, tipo: lO.tipo, dataOk: false, valorOk: false, ordem: Math.max(...ctO.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq, pTotal: l.pTotal, pAtual: proxP, tag: lO.tag || "", cartaoId: lO.cartaoId || null });
             }
-        } else {
-            let jaExiste = conta.lancamentos.find(x => { if (isRend) return x.data === nD && (x.desc || "").toLowerCase() === "rendimento diário"; if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP; return x.data === nD && x.desc === l.desc; });
-            if (!jaExiste) { conta.lancamentos.push({ id: Date.now().toString() + "_PROX" + Math.floor(Math.random()*1000), data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, cartaoId: l.cartaoId || null, tag: l.tag || "" }); }
+        }
+    } else {
+        // Checagem anti-colisão (Bloqueia múltiplos itens iguais no mesmo mês)
+        let jaExiste = conta.lancamentos.find(x => { 
+            if (isRend) return x.data === nD && (x.desc || "").toLowerCase() === "rendimento diário"; 
+            if (l.pTotal > 0) return x.desc === l.desc && x.pAtual === proxP; 
+            if (l.freq === 'mensal') return x.desc === l.desc && x.data.substring(0, 7) === nD.substring(0, 7);
+            if (l.freq === 'anual') return x.desc === l.desc && x.data.substring(0, 4) === nD.substring(0, 4);
+            return x.data === nD && x.desc === l.desc; 
+        });
+        
+        if (!jaExiste) { 
+            conta.lancamentos.push({ id: Date.now().toString() + "_" + Math.floor(Math.random()*10000) + "_PROX", data: nD, valor: nValor, desc: l.desc, tipo: l.tipo, dataOk: false, valorOk: false, ordem: Math.max(...conta.lancamentos.map(lx => lx.ordem || 0)) + 1, eRecurrente: true, freq: l.freq || 'mensal', pTotal: l.pTotal, pAtual: proxP, cartaoId: l.cartaoId || null, tag: l.tag || "" }); 
         }
     }
+}
 
     function toggleStatus(tipo) {
         if(tipo === 'Data') { dataOk = !dataOk; document.getElementById('tData').innerHTML = dataOk ? '<span class="ico-lock">🔒</span> Conf.' : '<span class="ico-lock">🔓</span> Est.'; document.getElementById('tData').classList.toggle('active', dataOk); document.getElementById('f_data').classList.toggle('incerto', !dataOk); } 
