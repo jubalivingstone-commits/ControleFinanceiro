@@ -1348,11 +1348,11 @@ function copiarTabelaAuditoria() {
         });
     });
 
-    // GERADOR DA NOVA JANELA VISUAL
-    let html = `
-        <!DOCTYPE html>
-        <html lang="pt-br">
-        <head>
+        // GERADOR DA NOVA JANELA VISUAL
+        let html = `
+            <!DOCTYPE html>
+            <html lang="pt-br">
+            <head>
             <meta charset="UTF-8">
             <title>Diagnóstico da Base - ConFIA</title>
             <style>
@@ -1367,38 +1367,37 @@ function copiarTabelaAuditoria() {
                 tr:hover { background-color: #f8fafc; }
                 .dica { color: #64748b; font-size: 0.95rem; }
                 .val-col { text-align: right; font-weight: bold; white-space: nowrap; }
-            </style>
-        </head>
-        <body>
-            <h2>🐕 Relatório do Cão Farejador</h2>
-            <p class="dica">Coloque esta janela lado a lado com o ConFIA. Use as informações abaixo (agora com data e valor exatos) para localizar os meses problemáticos e excluir as cópias excedentes. O motor blindado impedirá que elas voltem.</p>
-    `;
+                </style>
+            </head>
+            <body>
+                <h2>🐕 Relatório do Cão Farejador</h2>
+                <p class="dica">Coloque esta janela lado a lado com o ConFIA. Use as informações abaixo (agora com data e valor exatos) para localizar os meses problemáticos e excluir as cópias excedentes. O motor blindado impedirá que elas voltem.</p>
+        `;
 
-    const buildTable = (arr, cols, colMap) => {
-        if (arr.length === 0) return `<div class="ok">✔️ Nenhum problema detectado nesta categoria. O sistema está limpo!</div>`;
-        let tb = `<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
-        arr.forEach(item => { 
-            tb += `<tr>${colMap.map(col => {
-                let classExtra = (col === 'valor' || col === 'valoresStr' || col === 'variacoes') ? ' class="val-col"' : '';
-                return `<td${classExtra}>${item[col] || ''}</td>`;
-            }).join('')}</tr>`; 
-        });
-        tb += `</tbody></table>`;
-        return tb;
-    };
+        const buildTable = (arr, cols, colMap) => {
+            if (arr.length === 0) return `<div class="ok">✔️ Nenhum problema detectado nesta categoria. O sistema está limpo!</div>`;
+            let tb = `<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+            arr.forEach(item => { 
+                tb += `<tr>${colMap.map(col => {
+                    let classExtra = (col === 'valor' || col === 'valoresStr' || col === 'variacoes') ? ' class="val-col"' : '';
+                    return `<td${classExtra}>${item[col] || ''}</td>`;
+                }).join('')}</tr>`; 
+            });
+            tb += `</tbody></table>`;
+            return tb;
+        };
 
-    html += `<h3>1. Rendimentos Diários Duplicados</h3>` + buildTable(relatorio.rendimentosDuplicados, ['Conta', 'Data do Conflito', 'Valor (R$)'], ['conta', 'data', 'valor']);
-    html += `<h3>2. Anomalias em Parcelamentos</h3>` + buildTable(relatorio.parcelasEstruturaProblema, ['Conta Vinculada', 'Data Base', 'Descrição do Gasto', 'Valor (R$)', 'Diagnóstico', 'Indicador do Erro'], ['conta', 'data', 'desc', 'valor', 'problema', 'info']);
-    html += `<h3>3. Deriva de Datas (Saltos)</h3>` + buildTable(relatorio.derivaDeData, ['Conta', 'Descrição', 'Data Quebrada', 'Dia Certo', 'Dia Errado'], ['conta', 'desc', 'dataErro', 'original', 'atual']);
-    html += `<h3>4. Alerta de Inconsistência de Valores</h3>` + buildTable(relatorio.valoresInconsistentes, ['Conta', 'Descrição Base', 'Qtd. Variações', 'Valores Misturados (R$)'], ['conta', 'desc', 'variacoes', 'valoresStr']);
+        html += `<h3>1. Rendimentos Diários Duplicados</h3>` + buildTable(relatorio.rendimentosDuplicados, ['Conta', 'Data do Conflito', 'Valor (R$)'], ['conta', 'data', 'valor']);
+        html += `<h3>2. Anomalias em Parcelamentos</h3>` + buildTable(relatorio.parcelasEstruturaProblema, ['Conta Vinculada', 'Data Base', 'Descrição do Gasto', 'Valor (R$)', 'Diagnóstico', 'Indicador do Erro'], ['conta', 'data', 'desc', 'valor', 'problema', 'info']);
+        html += `<h3>3. Deriva de Datas (Saltos)</h3>` + buildTable(relatorio.derivaDeData, ['Conta', 'Descrição', 'Data Quebrada', 'Dia Certo', 'Dia Errado'], ['conta', 'desc', 'dataErro', 'original', 'atual']);
+        html += `<h3>4. Alerta de Inconsistência de Valores</h3>` + buildTable(relatorio.valoresInconsistentes, ['Conta', 'Descrição Base', 'Qtd. Variações', 'Valores Misturados (R$)'], ['conta', 'desc', 'variacoes', 'valoresStr']);
 
-    html += `</body></html>`;
+        html += `</body></html>`;
 
-    const novaJanela = window.open('', '_blank', 'width=1000,height=700');
-    novaJanela.document.write(html);
-    novaJanela.document.close();
-}
-
+        const novaJanela = window.open('', '_blank', 'width=1000,height=700');
+        novaJanela.document.write(html);
+        novaJanela.document.close();
+    }
 
     window.onload = () => { carregarDados(); };
 </script>
