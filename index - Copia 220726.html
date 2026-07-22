@@ -17,8 +17,7 @@
         .content-section { display: none; } .content-section.active { display: block; }
         .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #f1f5f9; }
         .painel-insercao { background: #ffffff; border: 2px solid var(--primary); border-radius: 12px; padding: 25px 20px 20px 20px; margin-bottom: 30px; box-shadow: 0 8px 15px -3px rgba(52, 152, 219, 0.15); position: relative; }
-        .painel-insercao-title { position: absolute; top: -12px; left: 20px; background: white; padding: 0 10px; font-size: 0.85rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; }
-        .painel-insercao-title:hover { color: var(--success); }
+        .painel-insercao-title { position: absolute; top: -12px; left: 20px; background: white; padding: 0 10px; font-size: 0.85rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
         details.accordion { background: white; padding: 20px 25px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: background 0.3s; }
         details.accordion:hover { background: #f8fafc; }
         details.accordion > summary { font-weight: bold; font-size: 1.15rem; cursor: pointer; color: var(--text); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none; }
@@ -155,7 +154,7 @@
 
                 <div id="painelOperacional" style="display:block; scroll-margin-top: 40px;">
                     <div class="painel-insercao">
-                        <div id="tituloAreaLancamento" class="painel-insercao-title" style="cursor: pointer;" onclick="document.getElementById('painelOperacional').scrollIntoView({ behavior: 'smooth', block: 'start' });" title="Clique para rolar ao topo">✏️ Área de Lançamento</div>
+                        <div id="tituloAreaLancamento" class="painel-insercao-title">✏️ Área de Lançamento</div>
                         <input type="hidden" id="id_editando_l">
                         <div class="flex-form" style="margin-bottom: 0;">
                             <div class="field-group fg-data"><label>Data <span id="tData" class="toggle-btn" onclick="toggleStatus('Data')"><span class="ico-lock">🔓</span> Est.</span></label><input type="date" id="f_data" onkeydown="if(event.key === 'Enter') salvarL()"></div>
@@ -348,7 +347,6 @@
     let deveFocarHoje = false; // Gatilho global para o pulo da tela
     let ultimaDataUsada = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
     let relatorioAtivo = null;
-    let primeiroCliqueLancamentos = true; // Controla o foco da pesquisa no primeiro clique da aba
 
     const fmt = (v) => { if (!isFinite(v)) return "0,00"; return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     function formatarDataHora(isoStr) { if(!isoStr) return "Desconhecido"; let d = new Date(isoStr); return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR'); }
@@ -1074,9 +1072,9 @@ function copiarTabelaAuditoria() {
                 if (contaAtiva !== c.id) { 
                     contaAtiva = c.id; 
                     modoConciliacao = (c.tipoConta === 'cartao'); 
+                    deveFocarHoje = true; // Gatilho de scroll armado
                 }
                 render(); 
-                setTimeout(() => { const area = document.getElementById('painelOperacional'); if(area) area.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
             }; 
             cp.appendChild(p);
         });
@@ -1182,8 +1180,8 @@ function copiarTabelaAuditoria() {
         const nC = contas[(i + 1) % contas.length];
         contaAtiva = nC.id; 
         modoConciliacao = (nC.tipoConta === 'cartao');
+        deveFocarHoje = true; // Gatilho de scroll armado
         render(); 
-        setTimeout(() => { const area = document.getElementById('painelOperacional'); if(area) area.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
     }
 
     function salvarC() {
@@ -1212,19 +1210,7 @@ function copiarTabelaAuditoria() {
         dataOk = true; toggleStatus('Data'); valorOk = true; toggleStatus('Valor'); eRecurrente = true; toggleStatus('Mensal');
     }
     
-    function mudarAba(id, b) { 
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); 
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-        b.classList.add('active'); 
-        render(); 
-        
-        if (id === 'aba-lancamentos' && primeiroCliqueLancamentos) {
-            primeiroCliqueLancamentos = false;
-            setTimeout(() => { const barra = document.getElementById('inputPesquisa'); if(barra) barra.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
-        }
-    }
-    
+    function mudarAba(id, b) { document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(id).classList.add('active'); b.classList.add('active'); render(); }
     function alignDate(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function alterarMes(delta) { dataFiltro.setMonth(dataFiltro.getMonth() + delta); render(); }
     function irParaHoje() { dataFiltro = new Date(); dataFiltro.setDate(1); deveFocarHoje = true; render(); } // Gatilho de scroll armado
@@ -1257,12 +1243,15 @@ function copiarTabelaAuditoria() {
         let rec = l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false); dataOk = !l.dataOk; toggleStatus('Data'); valorOk = !l.valorOk; toggleStatus('Valor'); eRecurrente = !rec; toggleStatus('Mensal');
         document.getElementById('btnSalvarL').innerText = "Atualizar Lançamento"; document.getElementById('btnCancL').style.display = "block";
         
-        // Rolagem garantida ao solicitar a edição, independente do autoScrollAtivo
-        setTimeout(() => {
-            const area = document.getElementById('painelOperacional');
-            if(area) area.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.getElementById('f_valor').focus();
-        }, 150);
+        if (autoScrollAtivo) {
+            setTimeout(() => { 
+                const area = document.getElementById('painelOperacional');
+                if(area) area.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+                document.getElementById('f_valor').focus(); 
+            }, 150);
+        } else {
+            setTimeout(() => { document.getElementById('f_valor').focus(); }, 150);
+        }
     }
 
     async function processarComandoIA() {
