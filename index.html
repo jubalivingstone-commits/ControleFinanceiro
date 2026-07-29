@@ -755,9 +755,43 @@ function copiarTabelaAuditoria() {
         });
     }
 
-    async function salvarEAtualizar() { 
-        try { verificarRendimentosDiarios(); verificarFaturasCartao(); if (dbConfig.mode === 'nuvem' && db !== null) { try { let metaLocal = JSON.parse(localStorage.getItem('financas_meta')) || { historico: [] }; let novoRegistro = { dataHora: new Date().toISOString(), dispositivo: dbConfig.deviceName || 'Meu Dispositivo' }; let historicoAtual = metaLocal.historico || []; historicoAtual.unshift(novoRegistro); if (historicoAtual.length > 5) historicoAtual = historicoAtual.slice(0, 5); let metaInfo = { historico: historicoAtual }; await db.collection("financas").doc(FIREBASE_DOC_ID).set({ contas: contas, metadados: metaInfo }); localStorage.setItem('financas_v9', JSON.stringify(contas)); localStorage.setItem('financas_meta', JSON.stringify(metaInfo)); atualizarUIMeta(metaInfo); } catch(e) { localStorage.setItem('financas_v9', JSON.stringify(contas)); } } else localStorage.setItem('financas_v9', JSON.stringify(contas)); render(); } catch (err) {}
+    async function salvarEAtualizar() {
+    try {
+        verificarRendimentosDiarios();
+        verificarFaturasCartao();
+
+        let metaInfo = { historico: [] };
+
+        // 1. Preparar os metadados ANTES (se estiver na nuvem)
+        if (dbConfig.mode === 'nuvem' && db !== null) {
+            let metaLocal = JSON.parse(localStorage.getItem('financas_meta')) || { historico: [] };
+            let novoRegistro = { dataHora: new Date().toISOString(), dispositivo: dbConfig.deviceName || 'Meu Dispositivo' };
+            let historicoAtual = metaLocal.historico || [];
+            historicoAtual.unshift(novoRegistro);
+            if (historicoAtual.length > 5) historicoAtual = historicoAtual.slice(0, 5);
+            metaInfo = { historico: historicoAtual };
+        }
+
+        // 2. SALVAMENTO LOCAL IMEDIATO (Garante que os dados nunca sejam perdidos no celular)
+        localStorage.setItem('financas_v9', JSON.stringify(contas));
+        if (dbConfig.mode === 'nuvem' && db !== null) {
+            localStorage.setItem('financas_meta', JSON.stringify(metaInfo));
+            atualizarUIMeta(metaInfo);
+        }
+
+        // 3. ATUALIZAR A INTERFACE IMEDIATAMENTE (O clique fica instantâneo)
+        render();
+
+        // 4. SINCRONIZAR COM A NUVEM NO MODO BACKGROUND (Sem o 'await')
+        if (dbConfig.mode === 'nuvem' && db !== null) {
+            db.collection("financas").doc(FIREBASE_DOC_ID).set({ contas: contas, metadados: metaInfo })
+              .catch(e => console.log("Aviso de rede: O Firebase sincronizará em cache.", e));
+        }
+    } catch (err) {
+        console.error("Erro no processamento do salvamento: ", err);
     }
+}
+
 
     function calcularValor() { let campo = document.getElementById('f_valor'); if(!campo) return; let val = campo.value.replace(/\s/g, ''); if (!val || /^\d+$/.test(val) || /^\d+,\d{1,2}$/.test(val)) return; try { let res = Function('"use strict";return (' + val.replace(/\./g, '').replace(/,/g, '.').replace(/[^\d\.\+\-\*\/\(\)]/g, '') + ')')(); if (isFinite(res)) campo.value = parseFloat(res).toFixed(2).replace('.', ','); } catch(e) {} }
     function moverConta(id, dir) { const idx = contas.findIndex(x => x.id === id); const aIdx = dir === 'sobe' ? idx - 1 : idx + 1; if (aIdx >= 0 && aIdx < contas.length) { const t = contas[idx]; contas[idx] = contas[aIdx]; contas[aIdx] = t; salvarEAtualizar(); } }
