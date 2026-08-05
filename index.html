@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v21.0.06</title>
+    <title>Meu Controle Financeiro Pro - v21.0.07</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -179,10 +179,9 @@
                     </div>
 
                     <div class="table-container">
-                        <table onclick="document.getElementById('painelOperacional').scrollIntoView({ behavior: 'smooth', block: 'start' });">
-                            <thead id="theadLancamentos"><tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">▼</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr></thead>
-                            <tbody id="corpoTabela"></tbody>
-                            <tfoot id="rodapeTabela" style="display: none;"><tr><td colspan="3" style="text-align: right; font-weight: bold; color: #475569; font-size: 0.9rem;">Saldo Inicial do Mês:</td><td id="celulaSaldoInicial" class="val-col" style="font-weight: bold; font-size: 0.95rem;">0,00</td><td></td></tr></tfoot>
+<table>
+    <thead id="theadLancamentos"><tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">▼</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr></thead>
+    <tbody id="corpoTabela" onclick="focarLinhaHoje(event)" title="Clique em uma área vazia para centralizar no dia atual" style="cursor: pointer;"></tbody>                            <tfoot id="rodapeTabela" style="display: none;"><tr><td colspan="3" style="text-align: right; font-weight: bold; color: #475569; font-size: 0.9rem;">Saldo Inicial do Mês:</td><td id="celulaSaldoInicial" class="val-col" style="font-weight: bold; font-size: 0.95rem;">0,00</td><td></td></tr></tfoot>
                         </table>
                     </div>
                 </div>
@@ -328,7 +327,7 @@
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.05</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.07</div>
 </div>
 
 <script>
@@ -1449,6 +1448,27 @@ function copiarTabelaAuditoria() {
 
 
     window.onload = () => { carregarDados(); };
+
+    function focarLinhaHoje(event) {
+    // Ignora o scroll se o clique foi em um botão, evitando o delay nas ações
+    if (event && event.target.closest('button')) return;
+
+    // Busca a linha que o sistema já marcou como sendo o dia de hoje
+    let alvo = document.querySelector('#corpoTabela .linha-hoje');
+    
+    // Se não tiver nenhum lançamento hoje, foca no lançamento passado mais recente
+    if (!alvo) {
+        const passadas = Array.from(document.querySelectorAll('#corpoTabela .linha-passada'));
+        if (passadas.length > 0) {
+            alvo = ordemDesc ? passadas[0] : passadas[passadas.length - 1];
+        }
+    }
+    
+    // Rola a tabela posicionando o alvo exatamente no MEIO da tela
+    if (alvo) {
+        alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
 </script>
 </body>
 </html>
