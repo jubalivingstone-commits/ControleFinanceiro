@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v21.0.08</title>
+    <title>Meu Controle Financeiro Pro - v21.0.07</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -179,10 +179,9 @@
                     </div>
 
                     <div class="table-container">
-                        <table>
-                            <thead id="theadLancamentos"><tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">▼</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr></thead>
-                            <tbody id="corpoTabela" onclick="focarLinhaHoje(event)" title="Clique em uma área vazia para centralizar no dia atual" style="cursor: pointer;"></tbody>
-                            <tfoot id="rodapeTabela" style="display: none;"><tr><td colspan="3" style="text-align: right; font-weight: bold; color: #475569; font-size: 0.9rem;">Saldo Inicial do Mês:</td><td id="celulaSaldoInicial" class="val-col" style="font-weight: bold; font-size: 0.95rem;">0,00</td><td></td></tr></tfoot>
+<table>
+    <thead id="theadLancamentos"><tr><th class="th-ordenavel" onclick="toggleOrdem()">Data <span id="iconeOrdem">▼</span></th><th>Descrição</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">Saldo (R$)</th><th style="text-align:center">Ações</th></tr></thead>
+    <tbody id="corpoTabela" onclick="focarLinhaHoje(event)" title="Clique em uma área vazia para centralizar no dia atual" style="cursor: pointer;"></tbody>                            <tfoot id="rodapeTabela" style="display: none;"><tr><td colspan="3" style="text-align: right; font-weight: bold; color: #475569; font-size: 0.9rem;">Saldo Inicial do Mês:</td><td id="celulaSaldoInicial" class="val-col" style="font-weight: bold; font-size: 0.95rem;">0,00</td><td></td></tr></tfoot>
                         </table>
                     </div>
                 </div>
@@ -328,7 +327,7 @@
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.08</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.07</div>
 </div>
 
 <script>
@@ -349,7 +348,6 @@
     let ultimaDataUsada = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
     let relatorioAtivo = null;
     let primeiroCliqueLancamentos = true; // Controla o foco da pesquisa no primeiro clique da aba
-    let linhaEmAjuste = null; // Variável para controlar a edição in-line de rendimentos
 
     const fmt = (v) => { if (!isFinite(v)) return "0,00"; return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
     function formatarDataHora(isoStr) { if(!isoStr) return "Desconhecido"; let d = new Date(isoStr); return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR'); }
@@ -426,6 +424,7 @@ function executarDetetiveMatematico() {
         }
     });
 
+    // A mágica da seleção de modo:
     let targetUnconfirmed = (tipoBusca === 'total') ? (valInput - sConf) : valInput;
     let targetAbsoluto = Math.abs(targetUnconfirmed);
 
@@ -434,6 +433,8 @@ function executarDetetiveMatematico() {
 
     function backtrack(idx, currentSum, currentSubset) {
         passos++; if (passos > 60000) return false; 
+        
+        // Testa a soma exata e a soma em módulo (para pegar divergências de sinal)
         if (Math.abs(currentSum - targetUnconfirmed) <= 0.05 || Math.abs(currentSum - targetAbsoluto) <= 0.05) { 
             solucao = [...currentSubset]; 
             return true; 
@@ -790,6 +791,7 @@ function copiarTabelaAuditoria() {
     }
 }
 
+
     function calcularValor() { let campo = document.getElementById('f_valor'); if(!campo) return; let val = campo.value.replace(/\s/g, ''); if (!val || /^\d+$/.test(val) || /^\d+,\d{1,2}$/.test(val)) return; try { let res = Function('"use strict";return (' + val.replace(/\./g, '').replace(/,/g, '.').replace(/[^\d\.\+\-\*\/\(\)]/g, '') + ')')(); if (isFinite(res)) campo.value = parseFloat(res).toFixed(2).replace('.', ','); } catch(e) {} }
     function moverConta(id, dir) { const idx = contas.findIndex(x => x.id === id); const aIdx = dir === 'sobe' ? idx - 1 : idx + 1; if (aIdx >= 0 && aIdx < contas.length) { const t = contas[idx]; contas[idx] = contas[aIdx]; contas[aIdx] = t; salvarEAtualizar(); } }
     
@@ -819,46 +821,13 @@ function copiarTabelaAuditoria() {
         salvarEAtualizar();
     }
 
-    function ajustarRendimentoL(id) {
-        linhaEmAjuste = id;
-        render();
-    }
-
-    function salvarAjusteRendimento(id) {
-        let inputEl = document.getElementById('inputAjuste_' + id);
-        if (!inputEl) return;
-        let saldoInformadoStr = inputEl.value;
-        if (!saldoInformadoStr) return;
-        
-        let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return; 
-        let l = c.lancamentos.find(x => x.id === id); if (!l) return;
-        
-        let saldoReal = parseFloat(saldoInformadoStr.replace(/\./g, '').replace(',', '.')); 
-        if (isNaN(saldoReal)) return alert("Valor inválido. Use apenas números e vírgula.");
-        
-        let saldoTeoricoAnterior = 0; 
-        [...(c.lancamentos||[])].forEach(lx => { 
-            if (lx.data <= l.data && lx.id !== id) { 
-                let v = lx.valor || 0; 
-                if (lx.isFaturaCartao && !lx.valorOk) v = Math.abs(obterSaldoCartao(lx.isFaturaCartao, lx.data)); 
-                saldoTeoricoAnterior += (lx.tipo === 'credito' ? v : -v); 
-            } 
-        });
-        
-        let rendimentoCalculado = saldoReal - saldoTeoricoAnterior; 
-        if (rendimentoCalculado < 0) { 
-            if (!confirm(`O saldo informado gerou um rendimento NEGATIVO de R$ ${rendimentoCalculado.toFixed(2)}.\nDeseja salvar assim mesmo?`)) return; 
-        }
-        
-        l.valor = parseFloat(rendimentoCalculado.toFixed(2)); 
-        l.dataOk = true; 
-        l.valorOk = true; 
-        if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) { 
-            processarProximo(c, l); 
-        } 
-        
-        linhaEmAjuste = null;
-        salvarEAtualizar();
+    function ajustarRendimentoL(id, dataRefStr) {
+        let c = contas.find(x => x.id === contaAtiva); if(!c || !c.lancamentos) return; let l = c.lancamentos.find(x => x.id === id); if (!l) return;
+        let saldoInformadoStr = prompt(`Informe o SALDO ATUAL da conta ${c.nome} no banco:\n(Apenas números e vírgula. Ex: 1540,50)`); if (!saldoInformadoStr) return; 
+        let saldoReal = parseFloat(saldoInformadoStr.replace(/\./g, '').replace(',', '.')); if (isNaN(saldoReal)) return alert("Valor inválido. Use apenas números e vírgula.");
+        let saldoTeoricoAnterior = 0; [...(c.lancamentos||[])].forEach(lx => { if (lx.data <= dataRefStr && lx.id !== id) { let v = lx.valor || 0; if (lx.isFaturaCartao && !lx.valorOk) v = Math.abs(obterSaldoCartao(lx.isFaturaCartao, lx.data)); saldoTeoricoAnterior += (lx.tipo === 'credito' ? v : -v); } });
+        let rendimentoCalculado = saldoReal - saldoTeoricoAnterior; if (rendimentoCalculado < 0) { if (!confirm(`O saldo informado gerou um rendimento NEGATIVO de R$ ${rendimentoCalculado.toFixed(2)}.\nDeseja salvar assim mesmo?`)) return; }
+        l.valor = parseFloat(rendimentoCalculado.toFixed(2)); l.dataOk = true; l.valorOk = true; if (l.hasOwnProperty('eRecurrente') ? l.eRecurrente : (l.eMensal || false)) { processarProximo(c, l); } salvarEAtualizar();
     }
     
     function salvarL() {
@@ -1115,18 +1084,6 @@ function copiarTabelaAuditoria() {
         } 
     }
 
-    function focarLinhaHoje(event) {
-        if (event && event.target.closest('button')) return;
-        let alvo = document.querySelector('#corpoTabela .linha-hoje');
-        if (!alvo) {
-            const passadas = Array.from(document.querySelectorAll('#corpoTabela .linha-passada'));
-            if (passadas.length > 0) {
-                alvo = ordemDesc ? passadas[0] : passadas[passadas.length - 1];
-            }
-        }
-        if (alvo) alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
     function render() {
         const pIA = document.getElementById('painelOnboardingIA');
         if (pIA) {
@@ -1197,30 +1154,13 @@ function copiarTabelaAuditoria() {
 
                 if (document.getElementById('rodapeTabela')) document.getElementById('rodapeTabela').style.display = mP ? 'none' : 'table-footer-group';
                 dR.forEach((l, i) => {
-                    if (linhaEmAjuste === l.id) {
-                        let dL = new Date((l.data||"") + 'T00:00:00'); let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : ""); 
-                        let strDataExibicao = (l.data||"").split('-').reverse().join('/');
-                        let setOr = mP ? "" : `<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div>`;
-                        let cCen = mP ? `<td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td><td style="color:var(--primary); font-weight:bold; font-size: 0.9rem;">👉 Digite o SALDO (R$):</td>` : `<td style="color:var(--primary); font-weight:bold; font-size: 0.9rem;">👉 Digite o SALDO BANCÁRIO:</td>`;
-                        let cInput = `<td class="val-col"><input type="text" id="inputAjuste_${l.id}" placeholder="Ex: 1500,00" style="width:100px; height:32px; font-size:0.95rem; text-align:right; border:2px solid var(--primary); font-weight:bold; color:var(--primary); border-radius:6px; outline:none;" inputmode="decimal" onkeydown="if(event.key==='Enter') salvarAjusteRendimento('${l.id}')"></td>`;
-                        let cSal = mP ? "" : `<td></td>`;
-                        let bC = `<button class="mini-btn btn-success" onclick="salvarAjusteRendimento('${l.id}')">OK</button> <button class="mini-btn" style="background:#64748b;" onclick="linhaEmAjuste=null; render();">X</button>`;
-                        
-                        bd.innerHTML += `<tr class="${cl}" style="background-color: #f0fdf4; border-top: 2px dashed var(--success); border-bottom: 2px dashed var(--success); box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.1);">
-                            <td class="${l.dataOk?'':'incerto'}">${strDataExibicao}${setOr}</td>${cCen}${cInput}${cSal}<td class="actions">${bC}</td>
-                        </tr>`;
-                        
-                        setTimeout(() => { let inp = document.getElementById('inputAjuste_'+l.id); if(inp) { inp.focus(); } }, 100);
-                        return;
-                    }
-
                     let dL = new Date((l.data||"") + 'T00:00:00'); let cl = dL.getTime() === hj.getTime() ? "linha-hoje" : (dL < hj ? "linha-passada" : ""); if (l.s < 0 && !mP) cl += " linha-negativa"; 
                     if (dR[i+1]) { if (!mP && modoConciliacao && c.tipoConta === 'cartao') { if ((l.tag||"").toLowerCase() !== (dR[i+1].tag||"").toLowerCase()) cl += " separador-dia"; } else if (dR[i+1].data !== l.data) cl += " separador-dia"; }
                     let valorExibicao = l.valorDin !== undefined ? l.valorDin : (l.valor||0); if (l.isFaturaCartao && !l.valorOk) { valorExibicao = Math.abs(obterSaldoCartao(l.isFaturaCartao, l.data)); }
                     let th = ""; if (l.isFaturaCartao) th += `<span class="badge badge-anual">💳 FATURA</span>`; else if (l.pTotal > 0) th += `<span class="badge badge-parc">PARC ${l.pAtual}/${l.pTotal}</span>`; else if (l.eRecurrente || l.eMensal) th += `<span class="badge badge-${l.freq==='anual'?'anual':(l.freq==='diario'?'diario':'mensal')}">${(l.freq||'').toUpperCase()}</span>`;
                     if (l.tag) th += `<span class="badge badge-tag">🏷️ ${l.tag}</span>`;
                     
-                    let bC = ''; if (!l.dataOk || !l.valorOk) { if ((l.desc || "").toLowerCase() === "rendimento diário" && l.tipo === "credito") { bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button> <button class="mini-btn btn-audit" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}')">A</button>`; } else { bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>`; } }
+                    let bC = ''; if (!l.dataOk || !l.valorOk) { if ((l.desc || "").toLowerCase() === "rendimento diário" && l.tipo === "credito") { bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button> <button class="mini-btn btn-audit" onclick="contaAtiva='${l.contaOrigemId}'; ajustarRendimentoL('${l.id}', '${l.data}')">A</button>`; } else { bC = `<button class="mini-btn btn-confirm" onclick="contaAtiva='${l.contaOrigemId}'; confirmarRapidoL('${l.id}')">C</button>`; } }
                     let cCen = mP ? `<td><span class="badge badge-diario" style="margin-left:0;">${l.nomeConta}</span></td><td>${l.desc||''} ${th}</td>` : `<td>${l.desc||''} ${th}</td>`;
                     let cSal = mP ? "" : `<td class="val-col ${l.s < 0 ? 'texto-perigo' : ''}">${fmt(l.s)}</td>`;
                     let setOr = mP ? "" : `<div class="order-controls"><button class="btn-ord" onclick="mover('${l.id}','sobe')">▲</button><button class="btn-ord" onclick="mover('${l.id}','desce')">▼</button></div>`;
@@ -1397,6 +1337,7 @@ function copiarTabelaAuditoria() {
             if (l.eRecurrente || l.pTotal > 0 || l.eMensal) {
                 let descBase = (l.desc || "").replace(/ \(Parc\. \d+\/\d+\)$/, "").trim().toLowerCase();
                 
+                // A LENTE DE CONTATO DO FAREJADOR: Agora agrupa por Nome + Total de Parcelas + Tag
                 let chaveHash = `${descBase}_${l.pTotal}_${l.tag || 'sem_tag'}`;
                 
                 if (!gruposRecorrentes[chaveHash]) gruposRecorrentes[chaveHash] = [];
@@ -1504,7 +1445,30 @@ function copiarTabelaAuditoria() {
     novaJanela.document.close();
 }
 
+
+
     window.onload = () => { carregarDados(); };
+
+    function focarLinhaHoje(event) {
+    // Ignora o scroll se o clique foi em um botão, evitando o delay nas ações
+    if (event && event.target.closest('button')) return;
+
+    // Busca a linha que o sistema já marcou como sendo o dia de hoje
+    let alvo = document.querySelector('#corpoTabela .linha-hoje');
+    
+    // Se não tiver nenhum lançamento hoje, foca no lançamento passado mais recente
+    if (!alvo) {
+        const passadas = Array.from(document.querySelectorAll('#corpoTabela .linha-passada'));
+        if (passadas.length > 0) {
+            alvo = ordemDesc ? passadas[0] : passadas[passadas.length - 1];
+        }
+    }
+    
+    // Rola a tabela posicionando o alvo exatamente no MEIO da tela
+    if (alvo) {
+        alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
 </script>
 </body>
 </html>
