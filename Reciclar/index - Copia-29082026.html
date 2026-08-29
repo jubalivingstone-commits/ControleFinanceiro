@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Controle Financeiro Pro - v21.0.09</title>
+    <title>Meu Controle Financeiro Pro - v21.0.08</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -274,10 +274,9 @@
             <span style="position:absolute; top:15px; right:20px; cursor:pointer; font-size:1.8rem; font-weight:bold; color:#64748b; user-select:none;" onclick="fecharModalConciliacao()">×</span>
             <h3 style="color:var(--primary); margin-top:0; margin-bottom:20px; display:flex; align-items:center; gap:10px;">🪄 Central de Conciliação: <span id="modalNomeCartao" style="color:var(--text)"></span></h3>
             
-            <div style="display:flex; gap:10px; margin-bottom:25px; border-bottom:1px solid #e2e8f0; padding-bottom:10px; flex-wrap:wrap;">
+            <div style="display:flex; gap:10px; margin-bottom:25px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
                 <button class="pill active" id="btnTabDetetive" onclick="mudarTabModal('detetive')" style="margin:0;">🔍 1. Detetive Matemático</button>
-                <button class="pill" id="btnTabAuditor" onclick="mudarTabModal('auditor')" style="margin:0;">🤖 2. Auditor de Extrato</button>
-                <button class="pill" id="btnTabImportador" onclick="mudarTabModal('importador')" style="margin:0;">⚡ 3. Importador Mágico</button>
+                <button class="pill" id="btnTabAuditor" onclick="mudarTabModal('auditor')" style="margin:0;">🤖 2. Auditor de Extrato (IA)</button>
             </div>
 
             <div id="tabModalDetetive">
@@ -318,34 +317,18 @@
                 </details>
                 <button class="btn btn-sync" id="btnAuditarExtratoIA" style="width:100%; height:42px; font-size:0.95rem;" onclick="executarAuditorExtratoIA()">🤖 Auditar com Inteligência Artificial</button>
 
-                <div id="toolbarAuditoria" style="display:none; gap: 10px; margin-top: 20px;">
-                    <button class="btn btn-primary" style="flex:1;" onclick="abrirAuditoriaNovaJanela()">🪟 Abrir em Janela Separada</button>
-                    <button class="btn btn-success" style="flex:1;" onclick="copiarTabelaAuditoria()">📋 Copiar Tabela</button>
-                </div>
+<div id="toolbarAuditoria" style="display:none; gap: 10px; margin-top: 20px;">
+    <button class="btn btn-primary" style="flex:1;" onclick="abrirAuditoriaNovaJanela()">🪟 Abrir em Janela Separada</button>
+    <button class="btn btn-success" style="flex:1;" onclick="copiarTabelaAuditoria()">📋 Copiar Tabela</button>
+</div>
 
-                <div id="resAuditorIA" style="margin-top:10px; padding:15px; border-radius:10px; background:#f1f5f9; border:1px solid #cbd5e1; display:none; font-size:0.9rem; max-height:400px; overflow-y:auto; line-height:1.6;"></div>
-            </div>
-
-            <div id="tabModalImportador" style="display:none;">
-                <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:15px;">Anexe sua fatura. A IA extrairá todas as despesas e você poderá marcar o que deseja importar automaticamente com a tag <b>🤖 IA-Auto</b>.</p>
-                <div class="form-grid-config" style="gap:10px; margin-bottom:15px; background: #f0fdf4; padding: 10px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                    <div class="field-group" style="flex:1; margin-bottom:0;">
-                        <label style="font-weight:bold; color:var(--success);">1. Anexar Fatura (PDF/Imagem)</label>
-                        <input type="file" id="fileImportador" accept=".pdf,image/png,image/jpeg" style="font-size: 0.85rem; padding: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%;">
-                    </div>
-                    <div style="width: 100%; text-align: center; font-size: 0.8rem; color: #166534; font-weight: bold;">OU</div>
-                    <div class="field-group" style="flex:1; margin-bottom:0;">
-                        <label style="font-weight:bold;">Colar Texto Bruto</label>
-                        <textarea id="txtImportador" style="width:100%; height:60px; border-radius:6px; padding:8px; border:1px solid var(--divider); font-family:monospace; font-size:0.85rem; resize:vertical;" placeholder="Cole o texto aqui (caso não anexe arquivo)..."></textarea>
-                    </div>
-                </div>
-                <button class="btn btn-success" id="btnExtrairImportadorIA" style="width:100%; height:42px; font-size:0.95rem; background: #10b981;" onclick="executarImportadorMagicoIA()">⚡ Extrair Lançamentos Mágicos</button>
-                <div id="resImportadorIA" style="margin-top:10px; padding:15px; border-radius:10px; background:#f8fafc; border:1px solid #cbd5e1; display:none; max-height:350px; overflow-y:auto;"></div>
+<div id="resAuditorIA" style="margin-top:10px; padding:15px; border-radius:10px; background:#f1f5f9; border:1px solid #cbd5e1; display:none; font-size:0.9rem; max-height:400px; overflow-y:auto; line-height:1.6;"></div>
+                
             </div>
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.09</div>
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.75rem; color: #94a3b8;">Meu Controle Financeiro Pro • v21.0.08</div>
 </div>
 
 <script>
@@ -408,11 +391,6 @@
         document.getElementById('txtExtratoBruto').value = "";
         document.getElementById('fileFaturaBanco').value = "";
         document.getElementById('resAuditorIA').style.display = "none";
-        document.getElementById('txtImportador').value = "";
-        document.getElementById('fileImportador').value = "";
-        if (document.getElementById('resImportadorIA')) document.getElementById('resImportadorIA').style.display = "none";
-        
-        window.dadosImportacaoTemporaria = [];
         combinacaoDetectadaGlobal = [];
         mudarTabModal('detetive');
         document.getElementById('modalConciliacao').style.display = "flex";
@@ -421,15 +399,10 @@
     function fecharModalConciliacao() { document.getElementById('modalConciliacao').style.display = "none"; }
 
     function mudarTabModal(tab) {
-        const d = document.getElementById('tabModalDetetive'); const a = document.getElementById('tabModalAuditor'); const i = document.getElementById('tabModalImportador');
-        const bD = document.getElementById('btnTabDetetive'); const bA = document.getElementById('btnTabAuditor'); const bI = document.getElementById('btnTabImportador');
-        
-        if(d) d.style.display = 'none'; if(a) a.style.display = 'none'; if(i) i.style.display = 'none';
-        if(bD) bD.classList.remove('active'); if(bA) bA.classList.remove('active'); if(bI) bI.classList.remove('active');
-        
-        if(tab === 'detetive') { if(d) d.style.display = 'block'; if(bD) bD.classList.add('active'); } 
-        else if(tab === 'auditor') { if(a) a.style.display = 'block'; if(bA) bA.classList.add('active'); }
-        else if(tab === 'importador') { if(i) i.style.display = 'block'; if(bI) bI.classList.add('active'); }
+        const d = document.getElementById('tabModalDetetive'); const a = document.getElementById('tabModalAuditor');
+        const bD = document.getElementById('btnTabDetetive'); const bA = document.getElementById('btnTabAuditor');
+        if(tab === 'detetive') { d.style.display = 'block'; a.style.display = 'none'; bD.classList.add('active'); bA.classList.remove('active'); } 
+        else { d.style.display = 'none'; a.style.display = 'block'; bD.classList.remove('active'); bA.classList.add('active'); }
     }
 
 function executarDetetiveMatematico() {
@@ -559,155 +532,51 @@ function executarDetetiveMatematico() {
         } catch(e) { alert("Falha na comunicação com o servidor da IA."); } finally { btn.innerText = originalText; btn.disabled = false; }
     }
     function abrirAuditoriaNovaJanela() {
-        const conteudoTabela = document.getElementById('resAuditorIA').innerHTML;
-        if (!conteudoTabela) return;
+    const conteudoTabela = document.getElementById('resAuditorIA').innerHTML;
+    if (!conteudoTabela) return;
 
-        const novaJanela = window.open('', '_blank', 'width=800,height=600');
-        novaJanela.document.write(`
-            <!DOCTYPE html>
-            <html lang="pt-br">
-            <head>
-                <meta charset="UTF-8">
-                <title>Relatório de Auditoria IA - ConFIA</title>
-                <style>
-                    body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 25px; background: #f8fafc; color: #1e293b; }
-                    table { width: 100%; border-collapse: collapse; background: white; margin-top: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-                    th, td { padding: 12px 15px; border: 1px solid #cbd5e1; text-align: left; }
-                    th { background: #3498db; color: white; text-transform: uppercase; font-size: 0.85rem; }
-                    tr:nth-child(even) { background-color: #f1f5f9; }
-                    h2 { color: #3498db; margin-top: 0; }
-                    .dica { font-size: 0.9rem; color: #64748b; margin-bottom: 20px; }
-                </style>
-            </head>
-            <body>
-                <h2>🤖 Relatório de Auditoria IA</h2>
-                <p class="dica">Dica: Coloque esta janela lado a lado com o ConFIA para fazer as suas correções e fechar a fatura.</p>
-                ${conteudoTabela}
-            </body>
-            </html>
-        `);
-        novaJanela.document.close();
+    const novaJanela = window.open('', '_blank', 'width=800,height=600');
+    novaJanela.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-br">
+        <head>
+            <meta charset="UTF-8">
+            <title>Relatório de Auditoria IA - ConFIA</title>
+            <style>
+                body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 25px; background: #f8fafc; color: #1e293b; }
+                table { width: 100%; border-collapse: collapse; background: white; margin-top: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+                th, td { padding: 12px 15px; border: 1px solid #cbd5e1; text-align: left; }
+                th { background: #3498db; color: white; text-transform: uppercase; font-size: 0.85rem; }
+                tr:nth-child(even) { background-color: #f1f5f9; }
+                h2 { color: #3498db; margin-top: 0; }
+                .dica { font-size: 0.9rem; color: #64748b; margin-bottom: 20px; }
+            </style>
+        </head>
+        <body>
+            <h2>🤖 Relatório de Auditoria IA</h2>
+            <p class="dica">Dica: Coloque esta janela lado a lado com o ConFIA para fazer as suas correções e fechar a fatura.</p>
+            ${conteudoTabela}
+        </body>
+        </html>
+    `);
+    novaJanela.document.close();
+}
+
+function copiarTabelaAuditoria() {
+    const elemento = document.getElementById('resAuditorIA');
+    const range = document.createRange();
+    range.selectNode(elemento);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    
+    try {
+        document.execCommand('copy');
+        alert('✔️ Tabela copiada! Você pode colar diretamente no Word ou Excel se desejar.');
+    } catch (err) {
+        alert('❌ Falha ao copiar a tabela.');
     }
-
-    function copiarTabelaAuditoria() {
-        const elemento = document.getElementById('resAuditorIA');
-        const range = document.createRange();
-        range.selectNode(elemento);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-        
-        try {
-            document.execCommand('copy');
-            alert('✔️ Tabela copiada! Você pode colar diretamente no Word ou Excel se desejar.');
-        } catch (err) {
-            alert('❌ Falha ao copiar a tabela.');
-        }
-        window.getSelection().removeAllRanges();
-    }
-
-    async function executarImportadorMagicoIA() {
-        let apiKey = dbConfig.geminiKey;
-        if (!apiKey) return alert("Configure a sua Gemini API Key na aba Avançado & IA.");
-        let fileInput = document.getElementById('fileImportador'); let txtExtrato = document.getElementById('txtImportador').value.trim();
-        if (!fileInput.files[0] && !txtExtrato) return alert("Anexe o arquivo da fatura (PDF/Imagem) ou cole o texto.");
-
-        const btn = document.getElementById('btnExtrairImportadorIA'); const originalText = btn.innerText;
-        btn.innerText = "⏳ A Mágica está acontecendo..."; btn.disabled = true;
-        const resDiv = document.getElementById('resImportadorIA'); resDiv.style.display = "none";
-
-        let promptExtracao = `Você é um robô de extração financeira. Analise a fatura do cartão (imagem, pdf ou texto). 
-        Sua única missão é extrair as DESPESAS desta fatura e ignorar pagamentos ou estornos da própria fatura.
-        REGRAS RÍGIDAS:
-        1. Devolva ÚNICA E EXCLUSIVAMENTE um array em formato JSON puro.
-        2. NÃO use formatação markdown (sem as tags \`\`\`json).
-        3. Formato OBRIGATÓRIO de cada objeto: {"data": "AAAA-MM-DD", "desc": "Nome da Despesa (mantenha a parcela ex: 03/06 no nome se existir)", "valor": 150.50}
-        4. O valor deve ser um número decimal (float) positivo.
-        5. Se a data omitir o ano, assuma o ano de ${dataFiltro.getFullYear()}.`;
-
-        if (txtExtrato) promptExtracao += `\n\nTEXTO DA FATURA:\n"""\n${txtExtrato}\n"""`;
-        let parts = [{ text: promptExtracao }];
-
-        try {
-            if (fileInput.files[0]) { let file = fileInput.files[0]; let base64Data = await lerArquivoBase64(file); parts.push({ inlineData: { mimeType: file.type, data: base64Data } }); }
-            const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: parts }], generationConfig: { temperature: 0.1 } }) });
-            const resJson = await resposta.json();
-            
-            if (resJson.error) { alert("Erro na IA: " + resJson.error.message); } 
-            else {
-                let outText = resJson.candidates[0].content.parts[0].text;
-                outText = outText.replace(/```json/g, '').replace(/```/g, '').trim();
-                let arrLancamentos = JSON.parse(outText);
-                
-                let c = contas.find(x => x.id === contaAtiva);
-                let html = `<table style="width:100%; text-align:left; border-collapse:collapse; font-size: 0.85rem;">
-                            <thead><tr style="border-bottom: 2px solid #cbd5e1;"><th><span style="color:var(--success); font-size:1rem;">✔</span></th><th>Data</th><th>Descrição</th><th style="text-align:right;">Valor</th><th>Status</th></tr></thead><tbody>`;
-                
-                window.dadosImportacaoTemporaria = [];
-                
-                arrLancamentos.forEach((ext, idx) => {
-                    // Verificação de duplicidade por Data Exata + Valor Exato
-                    let existe = c.lancamentos ? c.lancamentos.some(l => l.data === ext.data && Math.abs(l.valor) === Math.abs(ext.valor)) : false;
-                    window.dadosImportacaoTemporaria.push({ ...ext, existe });
-                    
-                    let dStr = ext.data.split('-').reverse().join('/');
-                    html += `<tr style="border-bottom: 1px solid #f1f5f9; ${existe ? 'opacity:0.6; background:#f8fafc;' : 'background:#f0fdf4;'}">
-                                <td style="padding: 8px 5px;"><input type="checkbox" id="chkImp_${idx}" ${existe ? '' : 'checked'} style="width:18px; height:18px; cursor:pointer;"></td>
-                                <td style="padding: 8px 5px;">${dStr}</td>
-                                <td style="padding: 8px 5px;">${ext.desc}</td>
-                                <td style="padding: 8px 5px; text-align:right; font-weight:bold;">${fmt(ext.valor)}</td>
-                                <td style="padding: 8px 5px; text-align:center;">${existe ? '<span class="badge" style="background:#cbd5e1;">Já Existe</span>' : '<span class="badge badge-diario">➕ Novo</span>'}</td>
-                            </tr>`;
-                });
-                
-                html += `</tbody></table>
-                         <button class="btn btn-success" style="width:100%; margin-top:15px; height: 45px; font-size: 1rem;" onclick="salvarImportacaoMagica()">💾 Confirmar Importação dos Selecionados</button>`;
-                
-                resDiv.innerHTML = html; resDiv.style.display = "block";
-            }
-        } catch(e) { 
-            console.error(e);
-            alert("Falha ao analisar a fatura ou interpretar a resposta da IA. Verifique o console."); 
-        } finally { 
-            btn.innerText = originalText; btn.disabled = false; 
-        }
-    }
-
-    function salvarImportacaoMagica() {
-        let c = contas.find(x => x.id === contaAtiva); if(!c) return;
-        if(!c.lancamentos) c.lancamentos = [];
-        
-        let importados = 0;
-        window.dadosImportacaoTemporaria.forEach((ext, idx) => {
-            let chk = document.getElementById(`chkImp_${idx}`);
-            if(chk && chk.checked) {
-                c.lancamentos.push({
-                    id: Date.now().toString() + "_" + Math.floor(Math.random()*10000) + "_" + idx,
-                    data: ext.data,
-                    valor: Math.abs(ext.valor),
-                    desc: ext.desc,
-                    tipo: 'debito', 
-                    dataOk: true,   
-                    valorOk: true,
-                    ordem: (c.lancamentos.length > 0 ? Math.max(...c.lancamentos.map(lx => lx.ordem || 0)) : 0) + 1,
-                    eRecurrente: false, 
-                    freq: 'mensal',
-                    pTotal: 0,
-                    pAtual: 1,
-                    tag: '🤖 IA-Auto'
-                });
-                importados++;
-            }
-        });
-        
-        if(importados > 0) {
-            salvarEAtualizar();
-            fecharModalConciliacao();
-            alert(`⚡ Mágica feita! ${importados} lançamentos importados com sucesso.`);
-        } else {
-            alert("Nenhum lançamento foi marcado para importação.");
-        }
-    }
-
+    window.getSelection().removeAllRanges();
+}
     // ==========================================
     // FUNÇÕES DE SINCRONIZAÇÃO E INFRAESTRUTURA
     // ==========================================
